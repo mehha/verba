@@ -1,6 +1,5 @@
 import type { CollectionConfig } from 'payload'
 import { authenticated } from '@/access/authenticated'
-import { ensureActionCell } from '@/collections/Apps/hooks/ensureActionCell'
 import { isAdminOrOwner } from '@/access/isAdminOrOwner'
 
 export const Apps: CollectionConfig = {
@@ -11,9 +10,6 @@ export const Apps: CollectionConfig = {
     create: authenticated,
     update: isAdminOrOwner,
     delete: isAdminOrOwner,
-  },
-  hooks: {
-    beforeChange: [ensureActionCell],
   },
   fields: [
     { name: 'name', type: 'text', required: true },
