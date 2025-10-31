@@ -6,6 +6,7 @@ import 'react-resizable/css/styles.css'
 import type { App } from '@/payload-types'
 import { useAppGrid } from './useAppGrid'
 import { AppEditorToolbar } from './Toolbar'
+import { useViewportHeight } from '@/utilities/useViewportHeight'
 
 const ReactGridLayout = WidthProvider(RGL)
 
@@ -29,6 +30,31 @@ export default function AppEditor({ app }: Props) {
     clearGrid,
   } = useAppGrid(app)
 
+  const vh = useViewportHeight()
+
+  // how many rows do we actually need right now?
+  const rowsNeeded =
+    layout.length > 0
+      ? Math.max(...layout.map((l) => (l.y ?? 0) + (l.h ?? 1)))
+      : 1
+
+  // space taken by toolbar + paddings
+  const TOP_BAR = 36
+  const HEADER = 98
+  const FOOTER = 105
+  const EXTRA = 24 // padding/margins
+  const reserved = TOP_BAR + HEADER + FOOTER + EXTRA // = 165
+
+  const available = Math.max(200, vh - reserved) // don’t go negative
+
+  // responsive row height
+  let rowHeight = Math.floor(available / rowsNeeded)
+
+  // clamp to avoid too small / too big
+  const MIN_ROW = 48
+  const MAX_ROW = 240
+  rowHeight = Math.min(MAX_ROW, Math.max(MIN_ROW, rowHeight))
+
   return (
     <div className="space-y-2">
       <div className="container">
@@ -48,7 +74,7 @@ export default function AppEditor({ app }: Props) {
       <ReactGridLayout
         className="layout"
         cols={cols}
-        rowHeight={80}
+        rowHeight={rowHeight}
         width={1200}
         layout={layout}
         onLayoutChange={onLayoutChange}
