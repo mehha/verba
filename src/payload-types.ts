@@ -755,6 +755,13 @@ export interface App {
   name: string;
   owner: string | User;
   thumbnail?: (string | null) | Media;
+  /**
+   * Ülemine “valitud” riba / fraasid
+   */
+  actionBar?: {
+    enabled?: boolean | null;
+    title?: string | null;
+  };
   grid?: {
     cols?: number | null;
     rows?: number | null;
@@ -772,7 +779,6 @@ export interface App {
           locked?: boolean | null;
         }[]
       | null;
-    actionCellId?: string | null;
   };
   updatedAt: string;
   createdAt: string;
@@ -1347,6 +1353,12 @@ export interface AppsSelect<T extends boolean = true> {
   name?: T;
   owner?: T;
   thumbnail?: T;
+  actionBar?:
+    | T
+    | {
+        enabled?: T;
+        title?: T;
+      };
   grid?:
     | T
     | {
@@ -1366,7 +1378,6 @@ export interface AppsSelect<T extends boolean = true> {
               audio?: T;
               locked?: T;
             };
-        actionCellId?: T;
       };
   updatedAt?: T;
   createdAt?: T;

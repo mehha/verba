@@ -16,7 +16,7 @@ export default async function AppRunPage({ params }: Props) {
   const { payload, user } = await getCurrentUser()
 
   if (!user) {
-    redirect('/login') // or your route
+    redirect('/admin') // or your route
   }
 
   // will be filtered by access rules in Payload anyway

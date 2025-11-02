@@ -19,7 +19,7 @@ export default async function AppEditPage({
   const { payload, user } = await getCurrentUser()
 
   if (!user) {
-    redirect('/login')
+    redirect('/admin')
   }
 
   const doc = await payload

@@ -9,16 +9,27 @@ type Grid = NonNullable<App['grid']>
 type Cells = NonNullable<Grid['cells']>
 type Cell = Cells[number]
 
+// allow local image object
+type LocalCell = Cell & {
+  image?: Cell['image'] | { id: string | number; url?: string } | null
+}
+
 export function useAppGrid(app: App) {
+  // real base cols from Payload – e.g. 12
+  const baseCols = app.grid?.cols ?? 12
+
   const [saving, setSaving] = useState(false)
 
-  // local state, editable
-  const [cols, setCols] = useState(() => app.grid?.cols ?? 6)
-  const [cells, setCells] = useState<Cell[]>(() => app.grid?.cells ?? [])
+  // we DON'T let presets overwrite cols anymore
+  const [cols] = useState(() => baseCols)
+
+  const [cells, setCells] = useState<LocalCell[]>(() => {
+    const initial = app.grid?.cells ?? []
+    return initial.map((c) => c as LocalCell)
+  })
 
   const hasActionCell = cells.some((c) => c.locked)
 
-  // RGL wants layout[]
   const layout: Layout[] = useMemo(
     () =>
       cells.map((cell) => ({
@@ -33,7 +44,27 @@ export function useAppGrid(app: App) {
   )
 
   const saveGrid = useCallback(
-    async (nextCols: number, nextCells: Cell[]) => {
+    async (nextCells: LocalCell[]) => {
+      // strip local image object → send only id
+      const cellsForServer = nextCells.map((c) => {
+        let image: any = c.image
+        if (image && typeof image === 'object' && 'id' in image) {
+          image = image.id
+        }
+        return {
+          id: c.id,
+          x: c.x,
+          y: c.y,
+          w: c.w,
+          h: c.h,
+          title: c.title ?? undefined,
+          externalImageURL: c.externalImageURL ?? undefined,
+          audio: c.audio ?? undefined,
+          locked: c.locked ?? false,
+          image,
+        }
+      })
+
       setSaving(true)
       await fetch(`${getClientSideURL()}/api/apps/${app.id}`, {
         method: 'PATCH',
@@ -44,19 +75,19 @@ export function useAppGrid(app: App) {
         body: JSON.stringify({
           grid: {
             ...(app.grid || {}),
-            cols: nextCols,
-            cells: nextCells,
+            cols: baseCols, // 👈 always keep 12 (or whatever app had)
+            cells: cellsForServer,
           },
         }),
       })
       setSaving(false)
     },
-    [app.id, app.grid],
+    [app.id, app.grid, baseCols],
   )
 
   const onLayoutChange = useCallback(
     async (newLayout: Layout[]) => {
-      const nextCells: Cell[] = newLayout.map((item) => {
+      const nextCells: LocalCell[] = newLayout.map((item) => {
         const orig = cells.find((c) => c.id === item.i)
         return {
           ...(orig || {}),
@@ -69,22 +100,20 @@ export function useAppGrid(app: App) {
         }
       })
       setCells(nextCells)
-      await saveGrid(cols, nextCells)
+      await saveGrid(nextCells)
     },
-    [cells, cols, saveGrid],
+    [cells, saveGrid],
   )
-
-  // --- actions ---
 
   const addCell = useCallback(async () => {
     const id =
       typeof crypto !== 'undefined' && 'randomUUID' in crypto
         ? crypto.randomUUID()
         : `cell-${Date.now()}`
-    const newCell: Cell = {
+    const newCell: LocalCell = {
       id,
       x: 0,
-      y: Infinity, // RGL will put it to bottom
+      y: Infinity,
       w: 1,
       h: 1,
       title: '',
@@ -92,66 +121,71 @@ export function useAppGrid(app: App) {
     }
     const nextCells = [...cells, newCell]
     setCells(nextCells)
-    await saveGrid(cols, nextCells)
-  }, [cells, cols, saveGrid])
+    await saveGrid(nextCells)
+  }, [cells, saveGrid])
 
-  const makeGrid = useCallback(
-    async (nCols: number, nRows: number) => {
-      const nextCells: Cell[] = []
+  /**
+   * Build an N×N logical grid INSIDE baseCols.
+   * Example: baseCols = 12, n = 4 → cellW = 12 / 4 = 3, so x = 0,3,6,9
+   */
+  const makeLogicalGrid = useCallback(
+    async (n: number) => {
+      const cellW = Math.max(1, Math.floor(baseCols / n))
+      const nextCells: LocalCell[] = []
+
       let i = 0
-      for (let y = 0; y < nRows; y += 1) {
-        for (let x = 0; x < nCols; x += 1) {
+      for (let y = 0; y < n; y += 1) {
+        for (let x = 0; x < n; x += 1) {
           nextCells.push({
-            id: `cell-${nCols}x${nRows}-${i++}`,
-            x,
+            id: `cell-${n}x${n}-${i++}`,
+            x: x * cellW,
             y,
-            w: 1,
+            w: cellW,
             h: 1,
             title: '',
             locked: false,
           })
         }
       }
-      setCols(nCols)
+
       setCells(nextCells)
-      await saveGrid(nCols, nextCells)
+      await saveGrid(nextCells)
     },
-    [saveGrid],
+    [baseCols, saveGrid],
   )
 
-  const make4x4 = useCallback(() => makeGrid(4, 4), [makeGrid])
-  const make6x6 = useCallback(() => makeGrid(6, 6), [makeGrid])
+  const make2x2 = useCallback(() => makeLogicalGrid(2), [makeLogicalGrid])
+  const make4x4 = useCallback(() => makeLogicalGrid(4), [makeLogicalGrid])
+  const make6x6 = useCallback(() => makeLogicalGrid(6), [makeLogicalGrid])
 
   const addActionCell = useCallback(async () => {
     if (hasActionCell) return
-    const action: Cell = {
+    const action: LocalCell = {
       id: 'action-cell',
       x: 0,
       y: 0,
-      w: cols,
+      w: baseCols, // 👈 full width of 12
       h: 1,
       title: 'Action',
       locked: true,
     }
-    // move everything else down
     const shifted = cells.map((c) => ({
       ...c,
       y: (c.y ?? 0) + 1,
     }))
     const nextCells = [action, ...shifted]
     setCells(nextCells)
-    await saveGrid(cols, nextCells)
-  }, [hasActionCell, cols, cells, saveGrid])
+    await saveGrid(nextCells)
+  }, [hasActionCell, baseCols, cells, saveGrid])
 
   const deleteCell = useCallback(
     async (cellId: string) => {
       const cell = cells.find((c) => c.id === cellId)
       if (!cell) return
 
-      let nextCells: Cell[]
+      let nextCells: LocalCell[]
 
       if (cell.locked) {
-        // deleting the action cell → pull other cells up
         nextCells = cells
           .filter((c) => c.id !== cellId)
           .map((c) => ({
@@ -163,29 +197,41 @@ export function useAppGrid(app: App) {
       }
 
       setCells(nextCells)
-      await saveGrid(cols, nextCells)
+      await saveGrid(nextCells)
     },
-    [cells, cols, saveGrid],
+    [cells, saveGrid],
+  )
+
+  const updateCellAction = useCallback(
+    async (cellId: string, patch: Partial<LocalCell>) => {
+      const nextCells = cells.map((c) =>
+        c.id === cellId ? { ...c, ...patch } : c,
+      )
+      setCells(nextCells)
+      await saveGrid(nextCells)
+    },
+    [cells, saveGrid],
   )
 
   const clearGrid = useCallback(async () => {
     setCells([])
-    await saveGrid(cols, [])
-  }, [cols, saveGrid])
+    await saveGrid([])
+  }, [saveGrid])
 
   return {
     saving,
-    cols,
+    cols: baseCols, // 👈 expose the real cols
     cells,
     layout,
     hasActionCell,
     onLayoutChange,
     addCell,
+    make2x2,
     make4x4,
     make6x6,
     addActionCell,
     deleteCell,
     clearGrid,
-    setCols, // if you later want a select for cols
+    updateCellAction,
   }
 }

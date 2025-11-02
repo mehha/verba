@@ -23,10 +23,29 @@ export const Apps: CollectionConfig = {
     },
     { name: 'thumbnail', type: 'upload', relationTo: 'media' },
     {
+      name: 'actionBar',
+      type: 'group',
+      admin: { description: 'Ülemine “valitud” riba / fraasid' },
+      fields: [
+        {
+          name: 'enabled',
+          type: 'checkbox',
+          defaultValue: false,
+          label: 'Display action bar',
+        },
+        {
+          name: 'title',
+          type: 'text',
+          label: 'Title',
+          defaultValue: '',
+        },
+      ],
+    },
+    {
       name: 'grid',
       type: 'group',
       fields: [
-        { name: 'cols', type: 'number', defaultValue: 6, min: 1 },
+        { name: 'cols', type: 'number', defaultValue: 12, min: 1 },
         { name: 'rows', type: 'number', defaultValue: 8, min: 1 }, // optional, used for editor canvas height
         {
           name: 'cells',
@@ -48,7 +67,6 @@ export const Apps: CollectionConfig = {
             { name: 'locked', type: 'checkbox', defaultValue: false }, // action cell = true
           ],
         },
-        { name: 'actionCellId', type: 'text' },
       ],
     },
   ],

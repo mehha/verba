@@ -6,12 +6,13 @@ import { GeistSans } from 'geist/font/sans'
 import React from 'react'
 
 import { AdminBar } from '@/components/AdminBar'
-import { Footer } from '@/Footer/Component'
+// import { Footer } from '@/Footer/Component'
 import { Header } from '@/Header/Component'
 import { Providers } from '@/providers'
 import { InitTheme } from '@/providers/Theme/InitTheme'
 import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
 import { draftMode } from 'next/headers'
+import { ModalProvider } from '@faceless-ui/modal'
 
 import './globals.css'
 import { getServerSideURL } from '@/utilities/getURL'
@@ -35,8 +36,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           />
 
           <Header />
+          <ModalProvider>
           {children}
-          <Footer />
+          </ModalProvider>
+          {/*<Footer />*/}
         </Providers>
       </body>
     </html>

@@ -1,17 +1,22 @@
-'use client'
+"use client";
+
+import { Button } from "@/components/ui/button";
+import { Grid2X2, Trash } from 'lucide-react'
 
 type ToolbarProps = {
-  onAddCellAction: () => void
-  onMake4x4Action: () => void
-  onMake6x6Action: () => void
-  onAddActionCellAction: () => void
-  onClearAction: () => void
-  disableAction: boolean
-  disableClear: boolean
-}
+  onAddCellAction: () => void;
+  onMake2x2Action: () => void;
+  onMake4x4Action: () => void;
+  onMake6x6Action: () => void;
+  onAddActionCellAction: () => void;
+  onClearAction: () => void;
+  disableAction: boolean;
+  disableClear: boolean;
+};
 
 export function AppEditorToolbar({
   onAddCellAction,
+  onMake2x2Action,
   onMake4x4Action,
   onMake6x6Action,
   onAddActionCellAction,
@@ -20,52 +25,60 @@ export function AppEditorToolbar({
   disableClear,
 }: ToolbarProps) {
   return (
-    <div className="flex gap-2 flex-wrap">
-      <button
+    <div className="flex flex-wrap gap-2">
+      {/* primary CTA */}
+      <Button variant="outline" size="sm" type="button" onClick={onAddCellAction}>
+        + Lisa üks ruut
+      </Button>
+
+      {/* layout presets */}
+      <Button
         type="button"
-        onClick={onAddCellAction}
-        className="rounded bg-slate-200 px-3 py-1 text-sm"
+        variant="outline"
+        size="sm"
+        onClick={onMake2x2Action}
       >
-        + Add cell
-      </button>
-      <button
+        Lisa 2×2 <Grid2X2 width={14} style={{marginLeft: '2px'}} />
+      </Button>
+      <Button
         type="button"
+        variant="outline"
+        size="sm"
         onClick={onMake4x4Action}
-        className="rounded bg-slate-200 px-3 py-1 text-sm"
       >
-        4 × 4 grid
-      </button>
-      <button
+        Lisa 4×4 <Grid2X2 width={14} style={{marginLeft: '2px'}} />
+      </Button>
+      <Button
         type="button"
+        variant="outline"
+        size="sm"
         onClick={onMake6x6Action}
-        className="rounded bg-slate-200 px-3 py-1 text-sm"
       >
-        6 × 6 grid
-      </button>
-      <button
+        Lisa 6×6 <Grid2X2 width={14} style={{marginLeft: '2px'}} />
+      </Button>
+
+      {/* action cell */}
+      <Button
         type="button"
+        size="sm"
+        variant={disableAction ? "outline" : "secondary"}
         onClick={onAddActionCellAction}
         disabled={disableAction}
-        className={`rounded px-3 py-1 text-sm ${
-          disableAction
-            ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-            : 'bg-amber-200'
-        }`}
       >
-        + Action cell
-      </button>
-      <button
+        + Lisa Tegevuskast
+      </Button>
+
+      {/* clear */}
+      <Button
+        title="Kustuta kõik kastid"
         type="button"
+        size="sm"
+        variant="destructive"
         onClick={onClearAction}
         disabled={disableClear}
-        className={`rounded px-3 py-1 text-sm ${
-          disableClear
-            ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-            : 'bg-red-100 text-red-700'
-        }`}
       >
-        Clear grid
-      </button>
+        <Trash width={14} />
+      </Button>
     </div>
-  )
+  );
 }
