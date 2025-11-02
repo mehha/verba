@@ -1,3 +1,4 @@
+// src/components/AppEditor/useAppGrid.ts
 'use client'
 
 import { useCallback, useMemo, useState } from 'react'
@@ -15,20 +16,19 @@ type LocalCell = Cell & {
 }
 
 export function useAppGrid(app: App) {
-  // real base cols from Payload – e.g. 12
   const baseCols = app.grid?.cols ?? 12
 
-  const [saving, setSaving] = useState(false)
+  // 👇 NEW: keep actionBar in state too
+  const [actionBar, setActionBar] = useState<{ enabled: boolean }>(() => ({
+    enabled: app.actionBar?.enabled !== false,
+  }))
 
-  // we DON'T let presets overwrite cols anymore
-  const [cols] = useState(() => baseCols)
+  const [saving, setSaving] = useState(false)
 
   const [cells, setCells] = useState<LocalCell[]>(() => {
     const initial = app.grid?.cells ?? []
     return initial.map((c) => c as LocalCell)
   })
-
-  const hasActionCell = cells.some((c) => c.locked)
 
   const layout: Layout[] = useMemo(
     () =>
@@ -38,14 +38,16 @@ export function useAppGrid(app: App) {
         y: cell.y ?? 0,
         w: cell.w ?? 1,
         h: cell.h ?? 1,
-        static: !!cell.locked,
       })),
     [cells],
   )
 
-  const saveGrid = useCallback(
-    async (nextCells: LocalCell[]) => {
-      // strip local image object → send only id
+  // 👇 single saver for BOTH grid + actionBar
+  const saveAll = useCallback(
+    async (
+      nextCells: LocalCell[],
+      nextActionBar: { enabled: boolean; } = actionBar,
+    ) => {
       const cellsForServer = nextCells.map((c) => {
         let image: any = c.image
         if (image && typeof image === 'object' && 'id' in image) {
@@ -60,7 +62,6 @@ export function useAppGrid(app: App) {
           title: c.title ?? undefined,
           externalImageURL: c.externalImageURL ?? undefined,
           audio: c.audio ?? undefined,
-          locked: c.locked ?? false,
           image,
         }
       })
@@ -73,16 +74,17 @@ export function useAppGrid(app: App) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          actionBar: nextActionBar,
           grid: {
             ...(app.grid || {}),
-            cols: baseCols, // 👈 always keep 12 (or whatever app had)
+            cols: baseCols,
             cells: cellsForServer,
           },
         }),
       })
       setSaving(false)
     },
-    [app.id, app.grid, baseCols],
+    [app.id, app.grid, baseCols, actionBar],
   )
 
   const onLayoutChange = useCallback(
@@ -96,13 +98,12 @@ export function useAppGrid(app: App) {
           y: item.y,
           w: item.w,
           h: item.h,
-          locked: item.static ?? orig?.locked ?? false,
         }
       })
       setCells(nextCells)
-      await saveGrid(nextCells)
+      await saveAll(nextCells)
     },
-    [cells, saveGrid],
+    [cells, saveAll],
   )
 
   const addCell = useCallback(async () => {
@@ -117,17 +118,13 @@ export function useAppGrid(app: App) {
       w: 1,
       h: 1,
       title: '',
-      locked: false,
     }
     const nextCells = [...cells, newCell]
     setCells(nextCells)
-    await saveGrid(nextCells)
-  }, [cells, saveGrid])
+    await saveAll(nextCells)
+  }, [cells, saveAll])
 
-  /**
-   * Build an N×N logical grid INSIDE baseCols.
-   * Example: baseCols = 12, n = 4 → cellW = 12 / 4 = 3, so x = 0,3,6,9
-   */
+  // build logical NxN inside baseCols
   const makeLogicalGrid = useCallback(
     async (n: number) => {
       const cellW = Math.max(1, Math.floor(baseCols / n))
@@ -143,63 +140,27 @@ export function useAppGrid(app: App) {
             w: cellW,
             h: 1,
             title: '',
-            locked: false,
           })
         }
       }
 
       setCells(nextCells)
-      await saveGrid(nextCells)
+      await saveAll(nextCells)
     },
-    [baseCols, saveGrid],
+    [baseCols, saveAll],
   )
 
   const make2x2 = useCallback(() => makeLogicalGrid(2), [makeLogicalGrid])
   const make4x4 = useCallback(() => makeLogicalGrid(4), [makeLogicalGrid])
   const make6x6 = useCallback(() => makeLogicalGrid(6), [makeLogicalGrid])
 
-  const addActionCell = useCallback(async () => {
-    if (hasActionCell) return
-    const action: LocalCell = {
-      id: 'action-cell',
-      x: 0,
-      y: 0,
-      w: baseCols, // 👈 full width of 12
-      h: 1,
-      title: 'Action',
-      locked: true,
-    }
-    const shifted = cells.map((c) => ({
-      ...c,
-      y: (c.y ?? 0) + 1,
-    }))
-    const nextCells = [action, ...shifted]
-    setCells(nextCells)
-    await saveGrid(nextCells)
-  }, [hasActionCell, baseCols, cells, saveGrid])
-
   const deleteCell = useCallback(
     async (cellId: string) => {
-      const cell = cells.find((c) => c.id === cellId)
-      if (!cell) return
-
-      let nextCells: LocalCell[]
-
-      if (cell.locked) {
-        nextCells = cells
-          .filter((c) => c.id !== cellId)
-          .map((c) => ({
-            ...c,
-            y: Math.max(0, (c.y ?? 0) - 1),
-          }))
-      } else {
-        nextCells = cells.filter((c) => c.id !== cellId)
-      }
-
+      const nextCells = cells.filter((c) => c.id !== cellId)
       setCells(nextCells)
-      await saveGrid(nextCells)
+      await saveAll(nextCells)
     },
-    [cells, saveGrid],
+    [cells, saveAll],
   )
 
   const updateCellAction = useCallback(
@@ -208,30 +169,41 @@ export function useAppGrid(app: App) {
         c.id === cellId ? { ...c, ...patch } : c,
       )
       setCells(nextCells)
-      await saveGrid(nextCells)
+      await saveAll(nextCells)
     },
-    [cells, saveGrid],
+    [cells, saveAll],
   )
 
   const clearGrid = useCallback(async () => {
     setCells([])
-    await saveGrid([])
-  }, [saveGrid])
+    await saveAll([])
+  }, [saveAll])
+
+  // 👇 NEW: update action bar only
+  const updateActionBar = useCallback(
+    async (enabled: boolean) => {
+      const next = { enabled }
+      setActionBar(next)
+      await saveAll(cells, next)
+    },
+    [cells, saveAll],
+  )
 
   return {
     saving,
-    cols: baseCols, // 👈 expose the real cols
+    cols: baseCols,
     cells,
     layout,
-    hasActionCell,
     onLayoutChange,
     addCell,
     make2x2,
     make4x4,
     make6x6,
-    addActionCell,
     deleteCell,
     clearGrid,
     updateCellAction,
+    // 👇 expose for editor
+    actionBar,
+    updateActionBar,
   }
 }

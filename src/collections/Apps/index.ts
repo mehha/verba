@@ -33,12 +33,6 @@ export const Apps: CollectionConfig = {
           defaultValue: false,
           label: 'Display action bar',
         },
-        {
-          name: 'title',
-          type: 'text',
-          label: 'Title',
-          defaultValue: '',
-        },
       ],
     },
     {

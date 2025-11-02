@@ -760,7 +760,6 @@ export interface App {
    */
   actionBar?: {
     enabled?: boolean | null;
-    title?: string | null;
   };
   grid?: {
     cols?: number | null;
@@ -1357,7 +1356,6 @@ export interface AppsSelect<T extends boolean = true> {
     | T
     | {
         enabled?: T;
-        title?: T;
       };
   grid?:
     | T

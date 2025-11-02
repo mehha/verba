@@ -1,3 +1,4 @@
+// src/components/AppEditor/index.tsx
 'use client'
 
 import RGL, { WidthProvider } from 'react-grid-layout'
@@ -27,16 +28,16 @@ export default function AppEditor({ app }: Props) {
     cols,
     cells,
     layout,
-    hasActionCell,
     onLayoutChange,
     addCell,
     make2x2,
     make4x4,
     make6x6,
-    addActionCell,
     deleteCell,
     clearGrid,
     updateCellAction,
+    actionBar,         // 👈 NEW
+    updateActionBar,   // 👈 NEW
   } = useAppGrid(app)
 
   const vh = useViewportHeight()
@@ -45,32 +46,32 @@ export default function AppEditor({ app }: Props) {
 
   const [editingCellId, setEditingCellId] = useState<string | null>(null)
 
-  // how many rows do we actually need right now?
-  const rowsNeeded = layout.length > 0 ? Math.max(...layout.map((l) => (l.y ?? 0) + (l.h ?? 1))) : 1
+  const rowsNeeded =
+    layout.length > 0 ? Math.max(...layout.map((l) => (l.y ?? 0) + (l.h ?? 1))) : 1
 
-  // space taken by toolbar + paddings
   const TOP_BAR = 36
   const HEADER = 98
   const FOOTER = 105
-  const EXTRA = 24 // padding/margins
+  const EXTRA = 24
   const reserved = TOP_BAR + HEADER + FOOTER + EXTRA
 
   const available = Math.max(200, vh - reserved)
-
-  // responsive row height
   let rowHeight = Math.floor(available / rowsNeeded)
-
-  // clamp
-  const MIN_ROW = 48
-  const MAX_ROW = 240
-  rowHeight = Math.min(MAX_ROW, Math.max(MIN_ROW, rowHeight))
+  rowHeight = Math.min(240, Math.max(48, rowHeight))
 
   const currentEditingCell =
     editingCellId != null ? (cells.find((c) => c.id === editingCellId) ?? null) : null
 
-  // helper to render image preview just like runner
+  const handleModalSave = (cellId: string, patch: {
+    title?: string
+    externalImageURL?: string
+    h?: number
+    image?: string | number | { id: string | number; url?: string } | null
+  }) => {
+    // we know our hook can handle this, so just cast it
+    void updateCellAction(cellId, patch as any)
+  }
   const renderCellImage = (cell: any) => {
-    // figure out source first
     const src =
       cell?.externalImageURL ||
       (cell?.image && typeof cell.image === 'object' && (cell.image as Media).url) ||
@@ -99,9 +100,7 @@ export default function AppEditor({ app }: Props) {
           onMake2x2Action={make2x2}
           onMake4x4Action={make4x4}
           onMake6x6Action={make6x6}
-          onAddActionCellAction={addActionCell}
           onClearAction={clearGrid}
-          disableAction={hasActionCell || cells.length === 0}
           disableClear={cells.length === 0}
         />
 
@@ -112,9 +111,36 @@ export default function AppEditor({ app }: Props) {
         </Link>
       </div>
 
-      {saving && <p className="text-xs text-slate-500">Saving…</p>}
+      {saving && <p className="text-xs text-slate-500 container">Salvestan…</p>}
 
       <div className="w-full h-full overflow-y-auto">
+        <div className="p-2 mt-6">
+          <div className="rounded border bg-white p-3 flex flex-wrap gap-3 items-center">
+            <label className="inline-flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={actionBar.enabled}
+                onChange={(e) => {
+                  void updateActionBar(e.target.checked)
+                }}
+              />
+              Kuvada tegevusriba
+            </label>
+
+            {/* small preview */}
+            <div className="flex-1 min-w-[200px] text-xs text-slate-500">
+              {actionBar.enabled ? (
+                <div className="inline-flex items-center gap-2 bg-slate-100 px-2 py-1 rounded">
+                  <span className="font-medium">Tegevusriba</span>
+                  <span className="text-slate-400">— siia tulevad klikitud sõnad</span>
+                </div>
+              ) : (
+                <span className="text-slate-400 italic">Tegevusriba peidetud</span>
+              )}
+            </div>
+          </div>
+        </div>
+
         <ReactGridLayout
           className="layout"
           cols={cols}
@@ -131,26 +157,21 @@ export default function AppEditor({ app }: Props) {
               className="rounded border bg-white p-0 relative flex flex-col gap-1 min-h-[4rem]"
             >
               <div className="absolute top-1 right-1 z-10 flex gap-1">
+                <Button
+                  type="button"
+                  size="xs"
+                  variant="secondary"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    e.preventDefault()
+                    setEditingCellId(cell.id)
+                    toggleModal(EDIT_MODAL_SLUG)
+                  }}
+                  onMouseDown={(e) => e.stopPropagation()}
+                >
+                  Muuda
+                </Button>
 
-                {/* edit */}
-                {!cell.locked &&
-                  <Button
-                    type="button"
-                    size="xs"
-                    variant="secondary"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      e.preventDefault()
-                      setEditingCellId(cell.id)
-                      toggleModal(EDIT_MODAL_SLUG)
-                    }}
-                    onMouseDown={(e) => e.stopPropagation()}
-                  >
-                    Muuda
-                  </Button>
-                }
-
-                {/* delete */}
                 <Button
                   type="button"
                   size="xs"
@@ -163,31 +184,25 @@ export default function AppEditor({ app }: Props) {
                   onMouseDown={(e) => {
                     e.stopPropagation()
                   }}
-                  className=""
                 >
                   <Trash width={14} />
                 </Button>
               </div>
 
-              {cell.locked && <div className="text-sm font-semibold">Mänguriba</div>}
+              {renderCellImage(cell)}
 
-              {!cell.locked && (
-                <>
-                  {renderCellImage(cell)}
-
-                  {cell.title && (
-                    <div className="absolute w-full bottom-0 left-0 p-1 bg-slate-800/65 text-white text-center">
-                      <div className="text-lg uppercase break-words leading-4">{cell.title}</div>
-                    </div>
-                  )}
-                </>
+              {cell.title && (
+                <div className="absolute w-full bottom-0 left-0 p-1 bg-slate-800/65 text-white text-center">
+                  <div className="text-lg uppercase break-words leading-4">
+                    {cell.title}
+                  </div>
+                </div>
               )}
             </div>
           ))}
         </ReactGridLayout>
       </div>
 
-      {/* modal */}
       <CellEditModal
         slug={EDIT_MODAL_SLUG}
         cell={
@@ -200,7 +215,7 @@ export default function AppEditor({ app }: Props) {
               }
             : null
         }
-        onSaveAction={updateCellAction}
+        onSaveAction={handleModalSave}
       />
     </div>
   )
