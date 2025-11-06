@@ -18,43 +18,29 @@ import Link from 'next/link'
 
 const ReactGridLayout = WidthProvider(RGL)
 
-type Props = {
-  app: App
-}
+type Props = { app: App }
 
 export default function AppEditor({ app }: Props) {
   const {
-    saving,
-    cols,
-    cells,
-    layout,
+    saving, dirty,
+    cols, cells, layout,
     onLayoutChange,
-    addCell,
-    make2x2,
-    make4x4,
-    make6x6,
-    deleteCell,
-    clearGrid,
+    addCell, make2x2, make4x4, make6x6,
+    deleteCell, clearGrid,
     updateCellAction,
-    actionBar,         // 👈 NEW
-    updateActionBar,   // 👈 NEW
+    actionBar, updateActionBar,
+    saveDraft,
   } = useAppGrid(app)
 
   const vh = useViewportHeight()
   const { toggleModal } = useModal()
   const EDIT_MODAL_SLUG = 'edit-cell-modal'
-
   const [editingCellId, setEditingCellId] = useState<string | null>(null)
 
-  const rowsNeeded =
-    layout.length > 0 ? Math.max(...layout.map((l) => (l.y ?? 0) + (l.h ?? 1))) : 1
+  const rowsNeeded = layout.length > 0 ? Math.max(...layout.map((l) => (l.y ?? 0) + (l.h ?? 1))) : 1
 
-  const TOP_BAR = 36
-  const HEADER = 98
-  const FOOTER = 105
-  const EXTRA = 24
+  const TOP_BAR = 36, HEADER = 98, FOOTER = 105, EXTRA = 24
   const reserved = TOP_BAR + HEADER + FOOTER + EXTRA
-
   const available = Math.max(200, vh - reserved)
   let rowHeight = Math.floor(available / rowsNeeded)
   rowHeight = Math.min(240, Math.max(48, rowHeight))
@@ -68,17 +54,15 @@ export default function AppEditor({ app }: Props) {
     h?: number
     image?: string | number | { id: string | number; url?: string } | null
   }) => {
-    // we know our hook can handle this, so just cast it
     void updateCellAction(cellId, patch as any)
   }
+
   const renderCellImage = (cell: any) => {
     const src =
       cell?.externalImageURL ||
       (cell?.image && typeof cell.image === 'object' && (cell.image as Media).url) ||
       ''
-
     if (!src) return null
-
     return (
       <div className="relative w-full h-full min-h-[4rem]">
         <Image
@@ -93,54 +77,52 @@ export default function AppEditor({ app }: Props) {
   }
 
   return (
-    <div className="space-y-2">
-      <div className="container flex justify-between items-center gap-2">
-        <AppEditorToolbar
-          onAddCellAction={addCell}
-          onMake2x2Action={make2x2}
-          onMake4x4Action={make4x4}
-          onMake6x6Action={make6x6}
-          onClearAction={clearGrid}
-          disableClear={cells.length === 0}
-        />
+    <div className="space-y-2 py-10">
+      <div className="container mb-10">
+        <h1 className="text-3xl text-center font-semibold leading-6 mb-10">{app.name}</h1>
 
-        <Link href={`/app/${app.id}`}>
-          <Button variant="default" size="sm">
-            Mängi
-          </Button>
-        </Link>
+        <div className="flex justify-between items-center gap-2">
+          <div className="flex items-center gap-2">
+            <AppEditorToolbar
+              onAddCellAction={addCell}
+              onMake2x2Action={make2x2}
+              onMake4x4Action={make4x4}
+              onMake6x6Action={make6x6}
+              onClearAction={clearGrid}
+              disableClear={cells.length === 0}
+            />
+            <label className="inline-flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={actionBar.enabled}
+                onChange={(e) => void updateActionBar(e.target.checked)}
+              />
+              Kuvada tegevusriba
+            </label>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => void saveDraft()}
+              disabled={!dirty || saving}
+            >
+              {saving ? 'Salvestan…' : (dirty ? 'Salvesta' : 'Salvestatud')}
+            </Button>
+
+            <Link href={`/app/${app.id}`}>
+              <Button variant="default" size="sm">
+                Mängi
+              </Button>
+            </Link>
+          </div>
+        </div>
       </div>
 
       {saving && <p className="text-xs text-slate-500 container">Salvestan…</p>}
 
       <div className="w-full h-full overflow-y-auto">
-        <div className="p-2 mt-6">
-          <div className="rounded border bg-white p-3 flex flex-wrap gap-3 items-center">
-            <label className="inline-flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={actionBar.enabled}
-                onChange={(e) => {
-                  void updateActionBar(e.target.checked)
-                }}
-              />
-              Kuvada tegevusriba
-            </label>
-
-            {/* small preview */}
-            <div className="flex-1 min-w-[200px] text-xs text-slate-500">
-              {actionBar.enabled ? (
-                <div className="inline-flex items-center gap-2 bg-slate-100 px-2 py-1 rounded">
-                  <span className="font-medium">Tegevusriba</span>
-                  <span className="text-slate-400">— siia tulevad klikitud sõnad</span>
-                </div>
-              ) : (
-                <span className="text-slate-400 italic">Tegevusriba peidetud</span>
-              )}
-            </div>
-          </div>
-        </div>
-
         <ReactGridLayout
           className="layout"
           cols={cols}
@@ -154,12 +136,12 @@ export default function AppEditor({ app }: Props) {
           {cells.map((cell) => (
             <div
               key={cell.id}
-              className="rounded border bg-white p-0 relative flex flex-col gap-1 min-h-[4rem]"
+              className="border overflow-hidden flex flex-col gap-1 aspect-[4/3] relative rounded-xl bg-white p-0 shadow-lg ring-1 ring-gray-900/5"
             >
               <div className="absolute top-1 right-1 z-10 flex gap-1">
                 <Button
                   type="button"
-                  size="xs"
+                  size="sm"
                   variant="secondary"
                   onClick={(e) => {
                     e.stopPropagation()
@@ -174,16 +156,14 @@ export default function AppEditor({ app }: Props) {
 
                 <Button
                   type="button"
-                  size="xs"
+                  size="sm"
                   variant="destructive"
                   onClick={(e) => {
                     e.stopPropagation()
                     e.preventDefault()
                     deleteCell(cell.id)
                   }}
-                  onMouseDown={(e) => {
-                    e.stopPropagation()
-                  }}
+                  onMouseDown={(e) => e.stopPropagation()}
                 >
                   <Trash width={14} />
                 </Button>
@@ -192,8 +172,8 @@ export default function AppEditor({ app }: Props) {
               {renderCellImage(cell)}
 
               {cell.title && (
-                <div className="absolute w-full bottom-0 left-0 p-1 bg-slate-800/65 text-white text-center">
-                  <div className="text-lg uppercase break-words leading-4">
+                <div className="absolute w-full bottom-0 left-0 p-2 bg-slate-800/85 text-white text-center">
+                  <div className="text-2xl uppercase break-words leading-4">
                     {cell.title}
                   </div>
                 </div>

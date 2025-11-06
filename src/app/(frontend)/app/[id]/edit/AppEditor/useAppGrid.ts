@@ -10,7 +10,6 @@ type Grid = NonNullable<App['grid']>
 type Cells = NonNullable<Grid['cells']>
 type Cell = Cells[number]
 
-// allow local image object
 type LocalCell = Cell & {
   image?: Cell['image'] | { id: string | number; url?: string } | null
 }
@@ -18,12 +17,13 @@ type LocalCell = Cell & {
 export function useAppGrid(app: App) {
   const baseCols = app.grid?.cols ?? 12
 
-  // 👇 NEW: keep actionBar in state too
+  // ---- DRAFT STATE (no autosave) ----
+  const [saving, setSaving] = useState(false)
+  const [dirty, setDirty] = useState(false)
+
   const [actionBar, setActionBar] = useState<{ enabled: boolean }>(() => ({
     enabled: app.actionBar?.enabled !== false,
   }))
-
-  const [saving, setSaving] = useState(false)
 
   const [cells, setCells] = useState<LocalCell[]>(() => {
     const initial = app.grid?.cells ?? []
@@ -42,168 +42,122 @@ export function useAppGrid(app: App) {
     [cells],
   )
 
-  // 👇 single saver for BOTH grid + actionBar
-  const saveAll = useCallback(
-    async (
-      nextCells: LocalCell[],
-      nextActionBar: { enabled: boolean; } = actionBar,
-    ) => {
-      const cellsForServer = nextCells.map((c) => {
-        let image: any = c.image
-        if (image && typeof image === 'object' && 'id' in image) {
-          image = image.id
-        }
-        return {
-          id: c.id,
-          x: c.x,
-          y: c.y,
-          w: c.w,
-          h: c.h,
-          title: c.title ?? undefined,
-          externalImageURL: c.externalImageURL ?? undefined,
-          audio: c.audio ?? undefined,
-          image,
-        }
-      })
+  // ---- SAVE (explicit) ----
+  const saveDraft = useCallback(async () => {
+    const cellsForServer = cells.map((c) => {
+      let image: any = c.image
+      if (image && typeof image === 'object' && 'id' in image) {
+        image = image.id
+      }
+      return {
+        id: c.id,
+        x: c.x, y: c.y, w: c.w, h: c.h,
+        title: c.title ?? undefined,
+        externalImageURL: c.externalImageURL ?? undefined,
+        audio: c.audio ?? undefined,
+        image,
+      }
+    })
 
-      setSaving(true)
-      await fetch(`${getClientSideURL()}/api/apps/${app.id}`, {
-        method: 'PATCH',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          actionBar: nextActionBar,
-          grid: {
-            ...(app.grid || {}),
-            cols: baseCols,
-            cells: cellsForServer,
-          },
-        }),
-      })
-      setSaving(false)
-    },
-    [app.id, app.grid, baseCols, actionBar],
-  )
+    setSaving(true)
+    await fetch(`${getClientSideURL()}/api/apps/${app.id}`, {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        actionBar,
+        grid: { ...(app.grid || {}), cols: baseCols, cells: cellsForServer },
+      }),
+    })
+    setSaving(false)
+    setDirty(false)
+  }, [app.id, app.grid, baseCols, cells, actionBar])
 
-  const onLayoutChange = useCallback(
-    async (newLayout: Layout[]) => {
-      const nextCells: LocalCell[] = newLayout.map((item) => {
-        const orig = cells.find((c) => c.id === item.i)
-        return {
-          ...(orig || {}),
-          id: item.i,
-          x: item.x,
-          y: item.y,
-          w: item.w,
-          h: item.h,
-        }
-      })
-      setCells(nextCells)
-      await saveAll(nextCells)
-    },
-    [cells, saveAll],
-  )
+  // ---- RGL change: mark dirty, no save ----
+  const onLayoutChange = useCallback((newLayout: Layout[]) => {
+    const nextCells: LocalCell[] = newLayout.map((item) => {
+      const orig = cells.find((c) => c.id === item.i)
+      return {
+        ...(orig || { id: item.i, title: '' }),
+        x: item.x, y: item.y, w: item.w, h: item.h,
+      }
+    })
+    setCells(nextCells)
+    setDirty(true)
+  }, [cells])
 
-  const addCell = useCallback(async () => {
+  const addCell = useCallback(() => {
     const id =
       typeof crypto !== 'undefined' && 'randomUUID' in crypto
         ? crypto.randomUUID()
         : `cell-${Date.now()}`
-    const newCell: LocalCell = {
-      id,
-      x: 0,
-      y: Infinity,
-      w: 1,
-      h: 1,
-      title: '',
-    }
-    const nextCells = [...cells, newCell]
-    setCells(nextCells)
-    await saveAll(nextCells)
-  }, [cells, saveAll])
+    // place at the first free row under current content
+    const maxBottom = cells.reduce((m, c) => Math.max(m, (c.y ?? 0) + (c.h ?? 1)), 0)
+    const newCell: LocalCell = { id, x: 0, y: maxBottom, w: 1, h: 1, title: '' }
+    setCells(prev => [...prev, newCell])
+    setDirty(true)
+  }, [cells])
 
-  // build logical NxN inside baseCols
-  const makeLogicalGrid = useCallback(
-    async (n: number) => {
-      const cellW = Math.max(1, Math.floor(baseCols / n))
-      const nextCells: LocalCell[] = []
+  // ---- Append NxN below existing cells (DON'T remove existing) ----
+  const appendLogicalGrid = useCallback((n: number) => {
+    const cellW = Math.max(1, Math.floor(baseCols / n))
+    const startY = cells.reduce((m, c) => Math.max(m, (c.y ?? 0) + (c.h ?? 1)), 0)
 
-      let i = 0
-      for (let y = 0; y < n; y += 1) {
-        for (let x = 0; x < n; x += 1) {
-          nextCells.push({
-            id: `cell-${n}x${n}-${i++}`,
-            x: x * cellW,
-            y,
-            w: cellW,
-            h: 1,
-            title: '',
-          })
-        }
+    const newOnes: LocalCell[] = []
+    let i = 0
+    for (let row = 0; row < n; row += 1) {
+      for (let col = 0; col < n; col += 1) {
+        newOnes.push({
+          id: `cell-${n}x${n}-${Date.now()}-${i++}`,
+          x: col * cellW,
+          y: startY + row,
+          w: cellW,
+          h: 1,
+          title: '',
+        })
       }
+    }
+    setCells(prev => [...prev, ...newOnes])
+    setDirty(true)
+  }, [baseCols, cells])
 
-      setCells(nextCells)
-      await saveAll(nextCells)
-    },
-    [baseCols, saveAll],
-  )
+  const make2x2 = useCallback(() => appendLogicalGrid(2), [appendLogicalGrid])
+  const make4x4 = useCallback(() => appendLogicalGrid(4), [appendLogicalGrid])
+  const make6x6 = useCallback(() => appendLogicalGrid(6), [appendLogicalGrid])
 
-  const make2x2 = useCallback(() => makeLogicalGrid(2), [makeLogicalGrid])
-  const make4x4 = useCallback(() => makeLogicalGrid(4), [makeLogicalGrid])
-  const make6x6 = useCallback(() => makeLogicalGrid(6), [makeLogicalGrid])
+  const deleteCell = useCallback((cellId: string) => {
+    setCells(prev => prev.filter(c => c.id !== cellId))
+    setDirty(true)
+  }, [])
 
-  const deleteCell = useCallback(
-    async (cellId: string) => {
-      const nextCells = cells.filter((c) => c.id !== cellId)
-      setCells(nextCells)
-      await saveAll(nextCells)
-    },
-    [cells, saveAll],
-  )
+  const updateCellAction = useCallback((cellId: string, patch: Partial<LocalCell>) => {
+    setCells(prev => prev.map(c => (c.id === cellId ? { ...c, ...patch } : c)))
+    setDirty(true)
+  }, [])
 
-  const updateCellAction = useCallback(
-    async (cellId: string, patch: Partial<LocalCell>) => {
-      const nextCells = cells.map((c) =>
-        c.id === cellId ? { ...c, ...patch } : c,
-      )
-      setCells(nextCells)
-      await saveAll(nextCells)
-    },
-    [cells, saveAll],
-  )
-
-  const clearGrid = useCallback(async () => {
+  const clearGrid = useCallback(() => {
     setCells([])
-    await saveAll([])
-  }, [saveAll])
+    setDirty(true)
+  }, [])
 
-  // 👇 NEW: update action bar only
-  const updateActionBar = useCallback(
-    async (enabled: boolean) => {
-      const next = { enabled }
-      setActionBar(next)
-      await saveAll(cells, next)
-    },
-    [cells, saveAll],
-  )
+  const updateActionBar = useCallback((enabled: boolean) => {
+    setActionBar({ enabled })
+    setDirty(true)
+  }, [])
 
   return {
-    saving,
+    // state
+    saving, dirty,
     cols: baseCols,
-    cells,
-    layout,
+    cells, layout,
+    actionBar,
+
+    // callbacks
     onLayoutChange,
     addCell,
-    make2x2,
-    make4x4,
-    make6x6,
-    deleteCell,
-    clearGrid,
-    updateCellAction,
-    // 👇 expose for editor
-    actionBar,
-    updateActionBar,
+    make2x2, make4x4, make6x6,
+    deleteCell, clearGrid,
+    updateCellAction, updateActionBar,
+    saveDraft,
   }
 }

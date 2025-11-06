@@ -6,12 +6,14 @@ import Runner from '@/app/(frontend)/app/[id]/Runner'
 import PageClient from './page.client'
 import React from 'react'
 
-type Props = {
-  params: { id: string }
+type Args = {
+  params: Promise<{
+    id: string
+  }>
 }
 
-export default async function AppRunPage({ params }: Props) {
-  const { id } = await params
+export default async function AppRunPage({ params: paramsPromise }: Args) {
+  const { id } = await paramsPromise
 
   const { payload, user } = await getCurrentUser()
 

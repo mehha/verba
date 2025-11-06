@@ -1,52 +1,111 @@
-// src/components/Runner.tsx
+// src/app/(frontend)/app/[id]/Runner.tsx
 'use client'
 
-import { useState } from 'react'
-import Link from 'next/link'
+import { useState, useMemo } from 'react'
 import Image from 'next/image'
 import type { App, Media } from '@/payload-types'
-import { speakET, speakText } from '@/utilities/speak'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Sparkles, Slash } from 'lucide-react'
 
-type RunnerProps = {
-  app: App
-}
+// ✅ use the same lib as editor
+import RGL, { WidthProvider, type Layout } from 'react-grid-layout'
+import 'react-grid-layout/css/styles.css'
+import 'react-resizable/css/styles.css'
+const ReactGridLayout = WidthProvider(RGL)
+
+type RunnerProps = { app: App }
 
 export default function Runner({ app }: RunnerProps) {
   const [sequence, setSequence] = useState<string[]>([])
+  const [busy, setBusy] = useState(false)
+  const [aiEnabled, setAiEnabled] = useState(true)
 
-  const cells = app.grid?.cells ?? []
+  const cols = app.grid?.cols ?? 6
+  const cells = (app.grid?.cells ?? []).filter((c) => !c.locked)
 
-  const actionBarEnabled = app.actionBar?.enabled !== false
+  // Build the SAME layout {x,y,w,h,i} that editor uses
+  const layout: Layout[] = useMemo(
+    () =>
+      cells.map((c) => ({
+        i: String(c.id),
+        x: Number(c.x ?? 0),
+        y: Number(c.y ?? 0),
+        w: Number(c.w ?? 1),
+        h: Number(c.h ?? 1),
+        static: true, // read-only
+      })),
+    [cells]
+  )
 
-  const handleCellClick = (cell: any) => {
-    if (!cell) return
+  const handleCellClick = async (cell: any) => {
+    const raw = cell?.title?.toString().trim()
+    if (!raw) return
+    setBusy(true)
+    try {
+      let surface = raw
 
-    if (cell.audio && typeof cell.audio === 'string') {
-      const audio = new Audio(cell.audio)
-      audio.play().catch(() => {
-        if (cell.title) speakText(cell.title)
+      if (aiEnabled && sequence.length > 0) {
+        try {
+          const mr = await fetch('/next/groq', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contextTail: sequence.slice(-2),
+              token: raw,
+            }),
+            signal: AbortSignal.timeout(5000),
+          })
+          if (mr.ok) {
+            const j = await mr.json().catch(() => null)
+            if (j && typeof j.surface === 'string' && j.surface.trim()) {
+              surface = j.surface.trim()
+            }
+          }
+        } catch {
+          surface = raw
+        }
+      }
+
+      setSequence((prev) => [...prev, surface])
+
+      const tr = await fetch('/next/tts-elg', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: surface, rate: '1.0', voice: 'eki_et_eva.htsvoice' }),
       })
-    } else if (cell.title) {
-      speakET(cell.title)
-    }
-
-    // only collect if action bar is ON
-    if (actionBarEnabled && cell.title) {
-      setSequence((prev) => [...prev, cell.title as string])
+      if (tr.ok) {
+        const blob = await tr.blob()
+        const url = URL.createObjectURL(blob)
+        const audio = new Audio(url)
+        await audio.play()
+        await new Promise<void>((res) => (audio.onended = () => res()))
+        URL.revokeObjectURL(url)
+      }
+    } finally {
+      setBusy(false)
     }
   }
 
-  const handlePlayAll = () => {
+  const handlePlayAll = async () => {
     if (!sequence.length) return
-    const items = [...sequence]
-    const sayNext = () => {
-      const text = items.shift()
-      if (!text) return
-      const u = new SpeechSynthesisUtterance(text)
-      u.onend = sayNext
-      window.speechSynthesis.speak(u)
+    setBusy(true)
+    try {
+      const r = await fetch('/next/tts-elg', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: sequence.join(' '), rate: '1.0', voice: 'eki_et_eva.htsvoice' }),
+      })
+      if (!r.ok) return
+      const blob = await r.blob()
+      const url = URL.createObjectURL(blob)
+      const audio = new Audio(url)
+      await audio.play()
+      await new Promise<void>((res) => (audio.onended = () => res()))
+      URL.revokeObjectURL(url)
+    } finally {
+      setBusy(false)
     }
-    sayNext()
   }
 
   const handleClear = () => setSequence([])
@@ -54,98 +113,104 @@ export default function Runner({ app }: RunnerProps) {
   const renderCellImage = (cell: any) => {
     const src =
       cell?.externalImageURL ||
-      (cell?.image &&
-        typeof cell.image === 'object' &&
-        (cell.image as Media).url) ||
+      (cell?.image && typeof cell.image === 'object' && (cell.image as Media).url) ||
       ''
     if (!src) return null
     return (
-      <div className="relative w-full h-full overflow-hidden">
+      <div className="relative w-full h-full min-h-[4rem]">
         <Image
           src={src}
           alt={cell.title ?? ''}
           fill
           sizes="(max-width: 768px) 100vw, 1200px"
-          className="object-contain"
+          className="object-contain rounded"
         />
       </div>
     )
   }
 
-  // show bar if it's enabled OR we have something already
-  const shouldShowActionBar = actionBarEnabled || sequence.length > 0
-
   return (
-    <div className="p-6 space-y-4 flex-1">
-      <div className="flex justify-end mb-2">
-        <Link
-          href={`/app/${app.id}/edit`}
-          className="rounded px-3 py-1 text-sm bg-slate-900 text-white hover:bg-slate-700"
+    <div className="p-6 flex-1">
+      <div className="flex justify-end gap-2">
+        <button
+          type="button"
+          onClick={() => setAiEnabled((v) => !v)}
+          aria-pressed={aiEnabled}
+          className={`inline-flex items-center gap-2 rounded px-3 py-1.5 text-sm transition ${
+            aiEnabled
+              ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+              : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+          }`}
+          title={aiEnabled ? 'AI on: parandab sõna kuju' : 'AI off: loeb täpselt valitud sõna'}
         >
-          Edit
+          {aiEnabled ? <Sparkles size={16} /> : <Slash size={16} />}
+          {aiEnabled ? 'AI: ON' : 'AI: OFF'}
+        </button>
+
+        <Link href={`/app/${app.id}/edit`}>
+          <Button variant="default" size="sm">Muuda</Button>
         </Link>
       </div>
 
-      {shouldShowActionBar && (
-        <div className="rounded border p-3 flex items-center gap-3 bg-slate-50">
-          <div className="flex-1 text-sm text-slate-700 min-h-[1.5rem]">
-            {sequence.length ? sequence.join(' ') : '—'}
-          </div>
+      <h1 className="text-3xl text-center font-semibold leading-6 mb-10">{app.name}</h1>
 
-          <div className="flex gap-2">
-            <button
-              onClick={handlePlayAll}
-              disabled={!sequence.length}
-              className={`rounded px-3 py-1 text-sm ${
-                sequence.length
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-slate-100 text-slate-400 cursor-not-allowed'
-              }`}
-            >
-              Play all
-            </button>
-            <button
-              onClick={handleClear}
-              disabled={!sequence.length}
-              className={`rounded px-3 py-1 text-sm ${
-                sequence.length
-                  ? 'bg-slate-200'
-                  : 'bg-slate-100 text-slate-400 cursor-not-allowed'
-              }`}
-            >
-              Clear
-            </button>
-          </div>
+      {/* Action bar */}
+      <div className="border px-6 py-4 flex items-center gap-3 mx-auto max-w-[1000px] mb-14 rounded-2xl bg-white p-0 shadow-lg ring-1 ring-gray-900/5">
+        <div className="flex-1 text-xl text-slate-900 h-full uppercase font-semibold">
+          {sequence.length ? sequence.join(' ') : '—'}
         </div>
-      )}
+        <div className="flex gap-2">
+          <button
+            onClick={handlePlayAll}
+            disabled={!sequence.length || busy}
+            className={`rounded px-3 py-1 text-sm ${sequence.length && !busy ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}
+          >
+            Mängi
+          </button>
+          <button
+            onClick={handleClear}
+            disabled={!sequence.length || busy}
+            className={`rounded px-3 py-1 text-sm ${sequence.length && !busy ? 'bg-slate-200' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}
+          >
+            Kustuta
+          </button>
+        </div>
+      </div>
 
-      <div
-        className="grid gap-3 h-full flex-1"
-        style={{
-          gridTemplateColumns: `repeat(${app.grid?.cols ?? 6}, minmax(0, 1fr))`,
-        }}
+      {/* ✅ EXACT SAME GRID using RGL (read-only) */}
+      <ReactGridLayout
+        className="layout"
+        cols={cols}
+        rowHeight={200}        // match editor's rowHeight
+        width={1200}           // match editor's fixed width
+        isResizable={false}
+        isDraggable={false}
+        margin={[16, 16]}
+        compactType={null}
+        preventCollision
+        layout={layout}
       >
         {cells.map((cell) => (
-          <button
-            key={cell.id}
-            onClick={() => handleCellClick(cell)}
-            className="border rounded flex flex-col bg-white hover:bg-slate-50 text-left min-h-[200px] relative"
-            style={{
-              gridColumn: `span ${cell.w ?? 1}`,
-              gridRow: `span ${cell.h ?? 1}`,
-            }}
-          >
+          <div key={String(cell.id)} className="border overflow-hidden flex flex-col gap-1 aspect-[4/3] relative rounded-xl bg-white p-0 shadow-lg ring-1 ring-gray-900/5">
             {renderCellImage(cell)}
             {cell.title && (
-              <div className="absolute w-full bottom-0 left-0 p-1 bg-slate-800/65 text-white text-center">
-                <div className="text-lg uppercase break-words leading-4">
+              <div className="absolute w-full bottom-0 left-0 p-2 bg-slate-800/85 text-white text-center pointer-events-none">
+                <div className="text-2xl uppercase break-words leading-4">
                   {cell.title}
                 </div>
               </div>
             )}
-          </button>
+            {/* Overlay button to keep click target */}
+            <button
+              type="button"
+              onClick={() => void handleCellClick(cell)}
+              disabled={busy}
+              className="absolute inset-0"
+              aria-label={cell.title ?? 'valik'}
+            />
+          </div>
         ))}
-      </div>
+      </ReactGridLayout>
     </div>
   )
 }
