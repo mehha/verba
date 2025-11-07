@@ -136,7 +136,7 @@ export default function AppEditor({ app }: Props) {
           {cells.map((cell) => (
             <div
               key={cell.id}
-              className="border overflow-hidden flex flex-col gap-1 aspect-[4/3] relative rounded-xl bg-white p-0 shadow-lg ring-1 ring-gray-900/5"
+              className="border overflow-hidden flex flex-col gap-1 aspect-[4/3] relative rounded-lg bg-white p-0 shadow-lg ring-1 ring-gray-900/5"
             >
               <div className="absolute top-1 right-1 z-10 flex gap-1">
                 <Button

@@ -132,20 +132,18 @@ export default function Runner({ app }: RunnerProps) {
   return (
     <div className="p-6 flex-1">
       <div className="flex justify-end gap-2">
-        <button
+        <Button
           type="button"
-          onClick={() => setAiEnabled((v) => !v)}
+          size="sm"
+          variant={aiEnabled ? 'positive' : 'muted'}
+          onClick={() => setAiEnabled(v => !v)}
           aria-pressed={aiEnabled}
-          className={`inline-flex items-center gap-2 rounded px-3 py-1.5 text-sm transition ${
-            aiEnabled
-              ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-              : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-          }`}
           title={aiEnabled ? 'AI on: parandab sõna kuju' : 'AI off: loeb täpselt valitud sõna'}
+          className="inline-flex items-center gap-2" // spacing for the icon+label
         >
           {aiEnabled ? <Sparkles size={16} /> : <Slash size={16} />}
           {aiEnabled ? 'AI: ON' : 'AI: OFF'}
-        </button>
+        </Button>
 
         <Link href={`/app/${app.id}/edit`}>
           <Button variant="default" size="sm">Muuda</Button>
@@ -155,25 +153,26 @@ export default function Runner({ app }: RunnerProps) {
       <h1 className="text-3xl text-center font-semibold leading-6 mb-10">{app.name}</h1>
 
       {/* Action bar */}
-      <div className="border px-6 py-4 flex items-center gap-3 mx-auto max-w-[1000px] mb-14 rounded-2xl bg-white p-0 shadow-lg ring-1 ring-gray-900/5">
+      <div className="border ps-6 pe-2 py-2 flex items-center gap-3 mx-auto max-w-[800px] mb-14 rounded-lg bg-white p-0 shadow-lg ring-1 ring-gray-900/5">
         <div className="flex-1 text-xl text-slate-900 h-full uppercase font-semibold">
-          {sequence.length ? sequence.join(' ') : '—'}
+          {sequence.length ? sequence.join(' ') : ''}
         </div>
         <div className="flex gap-2">
-          <button
+          <Button
+            variant={sequence.length && !busy ? 'default' : 'muted'} // blue when ready
+            disabled={!sequence.length || busy}
             onClick={handlePlayAll}
-            disabled={!sequence.length || busy}
-            className={`rounded px-3 py-1 text-sm ${sequence.length && !busy ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}
           >
-            Mängi
-          </button>
-          <button
-            onClick={handleClear}
+            {busy ? 'Mängin…' : 'Mängi'}
+          </Button>
+
+          <Button
+            variant={sequence.length && !busy ? 'secondary' : 'muted'} // grey when disabled
             disabled={!sequence.length || busy}
-            className={`rounded px-3 py-1 text-sm ${sequence.length && !busy ? 'bg-slate-200' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}
+            onClick={handleClear}
           >
             Kustuta
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -191,7 +190,7 @@ export default function Runner({ app }: RunnerProps) {
         layout={layout}
       >
         {cells.map((cell) => (
-          <div key={String(cell.id)} className="border overflow-hidden flex flex-col gap-1 aspect-[4/3] relative rounded-xl bg-white p-0 shadow-lg ring-1 ring-gray-900/5">
+          <div key={String(cell.id)} className="border overflow-hidden flex flex-col gap-1 aspect-[4/3] relative rounded-lg bg-white p-0 shadow-lg ring-1 ring-gray-900/5">
             {renderCellImage(cell)}
             {cell.title && (
               <div className="absolute w-full bottom-0 left-0 p-2 bg-slate-800/85 text-white text-center pointer-events-none">

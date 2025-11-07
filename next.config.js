@@ -26,6 +26,8 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'images.pexels.com',
       },
+      { protocol: 'https', hostname: 'static.arasaac.org' },
+      { protocol: 'https', hostname: 'unpkg.com' },
     ],
   },
   webpack: (webpackConfig) => {

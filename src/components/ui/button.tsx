@@ -4,7 +4,7 @@ import { type VariantProps, cva } from 'class-variance-authority'
 import * as React from 'react'
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center whitespace-nowrap rounded text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
   {
     defaultVariants: {
       size: 'default',
@@ -15,9 +15,9 @@ const buttonVariants = cva(
         clear: '',
         default: 'h-10 px-4 py-2',
         icon: 'h-10 w-10',
-        lg: 'h-11 rounded px-8',
-        sm: 'h-9 rounded px-3',
-        xs: 'h-5 rounded px-1',
+        lg: 'h-11 rounded-lg px-8',
+        sm: 'h-9 rounded-lg px-3',
+        xs: 'h-5 rounded-lg px-1',
       },
       variant: {
         default: 'bg-primary text-primary-foreground hover:bg-primary/90',
@@ -27,6 +27,7 @@ const buttonVariants = cva(
         outline: 'border border-border bg-background hover:bg-card hover:text-accent-foreground',
         secondary: 'bg-secondary border border-border text-secondary-foreground hover:bg-secondary/80',
         muted: "bg-slate-100 text-slate-900 hover:bg-slate-200",
+        positive: 'bg-emerald-600 text-white hover:bg-emerald-700',
       },
     },
   },
