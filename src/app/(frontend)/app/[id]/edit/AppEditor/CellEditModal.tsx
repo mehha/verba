@@ -255,7 +255,7 @@ export const CellEditModal: React.FC<CellEditModalProps> = ({
     <ModalContainer className="fixed inset-0 bg-black/10 flex items-center justify-center">
       <Modal
         slug={slug}
-        className="bg-white p-4 rounded-lg shadow-md w-[680px] max-w-[90vw] relative"
+        className="bg-white p-4 rounded-2xl shadow-md w-[680px] max-w-[90vw] relative"
         onClick={(e) => e.stopPropagation()}
         closeOnBlur={true}
       >

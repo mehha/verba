@@ -130,49 +130,53 @@ export default function Runner({ app }: RunnerProps) {
   }
 
   return (
-    <div className="p-6 flex-1">
-      <div className="flex justify-end gap-2">
-        <Button
-          type="button"
-          size="sm"
-          variant={aiEnabled ? 'positive' : 'muted'}
-          onClick={() => setAiEnabled(v => !v)}
-          aria-pressed={aiEnabled}
-          title={aiEnabled ? 'AI on: parandab sõna kuju' : 'AI off: loeb täpselt valitud sõna'}
-          className="inline-flex items-center gap-2" // spacing for the icon+label
-        >
-          {aiEnabled ? <Sparkles size={16} /> : <Slash size={16} />}
-          {aiEnabled ? 'AI: ON' : 'AI: OFF'}
-        </Button>
+    <div className="px-6 py-16 flex-1">
+      <div className="container">
+        <div className="flex justify-between gap-2 mb-10">
+          <h1 className="text-3xl text-center font-semibold">{app.name}</h1>
 
-        <Link href={`/app/${app.id}/edit`}>
-          <Button variant="default" size="sm">Muuda</Button>
-        </Link>
-      </div>
+          <div className={ "flex items-center gap-2"}>
+            <Button
+              type="button"
+              size="sm"
+              variant={aiEnabled ? 'positive' : 'muted'}
+              onClick={() => setAiEnabled(v => !v)}
+              aria-pressed={aiEnabled}
+              title={aiEnabled ? 'AI on: parandab sõna kuju' : 'AI off: loeb täpselt valitud sõna'}
+              className="inline-flex items-center gap-2" // spacing for the icon+label
+            >
+              {aiEnabled ? <Sparkles size={16} /> : <Slash size={16} />}
+              {aiEnabled ? 'AI: ON' : 'AI: OFF'}
+            </Button>
 
-      <h1 className="text-3xl text-center font-semibold leading-6 mb-10">{app.name}</h1>
-
-      {/* Action bar */}
-      <div className="border ps-6 pe-2 py-2 flex items-center gap-3 mx-auto max-w-[800px] mb-14 rounded-lg bg-white p-0 shadow-lg ring-1 ring-gray-900/5">
-        <div className="flex-1 text-xl text-slate-900 h-full uppercase font-semibold">
-          {sequence.length ? sequence.join(' ') : ''}
+            <Link href={`/app/${app.id}/edit`}>
+              <Button variant="default" size="sm">Muuda</Button>
+            </Link>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <Button
-            variant={sequence.length && !busy ? 'default' : 'muted'} // blue when ready
-            disabled={!sequence.length || busy}
-            onClick={handlePlayAll}
-          >
-            {busy ? 'Mängin…' : 'Mängi'}
-          </Button>
 
-          <Button
-            variant={sequence.length && !busy ? 'secondary' : 'muted'} // grey when disabled
-            disabled={!sequence.length || busy}
-            onClick={handleClear}
-          >
-            Kustuta
-          </Button>
+        {/* Action bar */}
+        <div className="border ps-6 pe-2 py-2 flex items-center gap-3 mx-auto max-w-[800px] mb-14 rounded-full bg-white p-0 shadow-lg ring-1 ring-gray-900/5">
+          <div className="flex-1 text-xl text-slate-900 h-full uppercase font-semibold">
+            {sequence.length ? sequence.join(' ') : ''}
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant={sequence.length && !busy ? 'default' : 'muted'} // blue when ready
+              disabled={!sequence.length || busy}
+              onClick={handlePlayAll}
+            >
+              {busy ? 'Mängin…' : 'Mängi'}
+            </Button>
+
+            <Button
+              variant={sequence.length && !busy ? 'secondary' : 'muted'} // grey when disabled
+              disabled={!sequence.length || busy}
+              onClick={handleClear}
+            >
+              Kustuta
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -190,7 +194,7 @@ export default function Runner({ app }: RunnerProps) {
         layout={layout}
       >
         {cells.map((cell) => (
-          <div key={String(cell.id)} className="border overflow-hidden flex flex-col gap-1 aspect-[4/3] relative rounded-lg bg-white p-0 shadow-lg ring-1 ring-gray-900/5">
+          <div key={String(cell.id)} className="border overflow-hidden flex flex-col gap-1 aspect-[4/3] relative rounded-2xl bg-white p-0 shadow-lg ring-1 ring-gray-900/5">
             {renderCellImage(cell)}
             {cell.title && (
               <div className="absolute w-full bottom-0 left-0 p-2 bg-slate-800/85 text-white text-center pointer-events-none">

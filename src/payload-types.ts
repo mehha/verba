@@ -193,7 +193,51 @@ export interface Page {
       | null;
     media?: (string | null) | Media;
   };
-  layout: (CallToActionBlock | ContentBlock | MediaBlock | ArchiveBlock | FormBlock)[];
+  layout: (
+    | CallToActionBlock
+    | ContentBlock
+    | MediaBlock
+    | ArchiveBlock
+    | FormBlock
+    | {
+        eyebrow?: string | null;
+        title?: string | null;
+        description?: string | null;
+        ctas?:
+          | {
+              label: string;
+              href: string;
+              variant?: ('primary' | 'secondary') | null;
+              id?: string | null;
+            }[]
+          | null;
+        cards: {
+          title?: string | null;
+          /**
+           * Optional. If set, this image is shown instead of the icon.
+           */
+          image?: (string | null) | Media;
+          /**
+           * Used when no image is selected.
+           */
+          icon?: ('Cat' | 'Dog' | 'PawPrint' | 'HeartPulse' | 'Syringe' | 'Stethoscope') | null;
+          gradientFrom?: string | null;
+          gradientTo?: string | null;
+          labelBg?: string | null;
+          badges?:
+            | {
+                label: string;
+                icon?: ('Stethoscope' | 'Syringe' | 'PawPrint' | 'HeartPulse') | null;
+                id?: string | null;
+              }[]
+            | null;
+          id?: string | null;
+        }[];
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'heroPaws';
+      }
+  )[];
   meta?: {
     title?: string | null;
     /**
@@ -1077,6 +1121,41 @@ export interface PagesSelect<T extends boolean = true> {
         mediaBlock?: T | MediaBlockSelect<T>;
         archive?: T | ArchiveBlockSelect<T>;
         formBlock?: T | FormBlockSelect<T>;
+        heroPaws?:
+          | T
+          | {
+              eyebrow?: T;
+              title?: T;
+              description?: T;
+              ctas?:
+                | T
+                | {
+                    label?: T;
+                    href?: T;
+                    variant?: T;
+                    id?: T;
+                  };
+              cards?:
+                | T
+                | {
+                    title?: T;
+                    image?: T;
+                    icon?: T;
+                    gradientFrom?: T;
+                    gradientTo?: T;
+                    labelBg?: T;
+                    badges?:
+                      | T
+                      | {
+                          label?: T;
+                          icon?: T;
+                          id?: T;
+                        };
+                    id?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
       };
   meta?:
     | T
