@@ -37,7 +37,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
           <Header />
           <ModalProvider>
-          {children}
+            <div className="py-12 px-4">
+              {children}
+            </div>
           </ModalProvider>
           {/*<Footer />*/}
         </Providers>

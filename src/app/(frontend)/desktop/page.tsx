@@ -103,9 +103,9 @@ export default async function DesktopPage() {
       {apps.length === 0 ? (
         <p className="text-muted-foreground">Sul pole veel rakendusi.</p>
       ) : (
-        <ul className="grid gap-4 md:grid-cols-3">
+        <ul className="flex gap-4">
           {apps.map((app) => (
-            <li key={app.id} className="border rounded p-4 flex flex-col gap-2">
+            <li key={app.id} className="border p-4 flex flex-col gap-2 aspect-[4/3] w-[240px] relative rounded-xl bg-white shadow-lg ring-1 ring-gray-900/5">
               <div className="flex items-center justify-between gap-2">
                 <h2 className="font-medium">{app.name}</h2>
                 {isAdmin && (

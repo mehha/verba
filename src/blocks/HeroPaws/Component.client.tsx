@@ -99,7 +99,7 @@ export const HeroPawsClient: React.FC<HeroPawsClientProps> = ({
                 <a
                   key={c.label}
                   href={c.href}
-                  className="group inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/10"
+                  className="group inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white h-[52px] px-5 py-2.5 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/10"
                 >
                   {c.label}
                   <svg

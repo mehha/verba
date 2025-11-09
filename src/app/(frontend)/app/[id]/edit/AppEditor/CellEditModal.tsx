@@ -11,6 +11,7 @@ import {
 import { CircleX } from 'lucide-react'
 import { getClientSideURL } from '@/utilities/getURL'
 import Image from 'next/image'
+import { Button } from '@/components/ui/button' // ⬅️ use your Button
 
 type SymbolItem = {
   id: string
@@ -78,7 +79,7 @@ export const CellEditModal: React.FC<CellEditModalProps> = ({
   // Symbols
   const [symQ, setSymQ] = useState('')
   const [symSource, setSymSource] = useState<'arasaac' | 'openmoji'>('arasaac')
-  const [symLocale, setSymLocale] = useState('et') // <- Estonian by default
+  const [symLocale, setSymLocale] = useState('et')
   const [symLoading, setSymLoading] = useState(false)
   const [symbols, setSymbols] = useState<SymbolItem[]>([])
   const [symError, setSymError] = useState<string | null>(null)
@@ -91,7 +92,6 @@ export const CellEditModal: React.FC<CellEditModalProps> = ({
   const [mediaPage, setMediaPage] = useState(1)
   const [mediaTotalPages, setMediaTotalPages] = useState(1)
 
-  // Init values when opening
   useEffect(() => {
     if (isOpen && cell) {
       setTitle(cell.title ?? '')
@@ -105,7 +105,6 @@ export const CellEditModal: React.FC<CellEditModalProps> = ({
     }
   }, [isOpen, cell])
 
-  // Upload to Payload Media
   const handleUpload = async (file: File) => {
     setUploading(true)
     try {
@@ -142,7 +141,6 @@ export const CellEditModal: React.FC<CellEditModalProps> = ({
     }
   }
 
-  // Symbols search
   const runSymbolsSearch = async () => {
     if (!symQ.trim()) {
       setSymbols([])
@@ -169,7 +167,7 @@ export const CellEditModal: React.FC<CellEditModalProps> = ({
 
   const pickSymbol = (s: SymbolItem) => {
     if (!cell) return
-    const nextTitle = prettifyName(s.title || symQ) || title // kui tõesti tühi, jäta vana
+    const nextTitle = prettifyName(s.title || symQ) || title
     setUploadedPreview(s.preview)
     setTitle(nextTitle)
     onSaveAction(cell.id, {
@@ -179,7 +177,6 @@ export const CellEditModal: React.FC<CellEditModalProps> = ({
     })
   }
 
-  // Media search/browse URL (search by alt OR filename). If empty, shows latest.
   const mediaQueryURL = useMemo(() => {
     const base = getClientSideURL()
     const q = mediaQ.trim()
@@ -188,7 +185,6 @@ export const CellEditModal: React.FC<CellEditModalProps> = ({
           q,
         )}`
       : ''
-    // 24 per page fits 6-col grid nicely
     return `${base}/api/media?limit=24&page=${mediaPage}${where}`
   }, [mediaQ, mediaPage])
 
@@ -210,16 +206,10 @@ export const CellEditModal: React.FC<CellEditModalProps> = ({
     }
   }
 
-  // Reset to page 1 when opening Media tab
   useEffect(() => {
-    if (isOpen && tab === 'media') {
-      setMediaPage(1)
-    }
+    if (isOpen && tab === 'media') setMediaPage(1)
   }, [isOpen, tab])
 
-  // Auto-load media:
-  // - Debounce when typing (mediaQ non-empty -> 300ms)
-  // - No debounce on page changes or when mediaQ empty
   useEffect(() => {
     if (tab !== 'media') return
     const delay = mediaQ.trim() ? 300 : 0
@@ -227,7 +217,6 @@ export const CellEditModal: React.FC<CellEditModalProps> = ({
       void runMediaSearch()
     }, delay)
     return () => clearTimeout(t)
-    // mediaQueryURL changes on mediaQ or mediaPage; tab ensures only when visible
   }, [tab, mediaQueryURL, mediaQ])
 
   const pickMedia = (m: MediaDoc) => {
@@ -294,16 +283,16 @@ export const CellEditModal: React.FC<CellEditModalProps> = ({
           {/* Tabs */}
           <div className="flex gap-2">
             {(['upload', 'symbols', 'media'] as TabKey[]).map((k) => (
-              <button
+              <Button
                 key={k}
                 type="button"
+                size="sm"
+                variant={tab === k ? 'secondary' : 'outline'}
                 onClick={() => setTab(k)}
-                className={`px-3 py-1 rounded text-sm border ${
-                  tab === k ? 'bg-slate-900 text-white' : 'bg-white hover:bg-slate-100'
-                }`}
+                className="text-sm"
               >
                 {k === 'upload' ? 'Lae üles' : k === 'symbols' ? 'Sümbolid' : 'Meedia'}
-              </button>
+              </Button>
             ))}
           </div>
 
@@ -359,13 +348,14 @@ export const CellEditModal: React.FC<CellEditModalProps> = ({
                     <option value="it">it</option>
                   </select>
                 )}
-                <button
+                <Button
                   type="button"
+                  size="sm"
+                  variant="secondary"
                   onClick={runSymbolsSearch}
-                  className="px-3 py-1 text-sm rounded bg-slate-200 hover:bg-slate-300"
                 >
                   Otsi
-                </button>
+                </Button>
               </div>
 
               {symError && <p className="text-xs text-red-500">{symError}</p>}
@@ -374,22 +364,26 @@ export const CellEditModal: React.FC<CellEditModalProps> = ({
               ) : symbols.length ? (
                 <div className="grid grid-cols-6 gap-2 max-h-48 overflow-y-auto">
                   {symbols.map((s) => (
-                    <button
+                    <Button
                       key={s.id}
                       type="button"
+                      variant="outline"
+                      size="sm"
                       onClick={() => pickSymbol(s)}
-                      className="border rounded overflow-hidden hover:ring-2 hover:ring-blue-500 focus:outline-none bg-white"
+                      className="block p-0 border rounded overflow-hidden hover:ring-2 hover:ring-blue-500 focus:outline-none bg-white"
                       title={`${s.title} · ${s.source}`}
                     >
-                      {/* use img here to avoid next/image domain config for thumbs */}
-                      <img
+                      <Image
                         src={s.preview}
                         alt={s.title}
-                        className="w-full h-16 object-contain p-1"
+                        width={64}
+                        height={64}
+                        className="w-full aspect-video object-contain p-1"
                         loading="lazy"
+                        unoptimized
                       />
                       <div className="px-1 pb-1 text-[10px] truncate opacity-70">{s.title}</div>
-                    </button>
+                    </Button>
                   ))}
                 </div>
               ) : null}
@@ -412,14 +406,15 @@ export const CellEditModal: React.FC<CellEditModalProps> = ({
                   className="border rounded px-2 py-1 text-sm flex-1"
                   placeholder="Otsi meediumist… (alt või failinimi) — jäta tühjaks, et näha viimaseid"
                 />
-                <button
+                <Button
                   type="button"
+                  size="sm"
+                  variant="secondary"
                   onClick={() => setMediaPage(1)}
-                  className="px-3 py-1 text-sm rounded bg-slate-200 hover:bg-slate-300"
                   title="Otsi"
                 >
                   Otsi
-                </button>
+                </Button>
               </div>
 
               {mediaError && <p className="text-xs text-red-500">{mediaError}</p>}
@@ -436,20 +431,25 @@ export const CellEditModal: React.FC<CellEditModalProps> = ({
                         m.url
                       if (!thumb) return null
                       return (
-                        <button
+                        <Button
                           key={String(m.id)}
                           type="button"
+                          variant="outline"
+                          size="sm"
                           onClick={() => pickMedia(m)}
-                          className="border rounded overflow-hidden hover:ring-2 hover:ring-blue-500 focus:outline-none"
+                          className="block p-0 border rounded overflow-hidden hover:ring-2 hover:ring-blue-500 focus:outline-none"
                           title={m.alt || m.filename || ''}
                         >
-                          <img
+                          <Image
                             src={thumb}
                             alt={m.alt || ''}
-                            className="w-full h-20 object-cover"
+                            width={160}
+                            height={80}
+                            className="w-full aspect-video object-cover"
                             loading="lazy"
+                            unoptimized
                           />
-                        </button>
+                        </Button>
                       )
                     })}
                   </div>
@@ -460,22 +460,24 @@ export const CellEditModal: React.FC<CellEditModalProps> = ({
                       Leht {mediaPage} / {mediaTotalPages}
                     </span>
                     <div className="flex gap-2">
-                      <button
+                      <Button
                         type="button"
+                        size="sm"
+                        variant="outline"
                         disabled={mediaPage <= 1}
                         onClick={() => setMediaPage((p) => Math.max(1, p - 1))}
-                        className="px-3 py-1 text-sm rounded border disabled:opacity-50"
                       >
                         Eelmine
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
+                        size="sm"
+                        variant="outline"
                         disabled={mediaPage >= mediaTotalPages}
                         onClick={() => setMediaPage((p) => p + 1)}
-                        className="px-3 py-1 text-sm rounded border disabled:opacity-50"
                       >
                         Järgmine
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </>
@@ -487,16 +489,20 @@ export const CellEditModal: React.FC<CellEditModalProps> = ({
 
           {/* Footer */}
           <div className="flex gap-2 justify-end">
-            <ModalToggler
-              slug={slug}
-              className="px-3 py-1 text-sm rounded bg-slate-100 hover:bg-slate-200"
+            <Button
+              asChild
+              size="sm"
+              variant="muted"
             >
-              Tühista
-            </ModalToggler>
+              <ModalToggler slug={slug} className="inline-flex">
+                Tühista
+              </ModalToggler>
+            </Button>
 
-            <button
+            <Button
               type="button"
-              className="px-3 py-1 text-sm rounded bg-blue-600 text-white hover:bg-blue-700"
+              size="sm"
+              variant="positive"
               onClick={() => {
                 if (!cell) return
                 onSaveAction(cell.id, { title })
@@ -504,7 +510,7 @@ export const CellEditModal: React.FC<CellEditModalProps> = ({
               }}
             >
               Salvesta
-            </button>
+            </Button>
           </div>
         </div>
       </Modal>

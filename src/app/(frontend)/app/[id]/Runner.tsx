@@ -130,7 +130,7 @@ export default function Runner({ app }: RunnerProps) {
   }
 
   return (
-    <div className="px-6 py-16 flex-1">
+    <div className="">
       <div className="container">
         <div className="flex justify-between gap-2 mb-10">
           <h1 className="text-3xl text-center font-semibold">{app.name}</h1>
@@ -194,7 +194,7 @@ export default function Runner({ app }: RunnerProps) {
         layout={layout}
       >
         {cells.map((cell) => (
-          <div key={String(cell.id)} className="border overflow-hidden flex flex-col gap-1 aspect-[4/3] relative rounded-2xl bg-white p-0 shadow-lg ring-1 ring-gray-900/5">
+          <div key={String(cell.id)} className="border overflow-hidden flex flex-col gap-1 aspect-[4/3] relative rounded-xl bg-white p-0 shadow-lg ring-1 ring-gray-900/5">
             {renderCellImage(cell)}
             {cell.title && (
               <div className="absolute w-full bottom-0 left-0 p-2 bg-slate-800/85 text-white text-center pointer-events-none">

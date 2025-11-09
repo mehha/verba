@@ -77,29 +77,10 @@ export default function AppEditor({ app }: Props) {
   }
 
   return (
-    <div className="space-y-2 py-10">
+    <div className="space-y-2">
       <div className="container mb-10">
-        <h1 className="text-3xl text-center font-semibold leading-6 mb-10">{app.name}</h1>
-
-        <div className="flex justify-between items-center gap-2">
-          <div className="flex items-center gap-2">
-            <AppEditorToolbar
-              onAddCellAction={addCell}
-              onMake2x2Action={make2x2}
-              onMake4x4Action={make4x4}
-              onMake6x6Action={make6x6}
-              onClearAction={clearGrid}
-              disableClear={cells.length === 0}
-            />
-            <label className="inline-flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={actionBar.enabled}
-                onChange={(e) => void updateActionBar(e.target.checked)}
-              />
-              Kuvada tegevusriba
-            </label>
-          </div>
+        <div className="flex justify-between items-center gap-2 mb-10">
+          <h1 className="text-3xl text-center font-semibold leading-6">{app.name}</h1>
 
           <div className="flex items-center gap-2">
             <Button
@@ -117,6 +98,25 @@ export default function AppEditor({ app }: Props) {
               </Button>
             </Link>
           </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <AppEditorToolbar
+            onAddCellAction={addCell}
+            onMake2x2Action={make2x2}
+            onMake4x4Action={make4x4}
+            onMake6x6Action={make6x6}
+            onClearAction={clearGrid}
+            disableClear={cells.length === 0}
+          />
+          <label className="inline-flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={actionBar.enabled}
+              onChange={(e) => void updateActionBar(e.target.checked)}
+            />
+            Kuvada tegevusriba
+          </label>
         </div>
       </div>
 
@@ -136,7 +136,7 @@ export default function AppEditor({ app }: Props) {
           {cells.map((cell) => (
             <div
               key={cell.id}
-              className="border overflow-hidden flex flex-col gap-1 aspect-[4/3] relative rounded-lg bg-white p-0 shadow-lg ring-1 ring-gray-900/5"
+              className="border overflow-hidden flex flex-col gap-1 aspect-[4/3] relative rounded-xl bg-white p-0 shadow-lg ring-1 ring-gray-900/5"
             >
               <div className="absolute top-1 right-1 z-10 flex gap-1">
                 <Button
