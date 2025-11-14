@@ -237,6 +237,7 @@ export interface Page {
         blockName?: string | null;
         blockType: 'heroPaws';
       }
+    | AacFeaturesBlock
   )[];
   meta?: {
     title?: string | null;
@@ -792,6 +793,27 @@ export interface Form {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "AacFeaturesBlock".
+ */
+export interface AacFeaturesBlock {
+  eyebrow?: string | null;
+  title: string;
+  subtitle?: string | null;
+  items: {
+    icon: 'message-circle' | 'grid-3x3' | 'images' | 'volume-2' | 'share-2' | 'wifi-off' | 'rocket' | 'accessibility';
+    title: string;
+    description: string;
+    variant?: ('default' | 'accent') | null;
+    ctaLabel?: string | null;
+    ctaHref?: string | null;
+    id?: string | null;
+  }[];
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'aac-features';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "apps".
  */
 export interface App {
@@ -1156,6 +1178,7 @@ export interface PagesSelect<T extends boolean = true> {
               id?: T;
               blockName?: T;
             };
+        'aac-features'?: T | AacFeaturesBlockSelect<T>;
       };
   meta?:
     | T
@@ -1252,6 +1275,28 @@ export interface FormBlockSelect<T extends boolean = true> {
   form?: T;
   enableIntro?: T;
   introContent?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "AacFeaturesBlock_select".
+ */
+export interface AacFeaturesBlockSelect<T extends boolean = true> {
+  eyebrow?: T;
+  title?: T;
+  subtitle?: T;
+  items?:
+    | T
+    | {
+        icon?: T;
+        title?: T;
+        description?: T;
+        variant?: T;
+        ctaLabel?: T;
+        ctaHref?: T;
+        id?: T;
+      };
   id?: T;
   blockName?: T;
 }

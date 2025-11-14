@@ -8,6 +8,7 @@ import { ContentBlock } from '@/blocks/Content/Component'
 import { FormBlock } from '@/blocks/Form/Component'
 import { MediaBlock } from '@/blocks/MediaBlock/Component'
 import { HeroPawsBlock } from '@/blocks/HeroPaws/Component'
+import { AacFeaturesBlock } from '@/blocks/AacFeatures/Component'
 
 const blockComponents = {
   archive: ArchiveBlock,
@@ -16,6 +17,7 @@ const blockComponents = {
   formBlock: FormBlock,
   mediaBlock: MediaBlock,
   heroPaws: HeroPawsBlock,
+  'aac-features': AacFeaturesBlock,
 }
 
 export const RenderBlocks: React.FC<{
@@ -30,6 +32,7 @@ export const RenderBlocks: React.FC<{
       <Fragment>
         {blocks.map((block, index) => {
           const { blockType } = block
+
 
           if (blockType && blockType in blockComponents) {
             const Block = blockComponents[blockType]

@@ -82,7 +82,7 @@ export const HeroPawsClient: React.FC<HeroPawsClientProps> = ({
         )}
 
         {!!ctas.length && (
-          <div className="mt-8 flex items-center justify-center gap-3">
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             {ctas.map((c) =>
               c.variant !== 'secondary' ? (
                 <a

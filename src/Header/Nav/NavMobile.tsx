@@ -5,20 +5,8 @@ import * as React from 'react'
 import { CMSLink } from '@/components/Link'
 import type { Header as HeaderType } from '@/payload-types'
 import { Menu } from 'lucide-react'
-import {
-  Sheet,
-  SheetTrigger,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetClose,
-} from '@/components/ui/sheet'
-import {
-  Accordion,
-  AccordionItem,
-  AccordionTrigger,
-  AccordionContent,
-} from '@/components/ui/accordion'
+import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle, SheetClose } from '@/components/ui/sheet'
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion'
 import { Button } from '@/components/ui/button'
 
 type Props = { data: HeaderType }
@@ -36,7 +24,7 @@ export function NavMobile({ data }: Props) {
         </SheetTrigger>
 
         <SheetContent side="right" className="w-[84vw] sm:w-[400px] p-0">
-          <SheetHeader className="p-4 border-b">
+          <SheetHeader className="p-4">
             <SheetTitle>Menu</SheetTitle>
           </SheetHeader>
 
@@ -55,7 +43,7 @@ export function NavMobile({ data }: Props) {
                   return (
                     <li key={i}>
                       <Accordion type="single" collapsible>
-                        <AccordionItem value={`item-${i}`} className="border-b">
+                        <AccordionItem value={`item-${i}`} className="border-y">
                           <AccordionTrigger className="px-3 py-2 text-base">
                             {topLabel}
                           </AccordionTrigger>
@@ -71,9 +59,11 @@ export function NavMobile({ data }: Props) {
                                 return (
                                   <li key={ci}>
                                     <SheetClose asChild>
-                                      <CMSLink appearance="link" {...(child.link ?? {})}>
-                                        {childLabel}
-                                      </CMSLink>
+                                      <CMSLink
+                                        appearance="link"
+                                        {...(child.link ?? {})}
+                                        label={childLabel}   // ⬅ no children!
+                                      />
                                     </SheetClose>
                                   </li>
                                 )
@@ -86,22 +76,24 @@ export function NavMobile({ data }: Props) {
                   )
                 }
 
+                // Leaf item
                 return (
                   <li key={i} className="px-3 py-2">
                     <SheetClose asChild>
-                      <CMSLink appearance="link" {...(item.link ?? {})}>
-                        {topLabel}
-                      </CMSLink>
+                      <CMSLink
+                        appearance="link"
+                        {...(item.link ?? {})}
+                        label={topLabel}     // ⬅ no children!
+                      />
                     </SheetClose>
                   </li>
                 )
               })}
+
               {/* Optional search */}
               <li className="px-3 py-2">
                 <SheetClose asChild>
-                  <CMSLink appearance="link" type="custom" url="/search">
-                    Search
-                  </CMSLink>
+                  <CMSLink appearance="link" type="custom" url="/search" label="Search" />
                 </SheetClose>
               </li>
             </ul>

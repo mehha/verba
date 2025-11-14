@@ -7,8 +7,9 @@ import React, { useEffect, useState } from 'react'
 import type { Header } from '@/payload-types'
 
 import { Logo } from '@/components/Logo/Logo'
-import { HeaderNav } from './Nav'
 import { NavDesktop } from '@/Header/Nav/NavDesktop'
+import {NavMobile} from "@/Header/Nav/NavMobile";
+import { HeaderNav } from '@/Header/Nav'
 
 interface HeaderClientProps {
   data: Header
@@ -38,9 +39,12 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
         </Link>
 
         {/* Desktop */}
-        <NavDesktop data={data} />
+        {/*<NavDesktop data={data} />*/}
 
-        {/*<HeaderNav data={data} />*/}
+        {/* Mobile */}
+        {/*<NavMobile data={data} />*/}
+
+        <HeaderNav data={data} />
       </div>
     </header>
   )
