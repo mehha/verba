@@ -835,6 +835,12 @@ export interface App {
   actionBar?: {
     enabled?: boolean | null;
   };
+  /**
+   * Extra valikud / seaded
+   */
+  extra?: {
+    ai?: boolean | null;
+  };
   grid?: {
     cols?: number | null;
     rows?: number | null;
@@ -1493,6 +1499,11 @@ export interface AppsSelect<T extends boolean = true> {
     | T
     | {
         enabled?: T;
+      };
+  extra?:
+    | T
+    | {
+        ai?: T;
       };
   grid?:
     | T

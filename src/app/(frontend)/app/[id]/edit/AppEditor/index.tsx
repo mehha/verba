@@ -8,13 +8,14 @@ import type { App, Media } from '@/payload-types'
 import { useAppGrid } from './useAppGrid'
 import { AppEditorToolbar } from './Toolbar'
 import { useViewportHeight } from '@/utilities/useViewportHeight'
-import { useModal } from '@faceless-ui/modal'
 import { CellEditModal } from './CellEditModal'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Trash } from 'lucide-react'
+import { Play, Trash } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
 
 const ReactGridLayout = WidthProvider(RGL)
 
@@ -22,31 +23,47 @@ type Props = { app: App }
 
 export default function AppEditor({ app }: Props) {
   const {
-    saving, dirty,
-    cols, cells, layout,
+    saving,
+    dirty,
+    cols,
+    cells,
+    layout,
     onLayoutChange,
-    addCell, make2x2, make4x4, make6x6,
-    deleteCell, clearGrid,
+    addCell,
+    make2x2,
+    make4x4,
+    make6x6,
+    deleteCell,
+    clearGrid,
     updateCellAction,
-    actionBar, updateActionBar,
+    actionBar,
+    updateActionBar,
     saveDraft,
+    aiEnabled,
+    updateAi,
   } = useAppGrid(app)
 
   const vh = useViewportHeight()
-  const { toggleModal } = useModal()
-  const EDIT_MODAL_SLUG = 'edit-cell-modal'
   const [editingCellId, setEditingCellId] = useState<string | null>(null)
 
-  const rowsNeeded = layout.length > 0 ? Math.max(...layout.map((l) => (l.y ?? 0) + (l.h ?? 1))) : 1
+  const rowsNeeded =
+    layout.length > 0
+      ? Math.max(...layout.map((l) => (l.y ?? 0) + (l.h ?? 1)))
+      : 1
 
-  const TOP_BAR = 36, HEADER = 98, FOOTER = 105, EXTRA = 24
+  const TOP_BAR = 36,
+    HEADER = 98,
+    FOOTER = 105,
+    EXTRA = 24
   const reserved = TOP_BAR + HEADER + FOOTER + EXTRA
   const available = Math.max(200, vh - reserved)
   let rowHeight = Math.floor(available / rowsNeeded)
   rowHeight = Math.min(240, Math.max(48, rowHeight))
 
   const currentEditingCell =
-    editingCellId != null ? (cells.find((c) => c.id === editingCellId) ?? null) : null
+    editingCellId != null
+      ? cells.find((c) => c.id === editingCellId) ?? null
+      : null
 
   const handleModalSave = (cellId: string, patch: {
     title?: string
@@ -60,17 +77,19 @@ export default function AppEditor({ app }: Props) {
   const renderCellImage = (cell: any) => {
     const src =
       cell?.externalImageURL ||
-      (cell?.image && typeof cell.image === 'object' && (cell.image as Media).url) ||
+      (cell?.image &&
+        typeof cell.image === 'object' &&
+        (cell.image as Media).url) ||
       ''
     if (!src) return null
     return (
-      <div className="relative w-full h-full min-h-[4rem]">
+      <div className="relative h-full w-full min-h-[4rem]">
         <Image
           src={src}
           alt={cell.title ?? ''}
           fill
           sizes="(max-width: 768px) 100vw, 1200px"
-          className="object-contain rounded"
+          className="rounded object-contain"
         />
       </div>
     )
@@ -79,8 +98,10 @@ export default function AppEditor({ app }: Props) {
   return (
     <div className="space-y-2">
       <div className="container mb-10">
-        <div className="flex justify-between items-center gap-2 mb-10">
-          <h1 className="text-3xl text-center font-semibold leading-6">{app.name}</h1>
+        <div className="mb-10 flex items-center justify-between gap-2">
+          <h1 className="text-center text-3xl font-semibold leading-6">
+            {app.name}
+          </h1>
 
           <div className="flex items-center gap-2">
             <Button
@@ -89,18 +110,18 @@ export default function AppEditor({ app }: Props) {
               onClick={() => void saveDraft()}
               disabled={!dirty || saving}
             >
-              {saving ? 'Salvestan…' : (dirty ? 'Salvesta' : 'Salvestatud')}
+              {saving ? 'Salvestan…' : dirty ? 'Salvesta' : 'Salvestatud'}
             </Button>
 
             <Link href={`/app/${app.id}`}>
               <Button variant="default" size="sm">
-                Mängi
+                <Play className="h-5 w-5" />
               </Button>
             </Link>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between gap-2">
           <AppEditorToolbar
             onAddCellAction={addCell}
             onMake2x2Action={make2x2}
@@ -109,24 +130,46 @@ export default function AppEditor({ app }: Props) {
             onClearAction={clearGrid}
             disableClear={cells.length === 0}
           />
-          <label className="inline-flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={actionBar.enabled}
-              onChange={(e) => void updateActionBar(e.target.checked)}
-            />
-            Kuvada tegevusriba
-          </label>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="action-bar-toggle"
+                checked={actionBar.enabled}
+                onCheckedChange={(checked) => {
+                  void updateActionBar(checked)
+                }}
+              />
+              <Label htmlFor="action-bar-toggle">
+                {actionBar.enabled
+                  ? 'Peida tegevusriba'
+                  : 'Kuva tegevusriba'}
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="action-ai-toggle"
+                checked={aiEnabled}
+                onCheckedChange={(checked) => {
+                  void updateAi(checked)
+                }}
+              />
+              <Label htmlFor="action-ai-toggle">
+                {aiEnabled ? 'Deaktiveeri AI' : 'Aktiveeri AI'}
+              </Label>
+            </div>
+          </div>
         </div>
       </div>
 
-      {saving && <p className="text-xs text-slate-500 container">Salvestan…</p>}
+      {saving && (
+        <p className="container text-xs text-slate-500">Salvestan…</p>
+      )}
 
-      <div className="w-full h-full overflow-y-auto">
+      <div className="h-full w-full overflow-y-auto">
         <ReactGridLayout
           className="layout"
           cols={cols}
-          rowHeight={200}
+          rowHeight={200} // kui tahad, saad siia panna rowHeight
           width={1200}
           layout={layout}
           onLayoutChange={onLayoutChange}
@@ -136,18 +179,17 @@ export default function AppEditor({ app }: Props) {
           {cells.map((cell) => (
             <div
               key={cell.id}
-              className="border overflow-hidden flex flex-col gap-1 aspect-[4/3] relative rounded-xl bg-white p-0 shadow-lg ring-1 ring-gray-900/5"
+              className="relative flex aspect-[4/3] flex-col gap-1 overflow-hidden rounded-xl bg-white p-0 shadow-lg ring-1 ring-gray-900/5"
             >
-              <div className="absolute top-1 right-1 z-10 flex gap-1">
+              <div className="absolute right-1 top-1 z-10 flex gap-1">
                 <Button
                   type="button"
-                  size="sm"
+                  size="xs"
                   variant="secondary"
                   onClick={(e) => {
                     e.stopPropagation()
                     e.preventDefault()
                     setEditingCellId(cell.id)
-                    toggleModal(EDIT_MODAL_SLUG)
                   }}
                   onMouseDown={(e) => e.stopPropagation()}
                 >
@@ -156,7 +198,7 @@ export default function AppEditor({ app }: Props) {
 
                 <Button
                   type="button"
-                  size="sm"
+                  size="xs"
                   variant="destructive"
                   onClick={(e) => {
                     e.stopPropagation()
@@ -172,8 +214,8 @@ export default function AppEditor({ app }: Props) {
               {renderCellImage(cell)}
 
               {cell.title && (
-                <div className="absolute w-full bottom-0 left-0 p-2 bg-slate-800/85 text-white text-center">
-                  <div className="text-2xl uppercase break-words leading-4">
+                <div className="absolute bottom-0 left-0 w-full bg-slate-800/85 p-2 text-center text-white">
+                  <div className="break-words text-2xl uppercase leading-4">
                     {cell.title}
                   </div>
                 </div>
@@ -184,14 +226,21 @@ export default function AppEditor({ app }: Props) {
       </div>
 
       <CellEditModal
-        slug={EDIT_MODAL_SLUG}
+        open={!!currentEditingCell}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditingCellId(null)
+          }
+        }}
         cell={
           currentEditingCell
             ? {
                 id: currentEditingCell.id,
                 title: currentEditingCell.title ?? '',
-                externalImageURL: currentEditingCell.externalImageURL ?? '',
+                externalImageURL:
+                  currentEditingCell.externalImageURL ?? '',
                 h: currentEditingCell.h ?? 1,
+                image: currentEditingCell.image,
               }
             : null
         }

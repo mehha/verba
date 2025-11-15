@@ -25,6 +25,10 @@ export function useAppGrid(app: App) {
     enabled: app.actionBar?.enabled !== false,
   }))
 
+  const [aiEnabled, setAiEnabled] = useState<boolean>(() => {
+    return app.extra?.ai ?? false // vaikimisi false
+  })
+
   const [cells, setCells] = useState<LocalCell[]>(() => {
     const initial = app.grid?.cells ?? []
     return initial.map((c) => c as LocalCell)
@@ -66,12 +70,16 @@ export function useAppGrid(app: App) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         actionBar,
+        extra: {
+          ...(app.extra || {}),
+          ai: aiEnabled,
+        },
         grid: { ...(app.grid || {}), cols: baseCols, cells: cellsForServer },
       }),
     })
     setSaving(false)
     setDirty(false)
-  }, [app.id, app.grid, baseCols, cells, actionBar])
+  }, [app.id, app.grid, baseCols, cells, actionBar, aiEnabled, app.extra])
 
   // ---- RGL change: mark dirty, no save ----
   const onLayoutChange = useCallback((newLayout: Layout[]) => {
@@ -145,12 +153,18 @@ export function useAppGrid(app: App) {
     setDirty(true)
   }, [])
 
+  const updateAi = useCallback((enabled: boolean) => {
+    setAiEnabled(enabled)
+    setDirty(true)
+  }, [])
+
   return {
     // state
     saving, dirty,
     cols: baseCols,
     cells, layout,
     actionBar,
+    aiEnabled,
 
     // callbacks
     onLayoutChange,
@@ -159,5 +173,6 @@ export function useAppGrid(app: App) {
     deleteCell, clearGrid,
     updateCellAction, updateActionBar,
     saveDraft,
+    updateAi
   }
 }

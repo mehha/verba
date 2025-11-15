@@ -19,7 +19,13 @@ type RunnerProps = { app: App }
 export default function Runner({ app }: RunnerProps) {
   const [sequence, setSequence] = useState<string[]>([])
   const [busy, setBusy] = useState(false)
-  const [aiEnabled, setAiEnabled] = useState(true)
+
+  // loe lubatus collectionist (group "extra" -> checkbox "ai")
+  const aiAllowed = app.extra?.ai ?? false
+  const actionBarEnabled = app.actionBar?.enabled ?? false
+
+  // lokaalne toggle sellele sessioonile, algväärtus DB-st
+  const [aiEnabled, setAiEnabled] = useState<boolean>(aiAllowed)
 
   const cols = app.grid?.cols ?? 6
   const cells = (app.grid?.cells ?? []).filter((c) => !c.locked)
@@ -139,45 +145,54 @@ export default function Runner({ app }: RunnerProps) {
             <Button
               type="button"
               size="sm"
+              roundness="2xl"
               variant={aiEnabled ? 'positive' : 'muted'}
-              onClick={() => setAiEnabled(v => !v)}
+              onClick={() => setAiEnabled((v) => !v)}
               aria-pressed={aiEnabled}
-              title={aiEnabled ? 'AI on: parandab sõna kuju' : 'AI off: loeb täpselt valitud sõna'}
-              className="inline-flex items-center gap-2" // spacing for the icon+label
+              title={
+                aiEnabled
+                  ? 'AI on: parandab sõna kuju'
+                  : 'AI off: loeb täpselt valitud sõna'
+              }
+              className="inline-flex items-center gap-2"
             >
               {aiEnabled ? <Sparkles size={16} /> : <Slash size={16} />}
-              {aiEnabled ? 'AI: ON' : 'AI: OFF'}
+              {aiEnabled ? 'AI: sees' : 'AI: väljas'}
             </Button>
 
             <Link href={`/app/${app.id}/edit`}>
-              <Button variant="default" size="sm">Muuda</Button>
+              <Button variant="default" roundness="2xl" size="sm">Muuda</Button>
             </Link>
           </div>
         </div>
 
         {/* Action bar */}
-        <div className="border ps-6 pe-2 py-2 flex items-center gap-3 mx-auto max-w-[800px] mb-14 rounded-full bg-white p-0 shadow-lg ring-1 ring-gray-900/5">
-          <div className="flex-1 text-xl text-slate-900 h-full uppercase font-semibold">
-            {sequence.length ? sequence.join(' ') : ''}
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant={sequence.length && !busy ? 'default' : 'muted'} // blue when ready
-              disabled={!sequence.length || busy}
-              onClick={handlePlayAll}
-            >
-              {busy ? 'Mängin…' : 'Mängi'}
-            </Button>
+        {actionBarEnabled &&
+          <div className="border ps-6 pe-2 py-2 flex items-center gap-3 mx-auto max-w-[800px] mb-14 rounded-full bg-white p-0 shadow-lg ring-1 ring-gray-900/5">
+            <div className="flex-1 text-xl text-slate-900 h-full uppercase font-semibold">
+              {sequence.length ? sequence.join(' ') : ''}
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant={sequence.length && !busy ? 'default' : 'muted'} // blue when ready
+                disabled={!sequence.length || busy}
+                onClick={handlePlayAll}
+                roundness="2xl"
+              >
+                {busy ? 'Kuulan…' : 'Kuula'}
+              </Button>
 
-            <Button
-              variant={sequence.length && !busy ? 'secondary' : 'muted'} // grey when disabled
-              disabled={!sequence.length || busy}
-              onClick={handleClear}
-            >
-              Kustuta
-            </Button>
+              <Button
+                variant={sequence.length && !busy ? 'secondary' : 'muted'} // grey when disabled
+                disabled={!sequence.length || busy}
+                onClick={handleClear}
+                roundness="2xl"
+              >
+                Kustuta
+              </Button>
+            </div>
           </div>
-        </div>
+        }
       </div>
 
       {/* ✅ EXACT SAME GRID using RGL (read-only) */}

@@ -2,16 +2,34 @@
 'use client'
 
 import React, { useEffect, useMemo, useState } from 'react'
-import {
-  Modal,
-  ModalContainer,
-  ModalToggler,
-  useModal,
-} from '@faceless-ui/modal'
 import { CircleX } from 'lucide-react'
-import { getClientSideURL } from '@/utilities/getURL'
 import Image from 'next/image'
-import { Button } from '@/components/ui/button' // ⬅️ use your Button
+
+import { getClientSideURL } from '@/utilities/getURL'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs'
 
 type SymbolItem = {
   id: string
@@ -31,7 +49,8 @@ type MediaDoc = {
 }
 
 type CellEditModalProps = {
-  slug: string
+  open: boolean
+  onOpenChange: (open: boolean) => void
   cell:
     | {
         id: string
@@ -63,13 +82,11 @@ function prettifyName(raw?: string | null): string {
 }
 
 export const CellEditModal: React.FC<CellEditModalProps> = ({
-  slug,
+  open,
+  onOpenChange,
   cell,
   onSaveAction,
 }) => {
-  const { toggleModal, modalState } = useModal()
-  const isOpen = modalState?.[slug]?.isOpen ?? false
-
   const [title, setTitle] = useState('')
   const [uploading, setUploading] = useState(false)
   const [uploadedPreview, setUploadedPreview] = useState<string | null>(null)
@@ -92,8 +109,9 @@ export const CellEditModal: React.FC<CellEditModalProps> = ({
   const [mediaPage, setMediaPage] = useState(1)
   const [mediaTotalPages, setMediaTotalPages] = useState(1)
 
+  // Sünkroniseeri state, kui dialog avaneb
   useEffect(() => {
-    if (isOpen && cell) {
+    if (open && cell) {
       setTitle(cell.title ?? '')
       if (cell.image && typeof cell.image === 'object' && cell.image.url) {
         setUploadedPreview(cell.image.url as string)
@@ -102,8 +120,10 @@ export const CellEditModal: React.FC<CellEditModalProps> = ({
       } else {
         setUploadedPreview(null)
       }
+      // ära muuda taba – kasutaja jääb samasse vaatesse
+      // setTab('upload')
     }
-  }, [isOpen, cell])
+  }, [open, cell])
 
   const handleUpload = async (file: File) => {
     setUploading(true)
@@ -122,15 +142,16 @@ export const CellEditModal: React.FC<CellEditModalProps> = ({
       if (json?.doc?.id) {
         setUploadedPreview(json.doc.url ?? null)
 
-        const nameCandidate = json?.doc?.alt || json?.doc?.filename || json?.doc?.url
-        const nextTitle = prettifyName(nameCandidate) || title
-        setTitle(nextTitle)
+        // Enam ei muuda pealkirja automaatselt
+        // const nameCandidate = json?.doc?.alt || json?.doc?.filename || json?.doc?.url
+        // const nextTitle = prettifyName(nameCandidate) || title
+        // setTitle(nextTitle)
 
         if (cell) {
           onSaveAction(cell.id, {
             image: { id: json.doc.id, url: json.doc.url },
             externalImageURL: '',
-            title: nextTitle,
+            // title: nextTitle,
           })
         }
       }
@@ -151,7 +172,9 @@ export const CellEditModal: React.FC<CellEditModalProps> = ({
     try {
       const base = getClientSideURL()
       const res = await fetch(
-        `${base}/next/symbols?q=${encodeURIComponent(symQ)}&source=${symSource}&locale=${symLocale}&limit=40`,
+        `${base}/next/symbols?q=${encodeURIComponent(
+          symQ,
+        )}&source=${symSource}&locale=${symLocale}&limit=40`,
         { credentials: 'include' },
       )
       if (!res.ok) throw new Error('Symbols load failed')
@@ -167,13 +190,16 @@ export const CellEditModal: React.FC<CellEditModalProps> = ({
 
   const pickSymbol = (s: SymbolItem) => {
     if (!cell) return
-    const nextTitle = prettifyName(s.title || symQ) || title
+
+    // Enam ei muuda pealkirja automaatselt
+    // const nextTitle = prettifyName(s.title || symQ) || title
     setUploadedPreview(s.preview)
-    setTitle(nextTitle)
+    // setTitle(nextTitle)
+
     onSaveAction(cell.id, {
       externalImageURL: s.preview,
       image: null,
-      title: nextTitle,
+      // title: nextTitle,
     })
   }
 
@@ -181,9 +207,9 @@ export const CellEditModal: React.FC<CellEditModalProps> = ({
     const base = getClientSideURL()
     const q = mediaQ.trim()
     const where = q
-      ? `&where[or][0][alt][contains]=${encodeURIComponent(q)}&where[or][1][filename][contains]=${encodeURIComponent(
+      ? `&where[or][0][alt][contains]=${encodeURIComponent(
           q,
-        )}`
+        )}&where[or][1][filename][contains]=${encodeURIComponent(q)}`
       : ''
     return `${base}/api/media?limit=24&page=${mediaPage}${where}`
   }, [mediaQ, mediaPage])
@@ -197,7 +223,9 @@ export const CellEditModal: React.FC<CellEditModalProps> = ({
       const json = await res.json()
       const docs: MediaDoc[] = Array.isArray(json?.docs) ? json.docs : []
       setMediaItems(docs)
-      if (typeof json?.totalPages === 'number') setMediaTotalPages(json.totalPages)
+      if (typeof json?.totalPages === 'number') {
+        setMediaTotalPages(json.totalPages)
+      }
     } catch (e) {
       setMediaItems([])
       setMediaError('Ei õnnestu meediumit laadida')
@@ -207,8 +235,8 @@ export const CellEditModal: React.FC<CellEditModalProps> = ({
   }
 
   useEffect(() => {
-    if (isOpen && tab === 'media') setMediaPage(1)
-  }, [isOpen, tab])
+    if (open && tab === 'media') setMediaPage(1)
+  }, [open, tab])
 
   useEffect(() => {
     if (tab !== 'media') return
@@ -228,40 +256,45 @@ export const CellEditModal: React.FC<CellEditModalProps> = ({
       m.url
     if (!url) return
 
-    const nameCandidate = m.alt || m.filename || url
-    const nextTitle = prettifyName(nameCandidate) || title
+    // Enam ei muuda pealkirja automaatselt
+    // const nameCandidate = m.alt || m.filename || url
+    // const nextTitle = prettifyName(nameCandidate) || title
 
     setUploadedPreview(url)
-    setTitle(nextTitle)
+    // setTitle(nextTitle)
+
     onSaveAction(cell.id, {
       image: { id: m.id, url },
       externalImageURL: '',
-      title: nextTitle,
+      // title: nextTitle,
     })
   }
 
+  const handleSave = () => {
+    if (!cell) {
+      onOpenChange(false)
+      return
+    }
+    onSaveAction(cell.id, { title })
+    onOpenChange(false)
+  }
+
   return (
-    <ModalContainer className="fixed inset-0 bg-black/10 flex items-center justify-center">
-      <Modal
-        slug={slug}
-        className="bg-white p-4 rounded-2xl shadow-md w-[680px] max-w-[90vw] relative"
-        onClick={(e) => e.stopPropagation()}
-        closeOnBlur={true}
-      >
-        <ModalToggler slug={slug} className="absolute -right-2 -top-2 cursor-pointer">
-          <CircleX className="w-5 h-5 text-slate-500 hover:text-slate-900" />
-        </ModalToggler>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="w-[680px] max-w-[90vw] rounded-2xl p-4 shadow-md">
+        <DialogHeader className="flex flex-row items-start justify-between gap-4">
+          <DialogTitle className="text-lg font-semibold">Muuda</DialogTitle>
+          <DialogClose asChild />
+        </DialogHeader>
 
-        <div className="flex flex-col gap-4">
-          <h2 className="text-lg font-semibold">Muuda</h2>
-
+        <div className="mt-4 flex flex-col gap-6">
           {uploadedPreview && (
-            <div className="relative w-full aspect-video max-w-64">
+            <div className="relative aspect-video w-full max-w-64">
               <Image
                 src={uploadedPreview}
                 alt={title || 'Eelvaade'}
                 fill
-                className="object-cover rounded border"
+                className="rounded border object-cover"
                 sizes="(min-width: 1024px) 800px, 100vw"
                 priority={false}
                 unoptimized
@@ -270,250 +303,259 @@ export const CellEditModal: React.FC<CellEditModalProps> = ({
           )}
 
           {/* Title */}
-          <label className="flex flex-col gap-1 text-sm uppercase">
-            <h2 className="text-xl">Pealkiri</h2>
-            <input
+          <div className="flex flex-col gap-1 text-sm">
+            <Label htmlFor="cell-title" className="text-lg">
+              Pealkiri
+            </Label>
+            <Input
+              id="cell-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="border rounded px-2 py-1 text-sm"
               placeholder="nt. Koer"
             />
-          </label>
+          </div>
 
           {/* Tabs */}
-          <div className="flex gap-2">
-            {(['upload', 'symbols', 'media'] as TabKey[]).map((k) => (
-              <Button
-                key={k}
-                type="button"
-                size="sm"
-                variant={tab === k ? 'secondary' : 'outline'}
-                onClick={() => setTab(k)}
-                className="text-sm"
-              >
-                {k === 'upload' ? 'Lae üles' : k === 'symbols' ? 'Sümbolid' : 'Meedia'}
-              </Button>
-            ))}
-          </div>
+          <Tabs
+            value={tab}
+            onValueChange={(value) => setTab(value as TabKey)}
+            className="flex flex-col gap-4"
+          >
+            <TabsList>
+              <TabsTrigger value="upload">Lae üles</TabsTrigger>
+              <TabsTrigger value="symbols">Sümbolid</TabsTrigger>
+              <TabsTrigger value="media">Meedia</TabsTrigger>
+            </TabsList>
 
-          {/* Upload */}
-          {tab === 'upload' && (
-            <label className="flex flex-col gap-1 text-sm">
-              Laadi pilt üles
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0]
-                  if (file) void handleUpload(file)
-                }}
-                disabled={uploading}
-                className="text-sm"
-              />
-              {uploading && <span className="text-xs text-slate-500">Laen üles…</span>}
-            </label>
-          )}
-
-          {/* Symbols */}
-          {tab === 'symbols' && (
-            <div className="flex flex-col gap-2">
-              <div className="flex flex-wrap gap-2 items-center">
-                <input
-                  value={symQ}
-                  onChange={(e) => setSymQ(e.target.value)}
-                  className="border rounded px-2 py-1 text-sm flex-1"
-                  placeholder="Otsi sümboleid… (nt dog, eat, play)"
+            {/* Upload */}
+            <TabsContent value="upload">
+              <div className="flex flex-col gap-1 text-sm">
+                <Label htmlFor="cell-image-upload" className="text-sm">
+                  Lae pilt üles
+                </Label>
+                <Input
+                  id="cell-image-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) void handleUpload(file)
+                  }}
+                  disabled={uploading}
+                  className="cursor-pointer text-sm"
                 />
-                <select
-                  value={symSource}
-                  onChange={(e) => setSymSource(e.target.value as 'arasaac' | 'openmoji')}
-                  className="border rounded px-2 py-1 text-sm"
-                >
-                  <option value="arasaac">ARASAAC</option>
-                  <option value="openmoji">OpenMoji</option>
-                </select>
-                {symSource === 'arasaac' && (
-                  <select
-                    value={symLocale}
-                    onChange={(e) => setSymLocale(e.target.value)}
-                    className="border rounded px-2 py-1 text-sm"
-                    title="ARASAAC locale"
-                  >
-                    <option value="et">et</option>
-                    <option value="en">en</option>
-                    <option value="es">es</option>
-                    <option value="fr">fr</option>
-                    <option value="de">de</option>
-                    <option value="pt">pt</option>
-                    <option value="it">it</option>
-                  </select>
+                {uploading && (
+                  <p className="text-xs text-slate-500">Laen üles…</p>
                 )}
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="secondary"
-                  onClick={runSymbolsSearch}
-                >
-                  Otsi
-                </Button>
               </div>
+            </TabsContent>
 
-              {symError && <p className="text-xs text-red-500">{symError}</p>}
-              {symLoading ? (
-                <p className="text-xs text-slate-500">Laen…</p>
-              ) : symbols.length ? (
-                <div className="grid grid-cols-6 gap-2 max-h-48 overflow-y-auto">
-                  {symbols.map((s) => (
-                    <Button
-                      key={s.id}
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => pickSymbol(s)}
-                      className="block p-0 border rounded overflow-hidden hover:ring-2 hover:ring-blue-500 focus:outline-none bg-white"
-                      title={`${s.title} · ${s.source}`}
+            {/* Symbols */}
+            <TabsContent value="symbols">
+              <div className="flex flex-col gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Input
+                    id="cell-symbol-search"
+                    value={symQ}
+                    placeholder="Otsi sümboleid… (nt dog, eat, play)"
+                    onChange={(e) => setSymQ(e.target.value)}
+                  />
+                  <Select
+                    value={symSource}
+                    onValueChange={(value: 'arasaac' | 'openmoji') =>
+                      setSymSource(value)
+                    }
+                  >
+                    <SelectTrigger className="w-[140px] rounded-xl text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="arasaac">ARASAAC</SelectItem>
+                      <SelectItem value="openmoji">OpenMoji</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {symSource === 'arasaac' && (
+                    <Select
+                      value={symLocale}
+                      onValueChange={(value) => setSymLocale(value)}
                     >
-                      <Image
-                        src={s.preview}
-                        alt={s.title}
-                        width={64}
-                        height={64}
-                        className="w-full aspect-video object-contain p-1"
-                        loading="lazy"
-                        unoptimized
-                      />
-                      <div className="px-1 pb-1 text-[10px] truncate opacity-70">{s.title}</div>
-                    </Button>
-                  ))}
+                      <SelectTrigger
+                        className="w-[90px] rounded-xl text-sm"
+                        title="ARASAAC locale"
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="et">et</SelectItem>
+                        <SelectItem value="en">en</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    onClick={runSymbolsSearch}
+                  >
+                    Otsi
+                  </Button>
                 </div>
-              ) : null}
 
-              {!!symbols.length && (
-                <p className="text-[10px] text-slate-400">
-                  ARASAAC: CC BY-NC-SA 4.0 · OpenMoji: CC BY-SA 4.0 — avaldamisel lisa allikaviide.
-                </p>
-              )}
-            </div>
-          )}
+                {symError && (
+                  <p className="text-xs text-red-500">{symError}</p>
+                )}
+                {symLoading ? (
+                  <p className="text-xs text-slate-500">Laen…</p>
+                ) : symbols.length ? (
+                  <div className="grid max-h-48 grid-cols-6 gap-2 overflow-y-auto">
+                    {symbols.map((s) => (
+                      <Button
+                        key={s.id}
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => pickSymbol(s)}
+                        className="block overflow-hidden rounded border bg-white p-0 hover:border hover:border-primary focus:outline-none"
+                        title={`${s.title} · ${s.source}`}
+                      >
+                        <Image
+                          src={s.preview}
+                          alt={s.title}
+                          width={64}
+                          height={64}
+                          className="aspect-video w-full object-contain p-1"
+                          loading="lazy"
+                          unoptimized
+                        />
+                        <div className="truncate px-1 pb-1 text-[10px] opacity-70">
+                          {s.title}
+                        </div>
+                      </Button>
+                    ))}
+                  </div>
+                ) : null}
 
-          {/* Media */}
-          {tab === 'media' && (
-            <div className="flex flex-col gap-2">
-              <div className="flex gap-2 items-center">
-                <input
-                  value={mediaQ}
-                  onChange={(e) => setMediaQ(e.target.value)}
-                  className="border rounded px-2 py-1 text-sm flex-1"
-                  placeholder="Otsi meediumist… (alt või failinimi) — jäta tühjaks, et näha viimaseid"
-                />
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => setMediaPage(1)}
-                  title="Otsi"
-                >
-                  Otsi
-                </Button>
+                {!!symbols.length && (
+                  <p className="text-[10px] text-slate-400">
+                    ARASAAC: CC BY-NC-SA 4.0 · OpenMoji: CC BY-SA 4.0 — avaldamisel
+                    lisa allikaviide.
+                  </p>
+                )}
               </div>
+            </TabsContent>
 
-              {mediaError && <p className="text-xs text-red-500">{mediaError}</p>}
-              {mediaLoading ? (
-                <p className="text-xs text-slate-500">Laen…</p>
-              ) : mediaItems.length ? (
-                <>
-                  <div className="grid grid-cols-6 gap-2 max-h-64 overflow-y-auto">
-                    {mediaItems.map((m) => {
-                      const thumb =
-                        m.sizes?.thumbnail?.url ||
-                        m.sizes?.small?.url ||
-                        m.sizes?.medium?.url ||
-                        m.url
-                      if (!thumb) return null
-                      return (
-                        <Button
-                          key={String(m.id)}
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => pickMedia(m)}
-                          className="block p-0 border rounded overflow-hidden hover:ring-2 hover:ring-blue-500 focus:outline-none"
-                          title={m.alt || m.filename || ''}
-                        >
-                          <Image
-                            src={thumb}
-                            alt={m.alt || ''}
-                            width={160}
-                            height={80}
-                            className="w-full aspect-video object-cover"
-                            loading="lazy"
-                            unoptimized
-                          />
-                        </Button>
-                      )
-                    })}
-                  </div>
+            {/* Media */}
+            <TabsContent value="media">
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={mediaQ}
+                    onChange={(e) => setMediaQ(e.target.value)}
+                    className="flex-1"
+                    placeholder="Otsi meediumist… (alt või failinimi) — jäta tühjaks, et näha viimaseid"
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => setMediaPage(1)}
+                    title="Otsi"
+                  >
+                    Otsi
+                  </Button>
+                </div>
 
-                  {/* Pagination */}
-                  <div className="flex items-center justify-between mt-2">
-                    <span className="text-xs text-slate-500">
-                      Leht {mediaPage} / {mediaTotalPages}
-                    </span>
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        disabled={mediaPage <= 1}
-                        onClick={() => setMediaPage((p) => Math.max(1, p - 1))}
-                      >
-                        Eelmine
-                      </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        disabled={mediaPage >= mediaTotalPages}
-                        onClick={() => setMediaPage((p) => p + 1)}
-                      >
-                        Järgmine
-                      </Button>
+                {mediaError && (
+                  <p className="text-xs text-red-500">{mediaError}</p>
+                )}
+                {mediaLoading ? (
+                  <p className="text-xs text-slate-500">Laen…</p>
+                ) : mediaItems.length ? (
+                  <>
+                    <div className="grid max-h-64 grid-cols-6 gap-2 overflow-y-auto">
+                      {mediaItems.map((m) => {
+                        const thumb =
+                          m.sizes?.thumbnail?.url ||
+                          m.sizes?.small?.url ||
+                          m.sizes?.medium?.url ||
+                          m.url
+                        if (!thumb) return null
+                        return (
+                          <Button
+                            key={String(m.id)}
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => pickMedia(m)}
+                            className="block overflow-hidden rounded border p-0 hover:border hover:border-primary focus:outline-none"
+                            title={m.alt || m.filename || ''}
+                          >
+                            <Image
+                              src={thumb}
+                              alt={m.alt || ''}
+                              width={160}
+                              height={80}
+                              className="aspect-video w-full object-cover"
+                              loading="lazy"
+                              unoptimized
+                            />
+                          </Button>
+                        )
+                      })}
                     </div>
-                  </div>
-                </>
-              ) : (
-                <p className="text-xs text-slate-500">Tulemusi pole.</p>
-              )}
-            </div>
-          )}
 
-          {/* Footer */}
-          <div className="flex gap-2 justify-end">
-            <Button
-              asChild
-              size="sm"
-              variant="muted"
-            >
-              <ModalToggler slug={slug} className="inline-flex">
-                Tühista
-              </ModalToggler>
-            </Button>
-
-            <Button
-              type="button"
-              size="sm"
-              variant="positive"
-              onClick={() => {
-                if (!cell) return
-                onSaveAction(cell.id, { title })
-                toggleModal(slug)
-              }}
-            >
-              Salvesta
-            </Button>
-          </div>
+                    <div className="mt-2 flex items-center justify-between">
+                      <span className="text-xs text-slate-500">
+                        Leht {mediaPage} / {mediaTotalPages}
+                      </span>
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          disabled={mediaPage <= 1}
+                          onClick={() =>
+                            setMediaPage((p) => Math.max(1, p - 1))
+                          }
+                        >
+                          Eelmine
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          disabled={mediaPage >= mediaTotalPages}
+                          onClick={() => setMediaPage((p) => p + 1)}
+                        >
+                          Järgmine
+                        </Button>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-xs text-slate-500">Tulemusi pole.</p>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
-      </Modal>
-    </ModalContainer>
+
+        <DialogFooter className="mt-6 flex justify-end gap-2">
+          <DialogClose asChild>
+            <Button type="button" size="sm" variant="outline">
+              Tühista
+            </Button>
+          </DialogClose>
+          <Button
+            type="button"
+            size="sm"
+            variant="positive"
+            onClick={handleSave}
+          >
+            Salvesta
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

@@ -47,8 +47,21 @@ export const Apps: CollectionConfig = {
         {
           name: 'enabled',
           type: 'checkbox',
-          defaultValue: false,
+          defaultValue: true,
           label: 'Display action bar',
+        },
+      ],
+    },
+    {
+      name: 'extra',
+      type: 'group',
+      admin: { description: 'Extra valikud / seaded' },
+      fields: [
+        {
+          name: 'ai',
+          type: 'checkbox',
+          defaultValue: false,
+          label: 'Use AI to generate text',
         },
       ],
     },

@@ -9,6 +9,7 @@ const buttonVariants = cva(
     defaultVariants: {
       size: 'default',
       variant: 'default',
+      roundness: 'xl',
     },
     variants: {
       size: {
@@ -18,7 +19,7 @@ const buttonVariants = cva(
         icon: 'py-4 w-10 text-sm',
         lg: 'py-3 px-8 text-sm',
         sm: 'py-2 px-3 text-sm',
-        xs: 'py-1 px-1 text-sm',
+        xs: 'py-1 px-2 text-sm',
       },
       variant: {
         default: 'bg-primary text-primary-foreground hover:bg-primary/90',
@@ -29,6 +30,15 @@ const buttonVariants = cva(
         secondary: 'bg-secondary border border-border text-secondary-foreground hover:bg-secondary/80',
         muted: "bg-slate-100 text-slate-900 hover:bg-slate-200",
         positive: 'bg-emerald-600 text-white hover:bg-emerald-700',
+      },
+      roundness: {
+        none: 'rounded-none',
+        sm: 'rounded-sm',
+        md: 'rounded-md',
+        lg: 'rounded-lg',
+        xl: 'rounded-xl',
+        '2xl': 'rounded-2xl',
+        full: 'rounded-full',
       },
     },
   },
@@ -46,11 +56,12 @@ const Button: React.FC<ButtonProps> = ({
   className,
   size,
   variant,
+  roundness,
   ref,
   ...props
 }) => {
   const Comp = asChild ? Slot : 'button'
-  return <Comp className={cn(buttonVariants({ className, size, variant }))} ref={ref} {...props} />
+  return <Comp className={cn(buttonVariants({ className, size, variant, roundness }))} ref={ref} {...props} />
 }
 
 export { Button, buttonVariants }

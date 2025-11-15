@@ -22,24 +22,24 @@ export function AppEditorToolbar({
 }: ToolbarProps) {
   return (
     <div className="flex flex-wrap gap-2">
-      <Button variant="outline" size="sm" type="button" onClick={onAddCellAction}>
+      <Button variant="outline" size="xs" type="button" onClick={onAddCellAction}>
         + Lisa üks ruut
       </Button>
 
-      <Button variant="outline" size="sm" type="button" onClick={onMake2x2Action}>
-        Lisa 2×2 <Grid2X2 width={14} className="ml-1" />
+      <Button variant="outline" size="xs" type="button" className="relative pr-6" onClick={onMake2x2Action}>
+        Lisa 2×2 <Grid2X2 width={14} className="absolute right-2 top-1/2 -translate-y-1/2" />
       </Button>
-      <Button variant="outline" size="sm" type="button" onClick={onMake4x4Action}>
-        Lisa 4×4 <Grid2X2 width={14} className="ml-1" />
+      <Button variant="outline" size="xs" type="button" className="relative pr-6" onClick={onMake4x4Action}>
+        Lisa 4×4 <Grid2X2 width={14} className="absolute right-2 top-1/2 -translate-y-1/2" />
       </Button>
-      <Button variant="outline" size="sm" type="button" onClick={onMake6x6Action}>
-        Lisa 6×6 <Grid2X2 width={14} className="ml-1" />
+      <Button variant="outline" size="xs" type="button" className="relative pr-6" onClick={onMake6x6Action}>
+        Lisa 6×6 <Grid2X2 width={14} className="absolute right-2 top-1/2 -translate-y-1/2" />
       </Button>
 
       <Button
         title="Kustuta kõik kastid"
         type="button"
-        size="sm"
+        size="xs"
         variant="destructive"
         onClick={onClearAction}
         disabled={disableClear}

@@ -57,19 +57,19 @@ export function UserMenu({ name, email, avatarUrl, onSignOut }: UserMenuProps) {
 
         <DropdownMenuContent
           align="end"
-          className="w-44 rounded-lg shadow-lg"
+          className="w-44 rounded-2xl shadow-lg"
         >
-          <DropdownMenuItem asChild>
+          <DropdownMenuItem asChild className="rounded-xl">
             <Link href="/profile">Profiil</Link>
           </DropdownMenuItem>
-          <DropdownMenuItem asChild>
+          <DropdownMenuItem asChild className="rounded-xl">
             <Link href="/settings">Seaded</Link>
           </DropdownMenuItem>
-          <DropdownMenuItem asChild>
+          <DropdownMenuItem asChild className="rounded-xl">
             <Link href="/apps">Kõik rakendused</Link>
           </DropdownMenuItem>
           <DropdownMenuItem
-            className="text-destructive"
+            className="text-destructive rounded-xl"
             onClick={onSignOut}
           >
             Logi välja
