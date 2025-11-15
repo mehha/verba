@@ -2,7 +2,6 @@
 'use client'
 
 import React, { useEffect, useMemo, useState } from 'react'
-import { CircleX } from 'lucide-react'
 import Image from 'next/image'
 
 import { getClientSideURL } from '@/utilities/getURL'
@@ -72,14 +71,6 @@ type CellEditModalProps = {
 }
 
 type TabKey = 'upload' | 'symbols' | 'media'
-
-function prettifyName(raw?: string | null): string {
-  if (!raw) return ''
-  const last = raw.split('/').pop() || raw
-  const noExt = last.replace(/\.[^/.]+$/, '')
-  const spaced = noExt.replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim()
-  return spaced ? spaced.charAt(0).toUpperCase() + spaced.slice(1) : ''
-}
 
 export const CellEditModal: React.FC<CellEditModalProps> = ({
   open,
@@ -282,9 +273,8 @@ export const CellEditModal: React.FC<CellEditModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[680px] max-w-[90vw] rounded-2xl p-4 shadow-md">
-        <DialogHeader className="flex flex-row items-start justify-between gap-4">
+        <DialogHeader>
           <DialogTitle className="text-lg font-semibold">Muuda</DialogTitle>
-          <DialogClose asChild />
         </DialogHeader>
 
         <div className="mt-4 flex flex-col gap-6">
