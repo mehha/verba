@@ -21,6 +21,23 @@ export const Apps: CollectionConfig = {
       admin: { readOnly: true },
       defaultValue: ({ user }) => user?.id, // auto-assign
     },
+    // NEW: kas näidatakse desktopil
+    {
+      name: 'pinned',
+      type: 'checkbox',
+      label: 'Näita desktopil',
+      defaultValue: true,
+    },
+    // NEW: sortimisnumber
+    {
+      name: 'order',
+      type: 'number',
+      label: 'Järjekord',
+      admin: {
+        position: 'sidebar',
+        description: 'Mida väiksem number, seda eespool desktopil.',
+      },
+    },
     { name: 'thumbnail', type: 'upload', relationTo: 'media' },
     {
       name: 'actionBar',
@@ -64,4 +81,33 @@ export const Apps: CollectionConfig = {
       ],
     },
   ],
+  hooks: {
+    beforeChange: [
+      async ({ data, operation, req }) => {
+        if (operation !== 'create') return data
+
+        // kui order juba on, ära tee midagi
+        if (typeof data.order === 'number') return data
+
+        const ownerId = data.owner || req.user?.id
+        if (!ownerId) return data
+
+        const result = await req.payload.find({
+          collection: 'apps',
+          where: {
+            owner: {
+              equals: ownerId,
+            },
+          },
+          sort: '-order',
+          limit: 1,
+        })
+
+        const maxOrder = result.docs[0]?.order ?? 0
+        data.order = maxOrder + 1
+
+        return data
+      },
+    ],
+  },
 }

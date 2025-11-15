@@ -37,7 +37,7 @@ export const link: LinkType = ({ appearances, disableLabel = false, overrides = 
             type: 'radio',
             admin: {
               layout: 'horizontal',
-              width: '50%',
+              width: '33%',
             },
             defaultValue: 'reference',
             options: [
@@ -58,9 +58,20 @@ export const link: LinkType = ({ appearances, disableLabel = false, overrides = 
               style: {
                 alignSelf: 'flex-end',
               },
-              width: '50%',
+              width: '33%',
             },
             label: 'Open in new tab',
+          },
+          {
+            name: 'accent',
+            type: 'checkbox',
+            admin: {
+              style: {
+                alignSelf: 'flex-end',
+              },
+              width: '33%',
+            },
+            label: 'Accent style',
           },
         ],
       },

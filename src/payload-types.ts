@@ -172,6 +172,7 @@ export interface Page {
           link: {
             type?: ('reference' | 'custom') | null;
             newTab?: boolean | null;
+            accent?: boolean | null;
             reference?:
               | ({
                   relationTo: 'pages';
@@ -474,6 +475,7 @@ export interface CallToActionBlock {
         link: {
           type?: ('reference' | 'custom') | null;
           newTab?: boolean | null;
+          accent?: boolean | null;
           reference?:
             | ({
                 relationTo: 'pages';
@@ -524,6 +526,7 @@ export interface ContentBlock {
         link?: {
           type?: ('reference' | 'custom') | null;
           newTab?: boolean | null;
+          accent?: boolean | null;
           reference?:
             | ({
                 relationTo: 'pages';
@@ -820,6 +823,11 @@ export interface App {
   id: string;
   name: string;
   owner: string | User;
+  pinned?: boolean | null;
+  /**
+   * Mida väiksem number, seda eespool desktopil.
+   */
+  order?: number | null;
   thumbnail?: (string | null) | Media;
   /**
    * Ülemine “valitud” riba / fraasid
@@ -1126,6 +1134,7 @@ export interface PagesSelect<T extends boolean = true> {
                 | {
                     type?: T;
                     newTab?: T;
+                    accent?: T;
                     reference?: T;
                     url?: T;
                     label?: T;
@@ -1208,6 +1217,7 @@ export interface CallToActionBlockSelect<T extends boolean = true> {
           | {
               type?: T;
               newTab?: T;
+              accent?: T;
               reference?: T;
               url?: T;
               label?: T;
@@ -1234,6 +1244,7 @@ export interface ContentBlockSelect<T extends boolean = true> {
           | {
               type?: T;
               newTab?: T;
+              accent?: T;
               reference?: T;
               url?: T;
               label?: T;
@@ -1475,6 +1486,8 @@ export interface UsersSelect<T extends boolean = true> {
 export interface AppsSelect<T extends boolean = true> {
   name?: T;
   owner?: T;
+  pinned?: T;
+  order?: T;
   thumbnail?: T;
   actionBar?:
     | T
@@ -1774,6 +1787,7 @@ export interface Header {
         link: {
           type?: ('reference' | 'custom') | null;
           newTab?: boolean | null;
+          accent?: boolean | null;
           reference?:
             | ({
                 relationTo: 'pages';
@@ -1795,6 +1809,7 @@ export interface Header {
               link: {
                 type?: ('reference' | 'custom') | null;
                 newTab?: boolean | null;
+                accent?: boolean | null;
                 reference?:
                   | ({
                       relationTo: 'pages';
@@ -1827,6 +1842,7 @@ export interface Footer {
         link: {
           type?: ('reference' | 'custom') | null;
           newTab?: boolean | null;
+          accent?: boolean | null;
           reference?:
             | ({
                 relationTo: 'pages';
@@ -1859,6 +1875,7 @@ export interface HeaderSelect<T extends boolean = true> {
           | {
               type?: T;
               newTab?: T;
+              accent?: T;
               reference?: T;
               url?: T;
               label?: T;
@@ -1872,6 +1889,7 @@ export interface HeaderSelect<T extends boolean = true> {
                 | {
                     type?: T;
                     newTab?: T;
+                    accent?: T;
                     reference?: T;
                     url?: T;
                     label?: T;
@@ -1897,6 +1915,7 @@ export interface FooterSelect<T extends boolean = true> {
           | {
               type?: T;
               newTab?: T;
+              accent?: T;
               reference?: T;
               url?: T;
               label?: T;

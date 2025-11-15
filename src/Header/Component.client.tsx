@@ -10,6 +10,7 @@ import { Logo } from '@/components/Logo/Logo'
 import { NavDesktop } from '@/Header/Nav/NavDesktop'
 import {NavMobile} from "@/Header/Nav/NavMobile";
 import { HeaderNav } from '@/Header/Nav'
+import { UserMenu } from '@/Header/Nav/UserMenu'
 
 interface HeaderClientProps {
   data: Header
@@ -33,7 +34,7 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
 
   return (
     <header className="container mt-6 relative z-20  " {...(theme ? { 'data-theme': theme } : {})}>
-      <div className="p-4 px-8 flex justify-between bg-white rounded-full dark:bg-black">
+      <div className="p-4 px-8 flex justify-between bg-white rounded-full dark:bg-black shadow-sm ring-1 ring-gray-900/5">
         <Link href="/">
           <Logo loading="eager" priority="high" className="invert dark:invert-0" />
         </Link>
@@ -45,6 +46,15 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
         {/*<NavMobile data={data} />*/}
 
         <HeaderNav data={data} />
+
+        <UserMenu
+          name="John Doe"
+          email="john@example.com"
+          avatarUrl="https://…/avatar.jpg"
+          onSignOut={() => {
+            // TODO: sign-out loogika (NextAuth signOut(), custom action vms)
+          }}
+        />
       </div>
     </header>
   )

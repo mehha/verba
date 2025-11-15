@@ -11,6 +11,7 @@ type CMSLinkType = {
   className?: string
   label?: string | null
   newTab?: boolean | null
+  accent?: boolean | null
   reference?: {
     relationTo: 'pages' | 'posts'
     value: Page | Post | string | number
@@ -28,6 +29,7 @@ export const CMSLink: React.FC<CMSLinkType> = (props) => {
     className,
     label,
     newTab,
+    accent,
     reference,
     size: sizeFromProps,
     url,
@@ -45,10 +47,14 @@ export const CMSLink: React.FC<CMSLinkType> = (props) => {
   const size = appearance === 'link' ? 'clear' : sizeFromProps
   const newTabProps = newTab ? { rel: 'noopener noreferrer', target: '_blank' } : {}
 
+  const accentClass = accent
+    ? 'px-4 py-2 rounded-full text-sm inline-flex items-center justify-center whitespace-nowrap font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-accent text-accent-foreground hover:bg-accent/90'
+    : undefined
+
   /* Ensure we don't break any styles set by richText */
   if (appearance === 'inline') {
     return (
-      <Link className={cn(className)} href={href || url || ''} {...newTabProps}>
+      <Link className={cn(accentClass, className)} href={href || url || ''} {...newTabProps}>
         {label && label}
         {children && children}
       </Link>
@@ -57,7 +63,7 @@ export const CMSLink: React.FC<CMSLinkType> = (props) => {
 
   return (
     <Button asChild className={className} size={size} variant={appearance}>
-      <Link className={cn(className)} href={href || url || ''} {...newTabProps}>
+      <Link className={cn(accentClass, className)} href={href || url || ''} {...newTabProps}>
         {label && label}
         {children && children}
       </Link>
