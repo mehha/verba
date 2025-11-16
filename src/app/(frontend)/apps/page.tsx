@@ -5,6 +5,9 @@ import { getPayload } from 'payload'
 import configPromise from '@payload-config'
 import type { App } from '@/payload-types'
 import { AppsList } from './AppsList'
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 
 export const dynamic = 'force-dynamic'
 
@@ -80,7 +83,13 @@ export default async function AppsPage() {
   async function deleteApp(formData: FormData) {
     'use server'
 
-    const appId = formData.get('appId') as string
+    const appId = formData.get('appId')
+
+    if (!appId || typeof appId !== 'string') {
+      console.error('Missing appId in deleteApp', appId)
+      throw new Error('appId puudub FormData-st')
+    }
+
     const payload = await getPayload({ config: configPromise })
     const requestHeaders = await headers()
     const { user } = await payload.auth({ headers: requestHeaders })
@@ -98,18 +107,20 @@ export default async function AppsPage() {
 
         {/* vana CreateAppButton loogika siin */}
         <form action={createApp} className="flex gap-2">
-          <input
-            type="text"
-            name="name"
-            placeholder="Uue äpi nimi"
-            className="border rounded px-2 py-1 text-sm"
-          />
-          <button
-            type="submit"
-            className="text-sm px-3 py-1 rounded bg-slate-900 text-white"
-          >
+          <div className="">
+            <Label htmlFor="name" className="sr-only">
+              Uue äpi nimi
+            </Label>
+            <Input
+              id="name"
+              name="name"
+              placeholder="Uue äpi nimi"
+            />
+          </div>
+
+          <Button type="submit">
             Lisa uus äpp
-          </button>
+          </Button>
         </form>
       </header>
 

@@ -7,37 +7,48 @@ export const runtime = 'nodejs'
 const client = new Groq({ apiKey: process.env.GROQ_API_KEY })
 const GROQ_MODEL = process.env.GROQ_MODEL ?? 'qwen/qwen3-32b'
 
+type GroqBody = {
+  contextTail?: string[]
+  token?: string
+}
+
 export async function POST(req: Request) {
   if (!process.env.GROQ_API_KEY) {
     return NextResponse.json({ error: 'GROQ_API_KEY missing' }, { status: 500 })
   }
 
-  const { contextTail = [], token = '' } = await req.json().catch(() => ({}))
-  const raw = (token ?? '').trim()
+  const body = (await req.json().catch(() => ({}))) as GroqBody
+  const raw = (body.token ?? '').trim()
   if (!raw) return NextResponse.json({ error: 'missing token' }, { status: 400 })
 
-  // First token is never changed
-  const isFirst = !Array.isArray(contextTail) || contextTail.length === 0
-  if (isFirst) return NextResponse.json({ surface: raw })
+  const tail = Array.isArray(body.contextTail) ? body.contextTail : []
 
-  const context = Array.isArray(contextTail) ? contextTail.slice(-2).join(' ') : ''
+  // Esimest tokenit ei muudeta – odavam, pole vaja Groq’i üldse
+  if (tail.length === 0) {
+    return NextResponse.json({ surface: raw })
+  }
+
+  // piirame konteksti 2 viimasele – piisav, odav
+  const context = tail.slice(-2).join(' ')
 
   const system = [
-    'Sa oled eesti keele morfosüntaksi korrigeerija.',
-    'VÄLJUND peab olema täpne JSON ilma lisatekstita.',
-    'REEGLID:',
-    '1) Ära kunagi kustuta sõnu.',
-    '2) Esimest tokenit ei muudeta (seda rakendus tagab).',
-    '3) Kui token on tegusõna ja kontekstis on alus, anna alati oleviku 3. pööre ainsus (nt "minema"→"läheb", "sittuma"→"situb").',
-    '4) Kui token on mitmesõnaline nimisõnafraas, hoia kõik eelnevad sõnad IDENTSELT samad ning muuda ainult viimase sõna käänet.',
-    '5) Kohavalik: seisundi/asendi verbide järel kasuta seesütlevat (inessiiv: "-s" → "koolis", "metsas"); liikumisverbide järel sisseütlevat (illatiiv: "-sse"/tüvi → "kooli", "metsasse").',
-    'Seisund/asend: "on", "asub", "elab", "viibib", "istub", "seisab", "magab", "ootab", "töötab", "puhkab", "pissib", "situb".',
-    'Liikumine: "läheb", "jookseb", "kõnnib", "sõidab", "suundub", "tormab".',
-    'Tagasta ainult JSON: {"surface":"..."}',
+    'Sa parandad eesti keele morfosüntaksit ühe tokeni kaupa.',
+    'Sulle antakse:',
+    '- "Kontekst": 0–2 eelmist sõna (või fraasi),',
+    '- "Token": praegune sõna või fraas, mida tuleb kohandada.',
+    '',
+    'Reeglid:',
+    '1) Ära lisa ega kustuta sõnu.',
+    '2) Hoia tokeni tüvi sama, muuda ainult vormi (kääne/pööre/lõpp).',
+    '3) Kui token sisaldab mitu sõna, muuda ainult VIIMAST sõna.',
+    '4) Kasuta vajadusel õiget mitmuse käänet (nt "kaks kass" → "kaks kassi").',
+    '5) Kohakäänded: olek/seisund → seesütlev ("koolis"), liikumine → sisseütlev ("kooli").',
+    '',
+    'Tagasta VAINULT JSON kujul: {"surface":"..."}',
   ].join('\n')
 
   const user = [
-    `Kontekst: ${context || '—'}`,
+    `Kontekst: ${context || '-'}`,
     `Token: ${raw}`,
     'Vastus:',
   ].join('\n')
@@ -45,9 +56,7 @@ export async function POST(req: Request) {
   try {
     const completion = await client.chat.completions.create({
       model: GROQ_MODEL,
-      // enforce strict JSON object
-      response_format: { type: 'json_object' },
-      reasoning_effort: 'none' as any,
+      response_format: { type: 'json_object' }, // garanteerib JSONi
       messages: [
         { role: 'system', content: system },
         { role: 'user', content: user },
@@ -57,17 +66,20 @@ export async function POST(req: Request) {
 
     const txt = (completion.choices?.[0]?.message?.content ?? '').trim()
 
-    // Parse JSON safely
     let surface = raw
+
     try {
       const parsed = JSON.parse(txt) as { surface?: string }
-      if (parsed?.surface && parsed.surface.trim()) surface = parsed.surface.trim()
+      if (parsed?.surface && parsed.surface.trim()) {
+        surface = parsed.surface.trim()
+      }
     } catch {
+      // fallback, kui mudel ikka midagi muud lisab
       const m = txt.match(/\{\s*"surface"\s*:\s*"([^"]*)"\s*\}/)
       if (m) surface = m[1]
     }
 
-    // Never drop words for multiword tokens: keep prefix identical
+    // Turvavõrk mitmesõnalise tokeni puhul: prefix peab jääma samaks
     if (raw.includes(' ')) {
       const parts = raw.split(/\s+/)
       const prefix = parts.slice(0, -1).join(' ')
@@ -78,8 +90,8 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ surface })
-  } catch (err) {
-    // Soft-fail to raw token on any SDK/network error
+  } catch {
+    // Soft-fail: kui Groq error, loeme lihtsalt algset tokenit
     return NextResponse.json({ surface: raw, note: 'sdk_error' }, { status: 200 })
   }
 }

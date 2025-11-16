@@ -295,7 +295,7 @@ export const CellEditModal: React.FC<CellEditModalProps> = ({
           {/* Title */}
           <div className="flex flex-col gap-1 text-sm">
             <Label htmlFor="cell-title" className="text-lg">
-              Pealkiri
+              Tekst
             </Label>
             <Input
               id="cell-title"

@@ -93,6 +93,67 @@ export const Apps: CollectionConfig = {
         },
       ],
     },
+    {
+      name: 'compounds',
+      type: 'array',
+      label: 'Sõnaühendid',
+      admin: {
+        description:
+          'Spetsiifilised cellide kombinatsioonid (nt "kaks" + "kass" → "kaks kassi").',
+      },
+      fields: [
+        {
+          name: 'id',
+          label: 'ID',
+          type: 'text',
+          required: true,
+          admin: {
+            description: 'Unikaalne id (nt kaks-kass-plural).',
+          },
+        },
+        {
+          name: 'cells',
+          label: 'Cellide jada',
+          type: 'array',
+          minRows: 2,
+          admin: {
+            description: 'Kombinatsioon milliste cellide jadas see fraas käivitub.',
+          },
+          fields: [
+            {
+              name: 'cellId',
+              label: 'Cell ID',
+              type: 'text',
+              required: true,
+            },
+          ],
+        },
+        {
+          name: 'parts',
+          label: 'Sõnad / vormid',
+          type: 'array',
+          minRows: 1,
+          admin: {
+            description:
+              'Sama arv ridu kui cellidel. Iga positsioonile saad määrata kuvatava ja TTS-kuju.',
+          },
+          fields: [
+            {
+              name: 'surface',
+              label: 'Tekst ekraanil',
+              type: 'text',
+              required: true,
+            },
+            {
+              name: 'tts',
+              label: 'TTS tekst (valikuline)',
+              type: 'text',
+              required: false,
+            },
+          ],
+        },
+      ],
+    },
   ],
   hooks: {
     beforeChange: [

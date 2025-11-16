@@ -11,7 +11,7 @@ import { useViewportHeight } from '@/utilities/useViewportHeight'
 import { CellEditModal } from './CellEditModal'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Play, Trash } from 'lucide-react'
+import { Play, Trash, WholeWord } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Switch } from '@/components/ui/switch'
@@ -113,8 +113,17 @@ export default function AppEditor({ app }: Props) {
               {saving ? 'Salvestan…' : dirty ? 'Salvesta' : 'Salvestatud'}
             </Button>
 
+            <Link
+              href={`/app/${app.id}/compounds`}
+              className="text-sm text-primary underline-offset-4 hover:underline"
+            >
+              <Button variant="secondary" size="sm">
+                <WholeWord className="h-5 w-5 mr-2 text-pink-600" /> Halda sõnaühendeid
+              </Button>
+            </Link>
+
             <Link href={`/app/${app.id}`}>
-              <Button variant="default" size="sm">
+              <Button variant="positive" size="sm">
                 <Play className="h-5 w-5" />
               </Button>
             </Link>

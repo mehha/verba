@@ -859,6 +859,36 @@ export interface App {
         }[]
       | null;
   };
+  /**
+   * Spetsiifilised cellide kombinatsioonid (nt "kaks" + "kass" → "kaks kassi").
+   */
+  compounds?:
+    | {
+        /**
+         * Unikaalne id (nt kaks-kass-plural).
+         */
+        id: string;
+        /**
+         * Kombinatsioon milliste cellide jadas see fraas käivitub.
+         */
+        cells?:
+          | {
+              cellId: string;
+              id?: string | null;
+            }[]
+          | null;
+        /**
+         * Sama arv ridu kui cellidel. Iga positsioonile saad määrata kuvatava ja TTS-kuju.
+         */
+        parts?:
+          | {
+              surface: string;
+              tts?: string | null;
+              id?: string | null;
+            }[]
+          | null;
+      }[]
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1523,6 +1553,24 @@ export interface AppsSelect<T extends boolean = true> {
               externalImageURL?: T;
               audio?: T;
               locked?: T;
+            };
+      };
+  compounds?:
+    | T
+    | {
+        id?: T;
+        cells?:
+          | T
+          | {
+              cellId?: T;
+              id?: T;
+            };
+        parts?:
+          | T
+          | {
+              surface?: T;
+              tts?: T;
+              id?: T;
             };
       };
   updatedAt?: T;

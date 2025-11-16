@@ -3,6 +3,7 @@
 import React, { useMemo, useState } from 'react'
 import Link from 'next/link'
 import type { App } from '@/payload-types'
+
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -12,6 +13,15 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Edit3,
   Monitor,
@@ -60,7 +70,7 @@ export function AppsList({
   return (
     <TooltipProvider>
       <div className="space-y-4">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center flex-wrap justify-between gap-4">
           <div className="flex-1">
             <Input
               type="search"
@@ -74,35 +84,39 @@ export function AppsList({
           <div className="text-xs text-muted-foreground">
             Kokku <span className="font-medium">{apps.length}</span> äppi
             {filteredApps.length !== apps.length && (
-              <> · filtris <span className="font-medium">{filteredApps.length}</span></>
+              <>
+                {' · '}filtris{' '}
+                <span className="font-medium">{filteredApps.length}</span>
+              </>
             )}
           </div>
         </div>
 
-        <div className="overflow-x-auto rounded-xl border bg-background">
-          <table className="min-w-full text-sm">
-            <thead className="bg-muted/60">
-              <tr className="border-b">
-                <th className="px-3 py-2 text-left font-medium text-xs uppercase tracking-wide text-muted-foreground w-10">
+        <ScrollArea className="rounded-xl border bg-background">
+          <Table className="min-w-full text-sm">
+            <TableHeader className="bg-muted/60">
+              <TableRow className="border-b">
+                <TableHead className="w-10 px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   #
-                </th>
-                <th className="px-3 py-2 text-left font-medium text-xs uppercase tracking-wide text-muted-foreground">
+                </TableHead>
+                <TableHead className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Nimi
-                </th>
+                </TableHead>
                 {isAdmin && (
-                  <th className="px-3 py-2 text-left font-medium text-xs uppercase tracking-wide text-muted-foreground">
+                  <TableHead className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
                     Omanik
-                  </th>
+                  </TableHead>
                 )}
-                <th className="px-3 py-2 text-left font-medium text-xs uppercase tracking-wide text-muted-foreground">
+                <TableHead className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Desktop
-                </th>
-                <th className="px-3 py-2 text-right font-medium text-xs uppercase tracking-wide text-muted-foreground">
+                </TableHead>
+                <TableHead className="px-3 py-2 text-right text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Tegevused
-                </th>
-              </tr>
-            </thead>
-            <tbody>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+
+            <TableBody>
               {filteredApps.map((app, index) => {
                 const isPinned = !!app.pinned
                 const owner =
@@ -111,43 +125,44 @@ export function AppsList({
                     : null
 
                 return (
-                  <tr
+                  <TableRow
                     key={app.id}
                     className="border-b last:border-b-0 hover:bg-muted/40"
                   >
-                    <td className="px-3 py-2 align-middle text-xs text-muted-foreground">
+                    <TableCell className="px-3 py-2 align-middle text-xs text-muted-foreground">
                       {index + 1}
-                    </td>
+                    </TableCell>
 
-                    <td className="px-3 py-2 align-middle">
+                    <TableCell className="px-3 py-2 align-middle">
                       <div className="flex flex-col gap-0.5">
                         <Link
                           href={`/app/${app.id}`}
-                          className="font-medium hover:underline underline-offset-2"
+                          className="font-medium underline-offset-2 hover:underline"
                         >
                           {app.name || 'Nimetu äpp'}
                         </Link>
                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
                           <Link
                             href={`/app/${app.id}`}
-                            className="inline-flex items-center gap-1 hover:underline underline-offset-2"
+                            className="inline-flex items-center gap-1 underline-offset-2 hover:underline"
                           >
-                            <Monitor className="w-3 h-3" />
+                            <Monitor className="h-3 w-3" />
                             <span>Vaata</span>
                           </Link>
+                          <span aria-hidden="true">·</span>
                           <Link
                             href={`/app/${app.id}/edit`}
-                            className="inline-flex items-center gap-1 hover:underline underline-offset-2"
+                            className="inline-flex items-center gap-1 underline-offset-2 hover:underline"
                           >
-                            <Edit3 className="w-3 h-3" />
+                            <Edit3 className="h-3 w-3" />
                             <span>Muuda</span>
                           </Link>
                         </div>
                       </div>
-                    </td>
+                    </TableCell>
 
                     {isAdmin && (
-                      <td className="px-3 py-2 align-middle">
+                      <TableCell className="px-3 py-2 align-middle">
                         {owner ? (
                           <div className="flex flex-col">
                             {owner.name && (
@@ -166,14 +181,14 @@ export function AppsList({
                             –
                           </span>
                         )}
-                      </td>
+                      </TableCell>
                     )}
 
-                    <td className="px-3 py-2 align-middle">
+                    <TableCell className="px-3 py-2 align-middle">
                       <div className="flex items-center gap-2">
                         <Badge
                           variant={isPinned ? 'default' : 'outline'}
-                          className="text-[11px] px-2 py-0.5"
+                          className="px-2 py-0.5 text-[11px]"
                         >
                           {isPinned ? 'Desktopil' : 'Peidetud'}
                         </Badge>
@@ -194,9 +209,9 @@ export function AppsList({
                                 className="h-7 w-7"
                               >
                                 {isPinned ? (
-                                  <PinOff className="w-4 h-4" />
+                                  <PinOff className="h-4 w-4" />
                                 ) : (
-                                  <Pin className="w-4 h-4" />
+                                  <Pin className="h-4 w-4" />
                                 )}
                               </Button>
                             </TooltipTrigger>
@@ -210,9 +225,9 @@ export function AppsList({
                           </Tooltip>
                         </form>
                       </div>
-                    </td>
+                    </TableCell>
 
-                    <td className="px-3 py-2 align-middle text-right">
+                    <TableCell className="px-3 py-2 align-middle text-right">
                       <form
                         action={deleteApp}
                         onSubmit={(e) => {
@@ -226,15 +241,16 @@ export function AppsList({
                         }}
                         className="inline-flex"
                       >
+                        <input type="hidden" name="appId" value={app.id} />
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
                               type="submit"
                               size="icon"
                               variant="ghost"
-                              className="h-7 w-7 text-red-600 hover:text-red-700 hover:bg-red-50"
+                              className="h-7 w-7 text-red-600 hover:bg-red-50 hover:text-red-700"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
@@ -242,13 +258,13 @@ export function AppsList({
                           </TooltipContent>
                         </Tooltip>
                       </form>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 )
               })}
-            </tbody>
-          </table>
-        </div>
+            </TableBody>
+          </Table>
+        </ScrollArea>
       </div>
     </TooltipProvider>
   )
