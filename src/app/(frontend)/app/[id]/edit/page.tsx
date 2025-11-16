@@ -1,5 +1,6 @@
 // src/app/(frontend)/app/[id]/edit/page.tsx
 import { notFound, redirect } from 'next/navigation'
+import { revalidatePath } from 'next/cache'
 import AppEditor from './AppEditor/index'
 import { getCurrentUser } from '@/utilities/getCurrentUser'
 import type { App, User } from '@/payload-types'
@@ -13,7 +14,6 @@ export default async function AppEditPage({
 }: {
   params: Promise<Params>
 }) {
-  // ✅ unwrap params first (this removes the warning)
   const { id } = await params
 
   const { payload, user } = await getCurrentUser()
@@ -36,7 +36,6 @@ export default async function AppEditPage({
 
   const app = doc as App
 
-  // extra safety: only admin or owner
   const isAdmin = user.role === 'admin'
   const ownerId =
     typeof app.owner === 'object' && app.owner !== null
@@ -44,8 +43,32 @@ export default async function AppEditPage({
       : app.owner
 
   if (!isAdmin && ownerId !== user.id) {
-    redirect('/desktop') // or 403
+    redirect('/desktop')
   }
 
-  return <AppEditor app={app} />
+  // --- server action: renameApp ---
+  async function renameApp(formData: FormData) {
+    'use server'
+
+    const { payload, user } = await getCurrentUser()
+    if (!user) {
+      redirect('/admin')
+    }
+
+    const appId = formData.get('appId') as string
+    const rawName = (formData.get('name') as string) ?? ''
+    const name = rawName.trim() || 'Nimetu äpp'
+
+    await payload.update({
+      collection: 'apps',
+      id: appId, // ei kasuta where, meil on id olemas
+      data: { name },
+    })
+
+    // värskenda edit-lehte ja listi
+    revalidatePath(`/app/${appId}/edit`)
+    revalidatePath('/apps')
+  }
+
+  return <AppEditor app={app} renameApp={renameApp} />
 }

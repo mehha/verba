@@ -1,4 +1,4 @@
-// src/components/AppEditor/index.tsx
+// src/components/AppEditor/index.tsx (või src/app/(frontend)/app/[id]/edit/AppEditor/index.tsx)
 'use client'
 
 import RGL, { WidthProvider } from 'react-grid-layout'
@@ -11,7 +11,8 @@ import { useViewportHeight } from '@/utilities/useViewportHeight'
 import { CellEditModal } from './CellEditModal'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Play, Trash, WholeWord } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Play, Trash, WholeWord, Edit3, Check, X } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Switch } from '@/components/ui/switch'
@@ -19,9 +20,12 @@ import { Label } from '@/components/ui/label'
 
 const ReactGridLayout = WidthProvider(RGL)
 
-type Props = { app: App }
+type Props = {
+  app: App
+  renameApp: (formData: FormData) => Promise<void>
+}
 
-export default function AppEditor({ app }: Props) {
+export default function AppEditor({ app, renameApp }: Props) {
   const {
     saving,
     dirty,
@@ -45,6 +49,10 @@ export default function AppEditor({ app }: Props) {
 
   const vh = useViewportHeight()
   const [editingCellId, setEditingCellId] = useState<string | null>(null)
+
+  // title edit local state
+  const [isEditingTitle, setIsEditingTitle] = useState(false)
+  const [titleDraft, setTitleDraft] = useState(app.name ?? '')
 
   const rowsNeeded =
     layout.length > 0
@@ -99,10 +107,65 @@ export default function AppEditor({ app }: Props) {
     <div className="space-y-2">
       <div className="container mb-10">
         <div className="mb-10 flex items-center justify-between gap-2">
-          <h1 className="text-center text-3xl font-semibold leading-6">
-            {app.name}
-          </h1>
+          {/* Title + edit */}
+          <div className="flex items-center gap-2">
+            {isEditingTitle ? (
+              <form
+                action={renameApp}
+                className="flex items-center gap-2"
+                onSubmit={() => {
+                  setIsEditingTitle(false)
+                }}
+              >
+                <input type="hidden" name="appId" value={app.id as string} />
+                <Input
+                  name="name"
+                  autoFocus
+                  value={titleDraft}
+                  onChange={(e) => setTitleDraft(e.target.value)}
+                  className="h-9 w-64 text-lg font-semibold"
+                  placeholder="Nimetu äpp"
+                />
+                <Button
+                  type="submit"
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8"
+                >
+                  <Check className="h-4 w-4" />
+                </Button>
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8"
+                  onClick={() => {
+                    setIsEditingTitle(false)
+                    setTitleDraft(app.name ?? '')
+                  }}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </form>
+            ) : (
+              <>
+                <h1 className="text-3xl font-semibold leading-6">
+                  {app.name || 'Nimetu äpp'}
+                </h1>
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8"
+                  onClick={() => setIsEditingTitle(true)}
+                >
+                  <Edit3 className="h-4 w-4" />
+                </Button>
+              </>
+            )}
+          </div>
 
+          {/* Parempoolsed nupud */}
           <div className="flex items-center gap-2">
             <Button
               variant="secondary"
@@ -118,7 +181,7 @@ export default function AppEditor({ app }: Props) {
               className="text-sm text-primary underline-offset-4 hover:underline"
             >
               <Button variant="secondary" size="sm">
-                <WholeWord className="h-5 w-5 mr-2 text-pink-600" /> Halda sõnaühendeid
+                <WholeWord className="mr-2 h-5 w-5 text-pink-600" /> Halda sõnaühendeid
               </Button>
             </Link>
 
@@ -149,9 +212,7 @@ export default function AppEditor({ app }: Props) {
                 }}
               />
               <Label htmlFor="action-bar-toggle">
-                {actionBar.enabled
-                  ? 'Peida tegevusriba'
-                  : 'Kuva tegevusriba'}
+                {actionBar.enabled ? 'Peida tegevusriba' : 'Kuva tegevusriba'}
               </Label>
             </div>
             <div className="flex items-center space-x-2">
@@ -178,7 +239,7 @@ export default function AppEditor({ app }: Props) {
         <ReactGridLayout
           className="layout"
           cols={cols}
-          rowHeight={200} // kui tahad, saad siia panna rowHeight
+          rowHeight={200}
           width={1200}
           layout={layout}
           onLayoutChange={onLayoutChange}
@@ -246,8 +307,7 @@ export default function AppEditor({ app }: Props) {
             ? {
                 id: currentEditingCell.id,
                 title: currentEditingCell.title ?? '',
-                externalImageURL:
-                  currentEditingCell.externalImageURL ?? '',
+                externalImageURL: currentEditingCell.externalImageURL ?? '',
                 h: currentEditingCell.h ?? 1,
                 image: currentEditingCell.image,
               }

@@ -16,7 +16,9 @@ export const Users: CollectionConfig = {
     useAsTitle: 'name',
     hidden: ({ user }) => user?.role !== 'admin',
   },
-  auth: true,
+  auth: {
+    tokenExpiration: 60 * 60 * 24 // 1 day
+  },
   fields: [
     {
       name: 'name',
