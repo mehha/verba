@@ -432,6 +432,11 @@ export interface User {
   id: string;
   name?: string | null;
   role: 'admin' | 'user';
+  /**
+   * Hashed PIN vanema vaate jaoks
+   */
+  parentPinHash?: string | null;
+  pinUpdatedAt?: string | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -1498,6 +1503,8 @@ export interface CategoriesSelect<T extends boolean = true> {
 export interface UsersSelect<T extends boolean = true> {
   name?: T;
   role?: T;
+  parentPinHash?: T;
+  pinUpdatedAt?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;

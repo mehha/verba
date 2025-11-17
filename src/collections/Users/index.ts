@@ -31,6 +31,21 @@ export const Users: CollectionConfig = {
       options: ['admin', 'user'],
       required: true,
     },
+    {
+      name: 'parentPinHash',
+      type: 'text',
+      admin: {
+        readOnly: true,
+        description: 'Hashed PIN vanema vaate jaoks',
+      },
+    },
+    {
+      name: 'pinUpdatedAt',
+      type: 'date',
+      admin: {
+        readOnly: true,
+      },
+    },
   ],
   timestamps: true,
 }

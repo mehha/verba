@@ -20,9 +20,10 @@ type UserMenuProps = {
   email?: string
   avatarUrl?: string
   onSignOut?: () => void
+  isParentMode?: boolean // 👈 lisatud
 }
 
-export function UserMenu({ name, email, avatarUrl, onSignOut }: UserMenuProps) {
+export function UserMenu({ name, email, avatarUrl, onSignOut, isParentMode }: UserMenuProps) {
   const initials = name
     .split(' ')
     .map((n) => n[0])
@@ -48,7 +49,7 @@ export function UserMenu({ name, email, avatarUrl, onSignOut }: UserMenuProps) {
             type="button"
             className="rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
-            <Avatar className="h-10 w-10">
+            <Avatar className="h-10 w-10 ring-2 ring-offset-2 ring-pink-500">
               <AvatarImage src={avatarUrl} alt={name} />
               <AvatarFallback>{initials}</AvatarFallback>
             </Avatar>
@@ -59,15 +60,16 @@ export function UserMenu({ name, email, avatarUrl, onSignOut }: UserMenuProps) {
           align="end"
           className="w-44 rounded-2xl shadow-lg"
         >
-          <DropdownMenuItem asChild className="rounded-xl">
-            <Link href="/profile">Profiil</Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild className="rounded-xl">
-            <Link href="/settings">Seaded</Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild className="rounded-xl">
-            <Link href="/apps">Kõik rakendused</Link>
-          </DropdownMenuItem>
+          {isParentMode && (
+            <>
+              <DropdownMenuItem asChild className="rounded-xl">
+                <Link href="/profile">Profiil</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild className="rounded-xl">
+                <Link href="/apps">Kõik rakendused</Link>
+              </DropdownMenuItem>
+            </>
+          )}
           <DropdownMenuItem
             className="text-destructive rounded-xl"
             onClick={onSignOut}

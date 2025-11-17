@@ -4,6 +4,7 @@ import Link from 'next/link'
 import React from 'react'
 
 import type { Page, Post } from '@/payload-types'
+import { MonitorStop } from 'lucide-react'
 
 type CMSLinkType = {
   appearance?: 'inline' | ButtonProps['variant']
@@ -47,6 +48,8 @@ export const CMSLink: React.FC<CMSLinkType> = (props) => {
   const size = appearance === 'link' ? 'clear' : sizeFromProps
   const newTabProps = newTab ? { rel: 'noopener noreferrer', target: '_blank' } : {}
 
+  const isAccent = accent === true
+
   const accentClass = accent
     ? 'px-4 py-2 rounded-full text-sm inline-flex items-center justify-center whitespace-nowrap font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-accent text-accent-foreground hover:bg-accent/90'
     : undefined
@@ -56,6 +59,7 @@ export const CMSLink: React.FC<CMSLinkType> = (props) => {
     return (
       <Link className={cn(accentClass, className)} href={href || url || ''} {...newTabProps}>
         {label && label}
+        {isAccent && <MonitorStop className="ml-2 h-4 w-4" />}
         {children && children}
       </Link>
     )
@@ -65,6 +69,7 @@ export const CMSLink: React.FC<CMSLinkType> = (props) => {
     <Button asChild className={className} size={size} variant={appearance}>
       <Link className={cn(accentClass, className)} href={href || url || ''} {...newTabProps}>
         {label && label}
+        {isAccent && <MonitorStop className="ml-2 h-4 w-4" />}
         {children && children}
       </Link>
     </Button>

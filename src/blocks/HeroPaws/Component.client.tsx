@@ -1,7 +1,17 @@
 'use client'
 
 import * as React from 'react'
-import { PawPrint, Cat, Dog, HeartPulse, Syringe, Stethoscope, type LucideIcon } from 'lucide-react'
+import {
+  MessageCircle,
+  Mic,
+  Headphones,
+  Users,
+  BookOpen,
+  Brain,
+  Smile,
+  MousePointer,
+  type LucideIcon,
+} from 'lucide-react'
 import type { Media as PayloadMedia } from '@/payload-types'
 import { Media } from '@/components/Media'
 
@@ -23,17 +33,20 @@ export type HeroPawsClientProps = {
   cards: HeroPawsCard[]
 }
 
-const ICONS: Record<string, LucideIcon> = {
-  PawPrint,
-  Cat,
-  Dog,
-  HeartPulse,
-  Syringe,
-  Stethoscope,
-}
+// AAC-related Lucide icons
+const ICONS = {
+  MessageCircle, // suhtlus / rääkimine
+  Mic,           // kõne / häälsüntees
+  Headphones,    // kuulamine
+  Users,         // suhtluspartnerid / grupp
+  BookOpen,      // õppematerjalid / sõnavara
+  Brain,         // kognitsioon / õppimine
+  Smile,         // emotsioonid / tunded
+  MousePointer,  // puudutamine / valimine (touch)
+} satisfies Record<string, LucideIcon>
 
 export const HeroPawsClient: React.FC<HeroPawsClientProps> = ({
-  eyebrow = 'Vertic pet solutions',
+  eyebrow = 'Eestikeelne AAC suhtlus',
   title,
   description,
   ctas = [],
@@ -41,30 +54,30 @@ export const HeroPawsClient: React.FC<HeroPawsClientProps> = ({
 }) => {
   return (
     <section className="relative isolate overflow-hidden">
-      {/* static floating icon pills */}
+      {/* static floating icon pills – nüüd AAC-ikoonid */}
       <span
-        className="absolute top-0 left-1/4 hidden h-10 w-10 items-center justify-center rounded-full bg-yellow-300 text-yellow-900 shadow ring-1 ring-black/5 backdrop-blur md:flex"
+        className="absolute top-0 left-1/4 hidden p-3 items-center justify-center rounded-full bg-yellow-300 text-yellow-900 shadow ring-1 ring-black/5 backdrop-blur md:flex"
         aria-hidden="true"
       >
-        <PawPrint className="h-5 w-5" />
+        <MessageCircle className="h-4 w-4" />
       </span>
       <span
-        className="absolute top-10 right-24 hidden h-10 w-10 items-center justify-center rounded-full bg-orange-300 text-orange-900 shadow ring-1 ring-black/5 backdrop-blur md:flex"
+        className="absolute top-10 right-24 hidden p-2 items-center justify-center rounded-full bg-orange-300 text-orange-900 shadow ring-1 ring-black/5 backdrop-blur md:flex"
         aria-hidden="true"
       >
-        <PawPrint className="h-5 w-5" />
+        <Mic className="h-4 w-4" />
       </span>
       <span
-        className="absolute top-1/2 left-24 hidden h-10 w-10 items-center justify-center rounded-full bg-blue-300 text-blue-900 shadow ring-1 ring-black/5 backdrop-blur md:flex"
+        className="absolute top-1/2 left-24 hidden p-3 items-center justify-center rounded-full bg-blue-300 text-blue-900 shadow ring-1 ring-black/5 backdrop-blur md:flex"
         aria-hidden="true"
       >
-        <PawPrint className="h-5 w-5" />
+        <Headphones className="h-5 w-5" />
       </span>
       <span
-        className="absolute top-1/2 right-12 hidden h-10 w-10 items-center justify-center rounded-full bg-emerald-300 text-emerald-900 shadow ring-1 ring-black/5 backdrop-blur md:flex"
+        className="absolute top-1/2 right-12 hidden p-2 items-center justify-center rounded-full bg-emerald-300 text-emerald-900 shadow ring-1 ring-black/5 backdrop-blur md:flex"
         aria-hidden="true"
       >
-        <PawPrint className="h-5 w-5" />
+        <Users className="h-4 w-4" />
       </span>
 
       <div className="mx-auto max-w-6xl px-6 pt-14 pb-10 text-center">
@@ -73,7 +86,10 @@ export const HeroPawsClient: React.FC<HeroPawsClientProps> = ({
           {eyebrow}
         </div>
 
-        <h1 className="mx-auto max-w-3xl text-balance text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl md:text-6xl" dangerouslySetInnerHTML={{ __html: title }} />
+        <h1
+          className="mx-auto max-w-3xl text-balance text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl md:text-6xl"
+          dangerouslySetInnerHTML={{ __html: title }}
+        />
 
         {description && (
           <p className="mx-auto mt-5 max-w-xl text-pretty text-base leading-7 text-slate-600 sm:text-lg">
@@ -92,14 +108,14 @@ export const HeroPawsClient: React.FC<HeroPawsClientProps> = ({
                 >
                   {c.label}
                   <span className="ml-1 inline-flex h-8 w-8 items-center justify-center rounded-full bg-pink-200 text-slate-900">
-                    <PawPrint size={16} />
+                    <MessageCircle size={16} />
                   </span>
                 </a>
               ) : (
                 <a
                   key={c.label}
                   href={c.href}
-                  className="group inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white h-[52px] px-5 py-2.5 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/10"
+                  className="group inline-flex h-[52px] items-center gap-2 rounded-full border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/10"
                 >
                   {c.label}
                   <svg
@@ -125,7 +141,8 @@ export const HeroPawsClient: React.FC<HeroPawsClientProps> = ({
 
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-6 pb-16 sm:grid-cols-3">
         {cards.map((c) => {
-          const Icon = ICONS[c.icon] || PawPrint
+          const Icon = ICONS[c.icon] || MessageCircle
+
           return (
             <div
               key={`${c.title}-${Math.random()}`}
@@ -139,13 +156,13 @@ export const HeroPawsClient: React.FC<HeroPawsClientProps> = ({
                 ].join(' ')}
                 aria-hidden="true"
               >
-                {c.image && typeof c.image === 'object' && c.image.url ? (
+                {c.image && typeof c.image === 'object' && c.image?.url ? (
                   <Media
-                    resource={c.image} // your component reads url/alt/width/height
+                    resource={c.image}
                     alt={c.image.alt || c.title}
-                    fill // NextImage fill layout
+                    fill
                     pictureClassName="block h-full w-full"
-                    imgClassName="object-cover" // cover to match the example
+                    imgClassName="object-cover"
                     priority={false}
                   />
                 ) : (
@@ -164,7 +181,7 @@ export const HeroPawsClient: React.FC<HeroPawsClientProps> = ({
                 {!!c.badges?.length && (
                   <div className="mt-3 flex items-center justify-center gap-2 text-slate-600">
                     {c.badges.map((b) => {
-                      const BIcon = (b.icon && ICONS[b.icon]) || Stethoscope
+                      const BIcon = (b.icon && ICONS[b.icon]) || Brain
                       return (
                         <span
                           key={b.label}

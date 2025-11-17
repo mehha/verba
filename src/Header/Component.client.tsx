@@ -1,26 +1,61 @@
 'use client'
 import { useHeaderTheme } from '@/providers/HeaderTheme'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 
-import type { Header } from '@/payload-types'
+import type { Header, User } from '@/payload-types'
 
 import { Logo } from '@/components/Logo/Logo'
 import { NavDesktop } from '@/Header/Nav/NavDesktop'
 import {NavMobile} from "@/Header/Nav/NavMobile";
 import { HeaderNav } from '@/Header/Nav'
 import { UserMenu } from '@/Header/Nav/UserMenu'
+import { getClientSideURL } from '@/utilities/getURL'
+import { Button } from '@/components/ui/button'
+import { LogIn } from 'lucide-react'
 
 interface HeaderClientProps {
   data: Header
+  currentUser: User | null
+  isParentMode?: boolean
 }
 
-export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
+export const HeaderClient: React.FC<HeaderClientProps> = ({ data, currentUser, isParentMode }) => {
   /* Storing the value in a useState to avoid hydration errors */
   const [theme, setTheme] = useState<string | null>(null)
   const { headerTheme, setHeaderTheme } = useHeaderTheme()
   const pathname = usePathname()
+  const router = useRouter()
+
+  async function handleSignOut() {
+    try {
+      const baseUrl = getClientSideURL()
+
+      await fetch(`${baseUrl}/api/users/logout`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+    } catch (err) {
+      console.error('Logout error', err)
+      // isegi kui failib, proovime ikkagi kasutaja "välja lükata"
+    } finally {
+      if (typeof document !== 'undefined') {
+        document.cookie = [
+          'uiMode=',
+          'path=/',
+          'max-age=0',
+          'samesite=lax',
+        ].join('; ')
+      }
+
+      router.push('/login')
+      router.refresh()
+    }
+  }
 
   useEffect(() => {
     setHeaderTheme(null)
@@ -32,10 +67,15 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [headerTheme])
 
+  const name =
+    currentUser?.name && true
+      ? currentUser.name
+      : currentUser?.email ?? ''
+
   return (
     <header className="container mt-6 relative z-20  " {...(theme ? { 'data-theme': theme } : {})}>
       <div className="p-4 px-8 flex justify-between bg-white rounded-full dark:bg-black shadow-sm ring-1 ring-gray-900/5">
-        <Link href="/">
+        <Link href="/" className="flex items-center" aria-label="Verba">
           <Logo loading="eager" priority="high" className="invert dark:invert-0" />
         </Link>
 
@@ -47,14 +87,22 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
 
         <HeaderNav data={data} />
 
-        <UserMenu
-          name="John Doe"
-          email="john@example.com"
-          avatarUrl="https://…/avatar.jpg"
-          onSignOut={() => {
-            // TODO: sign-out loogika (NextAuth signOut(), custom action vms)
-          }}
-        />
+        {/* ainult siis, kui on sisse loginud */}
+        {currentUser ? (
+          <UserMenu
+            name={name}
+            email={currentUser.email ?? ''}
+            onSignOut={handleSignOut}
+            isParentMode={isParentMode}
+          />
+        ) : (
+          <Link
+            href="/login"
+            className="flex items-center"
+          >
+            <Button variant="secondary" size="xs"><LogIn /></Button>
+          </Link>
+        )}
       </div>
     </header>
   )
