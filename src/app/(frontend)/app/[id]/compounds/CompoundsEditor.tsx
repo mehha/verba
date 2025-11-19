@@ -13,6 +13,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion'
+import { Badge } from '@/components/ui/badge'
 import type { App } from '@/payload-types'
 
 type CellOption = {
@@ -48,6 +55,42 @@ function normalizeCompoundStructure(c: Compound): Compound {
   }
 }
 
+function isCompoundValid(c: Compound): boolean {
+  if (!c.id || !c.id.trim()) return false
+  if (!c.cells || c.cells.length === 0) return false
+  if (!c.parts || c.parts.length !== c.cells.length) return false
+  if (c.parts.some((p) => !p.surface || !p.surface.trim())) return false
+  return true
+}
+
+function getCompoundPreview(
+  c: Compound,
+  cellTitleById: Map<string, string>,
+): string {
+  // 1) kas surface väärtused olemas
+  const surfaces =
+    c.parts
+      ?.map((p) => (p.surface ?? '').trim())
+      .filter(Boolean) ?? []
+
+  if (surfaces.length) {
+    return surfaces.join(' ')
+  }
+
+  // 2) fallback: cellide pealkirjad
+  const cellTitles =
+    c.cells
+      ?.map(({ cellId }) => cellTitleById.get(cellId) ?? cellId)
+      .filter(Boolean) ?? []
+
+  if (cellTitles.length) {
+    return cellTitles.join(' ')
+  }
+
+  // 3) viimane fallback
+  return 'Nimetu sõnaühend'
+}
+
 export function CompoundsEditor({
   appId,
   initialCompounds,
@@ -58,6 +101,7 @@ export function CompoundsEditor({
   const [status, setStatus] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [showTts, setShowTts] = useState(false)
+  const [filter, setFilter] = useState('')
 
   const cellTitleById = useMemo(
     () =>
@@ -248,13 +292,7 @@ export function CompoundsEditor({
     setStatus(null)
     setError(null)
 
-    const invalid = compounds.find((c) => {
-      if (!c.id || !c.id.trim()) return true
-      if (!c.cells || c.cells.length === 0) return true
-      if (!c.parts || c.parts.length !== c.cells.length) return true
-      if (c.parts.some((p) => !p.surface || !p.surface.trim())) return true
-      return false
-    })
+    const invalid = compounds.find((c) => !isCompoundValid(c))
 
     if (invalid) {
       setError(
@@ -275,9 +313,30 @@ export function CompoundsEditor({
     })
   }
 
+  // Filter: otsi preview ja ID järgi
+  const filteredCompounds = useMemo(
+    () =>
+      compounds
+        .map((compound, index) => ({
+          compound,
+          index, // originaalindeks, et handlerid töötaks
+          preview: getCompoundPreview(compound, cellTitleById),
+        }))
+        .filter(({ compound, preview }) => {
+          if (!filter.trim()) return true
+          const q = filter.toLowerCase()
+          return (
+            preview.toLowerCase().includes(q) ||
+            (compound.id ?? '').toLowerCase().includes(q)
+          )
+        }),
+    [compounds, filter, cellTitleById],
+  )
+
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between gap-4">
+      {/* Header + filter */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="text-sm text-muted-foreground">
           <p>
             Sõnaühendid on cellide jada, kus igal positsioonil saad määrata
@@ -288,9 +347,17 @@ export function CompoundsEditor({
             <code>[&quot;kaks&quot;, &quot;kassi&quot;]</code>.
           </p>
         </div>
-        <Button type="button" size="sm" onClick={addCompound}>
-          Lisa sõnaühend
-        </Button>
+        <div className="flex flex-col gap-2 md:items-end">
+          <Input
+            placeholder="Otsi sõnaühendit või ID järgi…"
+            className="h-8 w-full max-w-xs text-xs"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+          />
+          <Button type="button" size="sm" onClick={addCompound}>
+            Lisa sõnaühend
+          </Button>
+        </div>
       </div>
 
       {!cells.length && (
@@ -306,169 +373,217 @@ export function CompoundsEditor({
         </p>
       )}
 
-      <div className="flex flex-col gap-3">
-        {compounds.map((compound, index) => (
-          <div
-            key={compound.id || index}
-            className="flex flex-col gap-3 rounded-xl border bg-card p-4"
-          >
-            {/* Kaardi header */}
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex flex-col">
-                <span className="text-xs font-medium uppercase text-muted-foreground">
-                  Sõnaühend #{index + 1}
-                </span>
-                {compound.id && (
-                  <span
-                    className="truncate text-[10px] text-muted-foreground"
-                    title={compound.id}
+      {/* Accordion list */}
+      <Accordion
+        type="single"
+        collapsible
+        className="w-full space-y-2"
+      >
+        {filteredCompounds.map(({ compound, index, preview }) => {
+          const rowCount = compound.cells?.length ?? 0
+          const valid = isCompoundValid(compound)
+
+          return (
+            <AccordionItem
+              key={compound.id || index}
+              value={compound.id || String(index)}
+              className="rounded-xl border bg-card px-3"
+            >
+              <div className="">
+                <AccordionTrigger className="hover:no-underline">
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium uppercase text-muted-foreground">
+                        Sõnaühend #{index + 1}
+                      </span>
+                      {compound.id && (
+                        <span
+                          className="truncate text-[10px] text-muted-foreground"
+                          title={compound.id}
+                        >
+                          ID: {compound.id}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="truncate text-xs md:text-sm">
+                        {preview}
+                      </span>
+                      <Badge
+                        variant={valid ? 'outline' : 'destructive'}
+                        className="h-5 text-[10px]"
+                      >
+                        {valid ? 'Valiidne' : 'Puuduvad väljad'}
+                      </Badge>
+                      <Badge
+                        variant="secondary"
+                        className="h-5 text-[10px]"
+                      >
+                        {rowCount} rida
+                      </Badge>
+                    </div>
+                  </div>
+
+                  {/* Delete “nupp” – stiliseeritud span, mitte <button> */}
+                  <Button
+                    asChild
+                    size="xs"
+                    variant="destructive"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      removeCompound(index)
+                    }}
                   >
-                    ID: {compound.id}
-                  </span>
-                )}
+                    <span>Kustuta</span>
+                  </Button>
+                </AccordionTrigger>
               </div>
-              <Button
-                type="button"
-                size="xs"
-                variant="destructive"
-                onClick={() => removeCompound(index)}
-              >
-                Kustuta sõnaühend
-              </Button>
-            </div>
 
-            {/* TABEL: üks rida = üks positsioon fraasis */}
-            <div className="overflow-x-auto rounded-lg border">
-              <table className="w-full border-collapse text-sm">
-                <thead className="bg-muted/60">
-                  <tr>
-                    <th className="w-10 border-b px-2 py-1 text-left text-[11px] font-medium uppercase text-muted-foreground">
-                      #
-                    </th>
-                    <th className="border-b px-2 py-1 text-left text-[11px] font-medium uppercase text-muted-foreground">
-                      Cell
-                    </th>
-                    <th className="border-b px-2 py-1 text-left text-[11px] font-medium uppercase text-muted-foreground">
-                      Sõna
-                    </th>
-                    {showTts && (
-                      <th className="border-b px-2 py-1 text-left text-[11px] font-medium uppercase text-muted-foreground">
-                        TTS
-                      </th>
-                    )}
-                    <th className="w-10 border-b px-2 py-1" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {(compound.cells ?? []).map((cc, posIndex) => {
-                    const part =
-                      compound.parts?.[posIndex] ?? { surface: '', tts: '' }
-
-                    return (
-                      <tr key={`${compound.id}-row-${posIndex}`}>
-                        <td className="border-b px-2 py-1 text-[11px] text-muted-foreground">
-                          {posIndex + 1}
-                        </td>
-                        <td className="border-b px-2 py-1">
-                          <Select
-                            value={cc.cellId}
-                            onValueChange={(v) =>
-                              updateCellInCompound(index, posIndex, v)
-                            }
-                          >
-                            <SelectTrigger className="h-8 w-[220px] text-xs">
-                              <SelectValue placeholder="Vali cell" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {cells.map((cell) => (
-                                <SelectItem
-                                  key={cell.id}
-                                  value={cell.id}
-                                  title={cell.id}
-                                >
-                                  {cell.title}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </td>
-                        <td className="border-b px-2 py-1">
-                          <Input
-                            id={`cmp-surface-${index}-${posIndex}`}
-                            className="h-8 w-[220px] text-xs"
-                            value={part.surface ?? ''}
-                            onChange={(e) =>
-                              handlePartChange(
-                                index,
-                                posIndex,
-                                'surface',
-                                e.target.value,
-                              )
-                            }
-                            placeholder="nt kaks / kassi"
-                          />
-                        </td>
+              <AccordionContent className="pb-3">
+                {/* TABEL: üks rida = üks positsioon fraasis */}
+                <div className="overflow-x-auto rounded-lg border">
+                  <table className="w-full border-collapse text-sm">
+                    <thead className="bg-muted/60">
+                      <tr>
+                        <th className="w-10 border-b px-2 py-1 text-left text-[11px] font-medium uppercase text-muted-foreground">
+                          #
+                        </th>
+                        <th className="border-b px-2 py-1 text-left text-[11px] font-medium uppercase text-muted-foreground">
+                          Cell
+                        </th>
+                        <th className="border-b px-2 py-1 text-left text-[11px] font-medium uppercase text-muted-foreground">
+                          Sõna
+                        </th>
                         {showTts && (
-                          <td className="border-b px-2 py-1">
-                            <Input
-                              id={`cmp-tts-${index}-${posIndex}`}
-                              className="h-8 w-[220px] text-xs"
-                              value={part.tts ?? ''}
-                              onChange={(e) =>
-                                handlePartChange(
-                                  index,
-                                  posIndex,
-                                  'tts',
-                                  e.target.value,
-                                )
-                              }
-                              placeholder="kui tühi, kasutatakse sõna väärtust"
-                            />
-                          </td>
+                          <th className="border-b px-2 py-1 text-left text-[11px] font-medium uppercase text-muted-foreground">
+                            TTS
+                          </th>
                         )}
-                        <td className="border-b px-2 py-1 text-right">
-                          <Button
-                            type="button"
-                            size="icon"
-                            variant="ghost"
-                            onClick={() =>
-                              removeCellFromCompound(index, posIndex)
-                            }
-                            aria-label="Eemalda rida"
-                          >
-                            <Trash className="h-4 w-4 text-red-600" />
-                          </Button>
-                        </td>
+                        <th className="w-10 border-b px-2 py-1" />
                       </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
+                    </thead>
+                    <tbody>
+                      {(compound.cells ?? []).map((cc, posIndex) => {
+                        const part =
+                          compound.parts?.[posIndex] ?? {
+                            surface: '',
+                            tts: '',
+                          }
 
-            <div className="flex items-center justify-between gap-2">
-              <Button
-                type="button"
-                size="xs"
-                variant="outline"
-                disabled={!cells.length}
-                onClick={() => addCellToCompound(index)}
-              >
-                Lisa rida
-              </Button>
-              <p className="text-[11px] text-muted-foreground">
-                Järjekord on oluline – kombinatsioon matchitakse vasakult
-                paremale.
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
+                        return (
+                          <tr key={`${compound.id}-row-${posIndex}`}>
+                            <td className="border-b px-2 py-1 text-[11px] text-muted-foreground">
+                              {posIndex + 1}
+                            </td>
+                            <td className="border-b px-2 py-1">
+                              <Select
+                                value={cc.cellId}
+                                onValueChange={(v) =>
+                                  updateCellInCompound(
+                                    index,
+                                    posIndex,
+                                    v,
+                                  )
+                                }
+                              >
+                                <SelectTrigger className="h-8 w-[220px] text-xs">
+                                  <SelectValue placeholder="Vali cell" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {cells.map((cell) => (
+                                    <SelectItem
+                                      key={cell.id}
+                                      value={cell.id}
+                                      title={cell.id}
+                                    >
+                                      {cell.title}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </td>
+                            <td className="border-b px-2 py-1">
+                              <Input
+                                id={`cmp-surface-${index}-${posIndex}`}
+                                className="h-8 w-[220px] text-xs"
+                                value={part.surface ?? ''}
+                                onChange={(e) =>
+                                  handlePartChange(
+                                    index,
+                                    posIndex,
+                                    'surface',
+                                    e.target.value,
+                                  )
+                                }
+                                placeholder="nt kaks / kassi"
+                              />
+                            </td>
+                            {showTts && (
+                              <td className="border-b px-2 py-1">
+                                <Input
+                                  id={`cmp-tts-${index}-${posIndex}`}
+                                  className="h-8 w-[220px] text-xs"
+                                  value={part.tts ?? ''}
+                                  onChange={(e) =>
+                                    handlePartChange(
+                                      index,
+                                      posIndex,
+                                      'tts',
+                                      e.target.value,
+                                    )
+                                  }
+                                  placeholder="kui tühi, kasutatakse sõna väärtust"
+                                />
+                              </td>
+                            )}
+                            <td className="border-b px-2 py-1 text-right">
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="ghost"
+                                onClick={() =>
+                                  removeCellFromCompound(
+                                    index,
+                                    posIndex,
+                                  )
+                                }
+                                aria-label="Eemalda rida"
+                              >
+                                <Trash className="h-4 w-4 text-red-600" />
+                              </Button>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="mt-2 flex items-center justify-between gap-2">
+                  <Button
+                    type="button"
+                    size="xs"
+                    variant="outline"
+                    disabled={!cells.length}
+                    onClick={() => addCellToCompound(index)}
+                  >
+                    Lisa rida
+                  </Button>
+                  <p className="text-[11px] text-muted-foreground">
+                    Järjekord on oluline – kombinatsioon matchitakse vasakult
+                    paremale.
+                  </p>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          )
+        })}
+      </Accordion>
 
       <div className="mt-4 flex items-center justify-between gap-4 border-t pt-4">
         <div className="text-xs">
           {status && <span className="text-emerald-700">{status}</span>}
-          {error && <span className="text-red-600">{error}</span>}
+          {error && <span className="ml-2 text-red-600">{error}</span>}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button
@@ -482,7 +597,6 @@ export function CompoundsEditor({
           <Button
             type="button"
             size="sm"
-            variant="outline"
             onClick={addCompound}
           >
             Lisa sõnaühend
@@ -492,6 +606,7 @@ export function CompoundsEditor({
             size="sm"
             onClick={handleSaveAll}
             disabled={isPending}
+            variant="secondary"
           >
             {isPending ? 'Salvestan…' : 'Salvesta kõik'}
           </Button>

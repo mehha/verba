@@ -11,6 +11,8 @@ import {
   WifiOff,
   Rocket,
   Accessibility,
+  Combine,
+  Sparkles,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -27,6 +29,8 @@ const iconMap: Record<string, LucideIcon> = {
   'wifi-off': WifiOff,
   rocket: Rocket,
   accessibility: Accessibility,
+  combine: Combine,
+  ai: Sparkles
 }
 
 export const AacFeaturesBlock: React.FC<Props> = ({

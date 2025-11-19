@@ -7,8 +7,6 @@ import React, { useEffect, useState } from 'react'
 import type { Header, User } from '@/payload-types'
 
 import { Logo } from '@/components/Logo/Logo'
-import { NavDesktop } from '@/Header/Nav/NavDesktop'
-import {NavMobile} from "@/Header/Nav/NavMobile";
 import { HeaderNav } from '@/Header/Nav'
 import { UserMenu } from '@/Header/Nav/UserMenu'
 import { getClientSideURL } from '@/utilities/getURL'
@@ -78,12 +76,6 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data, currentUser, i
         <Link href="/" className="flex items-center" aria-label="Verba">
           <Logo loading="eager" priority="high" className="invert dark:invert-0" />
         </Link>
-
-        {/* Desktop */}
-        {/*<NavDesktop data={data} />*/}
-
-        {/* Mobile */}
-        {/*<NavMobile data={data} />*/}
 
         <HeaderNav data={data} />
 

@@ -9,6 +9,7 @@ import { FormBlock } from '@/blocks/Form/Component'
 import { MediaBlock } from '@/blocks/MediaBlock/Component'
 import { HeroPawsBlock } from '@/blocks/HeroPaws/Component'
 import { AacFeaturesBlock } from '@/blocks/AacFeatures/Component'
+import { UsageContextsBlockComponent } from '@/blocks/UsageContexts/Component'
 
 const blockComponents = {
   archive: ArchiveBlock,
@@ -18,6 +19,7 @@ const blockComponents = {
   mediaBlock: MediaBlock,
   heroPaws: HeroPawsBlock,
   'aac-features': AacFeaturesBlock,
+  usageContexts: UsageContextsBlockComponent,
 }
 
 export const RenderBlocks: React.FC<{

@@ -47,6 +47,8 @@ export const AacFeatures: Block = {
             { label: 'Offline (WifiOff)', value: 'wifi-off' },
             { label: 'Kiire algus (Rocket)', value: 'rocket' },
             { label: 'Ligipääsetavus (Accessibility)', value: 'accessibility' },
+            { label: 'AI', value: 'ai' },
+            { label: 'Combine', value: 'combine' },
           ],
         },
         {

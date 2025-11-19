@@ -7,15 +7,11 @@ import type { App } from '@/payload-types'
 import { CompoundsEditor } from './CompoundsEditor'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Play } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
-type PageProps = {
-  params: { id: string }
-}
-
-export default async function AppCompoundsPage({ params }: PageProps) {
+export default async function AppCompoundsPage({ params }: any) {
   const payload = await getPayload({ config: configPromise })
   const requestHeaders = await headers()
   const { id } = await params
@@ -88,13 +84,8 @@ export default async function AppCompoundsPage({ params }: PageProps) {
           </p>
         </div>
         <Link href={`/app/${app.id}/edit`}>
-          <Button>
-            <ArrowLeft className="mr-2 h-4 w-4" />Tagasi appi seadetesse
-          </Button>
-        </Link>
-        <Link href={`/app/${app.id}`}>
-          <Button variant="positive" size="sm">
-            <Play className="h-5 w-5" />
+          <Button variant="outline">
+            <ArrowLeft className="mr-2 h-4 w-4" />Tagasi seadetesse
           </Button>
         </Link>
       </div>

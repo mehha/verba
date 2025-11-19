@@ -162,7 +162,7 @@ export const HeroPawsClient: React.FC<HeroPawsClientProps> = ({
                     alt={c.image.alt || c.title}
                     fill
                     pictureClassName="block h-full w-full"
-                    imgClassName="object-cover"
+                    imgClassName="object-contain"
                     priority={false}
                   />
                 ) : (

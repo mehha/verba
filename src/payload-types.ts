@@ -239,6 +239,22 @@ export interface Page {
         blockType: 'heroPaws';
       }
     | AacFeaturesBlock
+    | {
+        heading?: string | null;
+        items: {
+          title: string;
+          description: string;
+          image?: (string | null) | Media;
+          button?: {
+            label?: string | null;
+            href?: string | null;
+          };
+          id?: string | null;
+        }[];
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'usageContexts';
+      }
   )[];
   meta?: {
     title?: string | null;
@@ -808,7 +824,17 @@ export interface AacFeaturesBlock {
   title: string;
   subtitle?: string | null;
   items: {
-    icon: 'message-circle' | 'grid-3x3' | 'images' | 'volume-2' | 'share-2' | 'wifi-off' | 'rocket' | 'accessibility';
+    icon:
+      | 'message-circle'
+      | 'grid-3x3'
+      | 'images'
+      | 'volume-2'
+      | 'share-2'
+      | 'wifi-off'
+      | 'rocket'
+      | 'accessibility'
+      | 'ai'
+      | 'combine';
     title: string;
     description: string;
     variant?: ('default' | 'accent') | null;
@@ -1229,6 +1255,27 @@ export interface PagesSelect<T extends boolean = true> {
               blockName?: T;
             };
         'aac-features'?: T | AacFeaturesBlockSelect<T>;
+        usageContexts?:
+          | T
+          | {
+              heading?: T;
+              items?:
+                | T
+                | {
+                    title?: T;
+                    description?: T;
+                    image?: T;
+                    button?:
+                      | T
+                      | {
+                          label?: T;
+                          href?: T;
+                        };
+                    id?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
       };
   meta?:
     | T
