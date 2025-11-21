@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getPayload } from 'payload'
 import configPromise from '@payload-config'
-import { headers, cookies } from 'next/headers'
+import { headers } from 'next/headers'
 import type { App, User } from '@/payload-types'
 import { SortableApps } from './SortableApps'
 import { reorderApps } from './reorderApps'
@@ -9,13 +9,13 @@ import { MonitorCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ParentUnlockDialog } from './ParentUnlockDialog'
 import { switchToChildModeAction } from './modeActions'
+import { isParentModeUtil } from '@/utilities/uiMode'
 
 export const dynamic = 'force-dynamic'
 
 export default async function DesktopPage() {
   const payload = await getPayload({ config: configPromise })
   const requestHeaders = await headers()
-  const cookieStore = await cookies()
 
   const { user } = await payload.auth({ headers: requestHeaders })
 
@@ -23,10 +23,8 @@ export default async function DesktopPage() {
     redirect('/login')
   }
 
+  const isParentMode = await isParentModeUtil()
   const u = user as User
-  const uiModeCookie = cookieStore.get('uiMode')?.value
-  const mode: 'child' | 'parent' = uiModeCookie === 'parent' ? 'parent' : 'child'
-  const isParentMode = mode === 'parent'
 
   const appsRes = await payload.find({
     collection: 'apps',

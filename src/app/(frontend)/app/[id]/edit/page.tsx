@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import AppEditor from './AppEditor/index'
 import { getCurrentUser } from '@/utilities/getCurrentUser'
 import type { App, User } from '@/payload-types'
+import { requireParentMode } from '@/utilities/uiMode'
 
 type Params = {
   id: string
@@ -15,6 +16,8 @@ export default async function AppEditPage({
   params: Promise<Params>
 }) {
   const { id } = await params
+
+  await requireParentMode()
 
   const { payload, user } = await getCurrentUser()
 

@@ -17,7 +17,7 @@ import { getCompoundFormForLastToken } from '@/app/(frontend)/app/[id]/compounds
 
 const ReactGridLayout = WidthProvider(RGL)
 
-type RunnerProps = { app: App }
+type RunnerProps = { app: App, isParentMode: boolean }
 
 type SequenceItem = {
   cellId: string
@@ -57,7 +57,7 @@ async function playTTS(text: string) {
   URL.revokeObjectURL(url)
 }
 
-export default function Runner({ app }: RunnerProps) {
+export default function Runner({ app, isParentMode }: RunnerProps) {
   // UUS: hoiame cellId + teksti
   const [sequence, setSequence] = useState<SequenceItem[]>([])
   const [busy, setBusy] = useState(false)
@@ -219,11 +219,13 @@ export default function Runner({ app }: RunnerProps) {
               {aiEnabled ? 'AI: sees' : 'AI: väljas'}
             </Button>
 
-            <Link href={`/app/${app.id}/edit`}>
-              <Button variant="default" roundness="2xl" size="sm">
-                Muuda
-              </Button>
-            </Link>
+            {isParentMode &&
+              <Link href={`/app/${app.id}/edit`}>
+                <Button variant="default" roundness="2xl" size="sm">
+                  Muuda
+                </Button>
+              </Link>
+            }
           </div>
         </div>
 

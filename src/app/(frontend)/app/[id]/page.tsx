@@ -5,6 +5,7 @@ import { getCurrentUser } from '@/utilities/getCurrentUser'
 import Runner from '@/app/(frontend)/app/[id]/Runner'
 import PageClient from './page.client'
 import React from 'react'
+import { isParentModeUtil } from '@/utilities/uiMode'
 
 type Args = {
   params: Promise<{
@@ -20,6 +21,8 @@ export default async function AppRunPage({ params: paramsPromise }: Args) {
   if (!user) {
     redirect('/admin') // or your route
   }
+
+  const isParentMode = await isParentModeUtil()
 
   // will be filtered by access rules in Payload anyway
   const doc = await payload.findByID({
@@ -37,7 +40,7 @@ export default async function AppRunPage({ params: paramsPromise }: Args) {
   return (
     <>
       <PageClient />
-      <Runner app={app} />
+      <Runner app={app} isParentMode={isParentMode} />
     </>
   )
 }

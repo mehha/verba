@@ -5,7 +5,17 @@ import * as TooltipPrimitive from "@radix-ui/react-tooltip"
 
 import { cn } from "@/utilities/ui"
 
-const TooltipProvider = TooltipPrimitive.Provider
+const TooltipProvider = ({
+  delayDuration = 50, // vaikimisi kiirem kui Radixi default
+  skipDelayDuration = 200,
+  ...props
+}: TooltipPrimitive.TooltipProviderProps) => (
+  <TooltipPrimitive.Provider
+    delayDuration={delayDuration}
+    skipDelayDuration={skipDelayDuration}
+    {...props}
+  />
+)
 
 const Tooltip = TooltipPrimitive.Root
 
