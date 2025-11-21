@@ -12,10 +12,7 @@ import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 
 // UUS: sõnaühendite util
-import {
-  applyCompounds,
-  type SelectedToken,
-} from './compounds/applyCompounds'
+import { applyCompounds, type SelectedToken } from './compounds/applyCompounds'
 import { getCompoundFormForLastToken } from '@/app/(frontend)/app/[id]/compounds/getCompoundFormForLastToken'
 
 const ReactGridLayout = WidthProvider(RGL)
@@ -64,6 +61,7 @@ export default function Runner({ app }: RunnerProps) {
   // UUS: hoiame cellId + teksti
   const [sequence, setSequence] = useState<SequenceItem[]>([])
   const [busy, setBusy] = useState(false)
+  const [tempLabel, setTempLabel] = useState<{ id: string; text: string } | null>(null)
 
   const aiAllowed = app.extra?.ai ?? false
   const actionBarEnabled = app.actionBar?.enabled ?? false
@@ -140,10 +138,7 @@ export default function Runner({ app }: RunnerProps) {
       }
 
       // 1) Ehita nextSequence
-      const nextSequence: SequenceItem[] = [
-        ...sequence,
-        { cellId: String(cell.id), text: surface },
-      ]
+      const nextSequence: SequenceItem[] = [...sequence, { cellId: String(cell.id), text: surface }]
 
       // 2) Teisenda SelectedTokeniteks
       const nextTokens: SelectedToken[] = nextSequence.map((item) => ({
@@ -152,15 +147,16 @@ export default function Runner({ app }: RunnerProps) {
       }))
 
       // 3) Kui AI on väljas, proovi compounds; kui AI sees, ära kasuta compounds
-      const compoundForm =
-        !aiEnabled
-          ? getCompoundFormForLastToken(nextTokens, app.compounds)
-          : null
+      const compoundForm = !aiEnabled
+        ? getCompoundFormForLastToken(nextTokens, app.compounds)
+        : null
 
       const spoken = compoundForm ? compoundForm.tts : surface
 
       // 4) Uuenda jada state
       setSequence(nextSequence)
+
+      setTempLabel({ id: String(cell.id), text: spoken })
 
       // 5) Loeme ainult selle sõna vormi
       await playTTS(spoken)
@@ -216,11 +212,7 @@ export default function Runner({ app }: RunnerProps) {
               variant={aiEnabled ? 'positive' : 'muted'}
               onClick={() => setAiEnabled((v) => !v)}
               aria-pressed={aiEnabled}
-              title={
-                aiEnabled
-                  ? 'AI on: parandab sõna kuju'
-                  : 'AI off: loeb täpselt valitud sõna'
-              }
+              title={aiEnabled ? 'AI on: parandab sõna kuju' : 'AI off: loeb täpselt valitud sõna'}
               className="inline-flex items-center gap-2"
             >
               {aiEnabled ? <Sparkles size={16} /> : <Slash size={16} />}
@@ -274,28 +266,41 @@ export default function Runner({ app }: RunnerProps) {
         preventCollision
         layout={layout}
       >
-        {cells.map((cell) => (
-          <div
-            key={String(cell.id)}
-            className="relative flex aspect-[4/3] flex-col gap-1 overflow-hidden rounded-xl border bg-white p-0 shadow-lg ring-1 ring-gray-900/5"
-          >
-            {renderCellImage(cell)}
-            {cell.title && (
-              <div className="pointer-events-none absolute bottom-0 left-0 w-full bg-slate-800/85 p-2 text-center text-white">
-                <div className="break-words text-2xl uppercase leading-4">
-                  {cell.title}
+        {cells.map((cell) => {
+          const cellIdString = String(cell.id)
+
+          // UUS: Kontrollime, kas sellele kaardile on määratud ajutine tekst
+          const isOverridden = tempLabel?.id === cellIdString
+          const titleToShow = isOverridden && tempLabel ? tempLabel.text : cell.title
+
+          return (
+            <div
+              key={cellIdString}
+              className="relative flex aspect-[4/3] flex-col gap-1 overflow-hidden rounded-xl border bg-white p-0 shadow-lg ring-1 ring-gray-900/5"
+            >
+              {renderCellImage(cell)}
+
+              {/* Muutsime tingimust, et kuvada titleToShow */}
+              {titleToShow && (
+                <div
+                  className={`pointer-events-none absolute bottom-0 left-0 w-full p-2 text-center text-white transition-colors duration-200 ${
+                    isOverridden ? 'bg-blue-600/90' : 'bg-slate-800/85'
+                  }`}
+                >
+                  <div className="break-words text-2xl uppercase leading-4">{titleToShow}</div>
                 </div>
-              </div>
-            )}
-            <button
-              type="button"
-              onClick={() => void handleCellClick(cell)}
-              disabled={busy}
-              className="absolute inset-0"
-              aria-label={cell.title ?? 'valik'}
-            />
-          </div>
-        ))}
+              )}
+
+              <button
+                type="button"
+                onClick={() => void handleCellClick(cell)}
+                disabled={busy}
+                className="absolute inset-0"
+                aria-label={titleToShow ?? 'valik'}
+              />
+            </div>
+          )
+        })}
       </ReactGridLayout>
     </div>
   )
