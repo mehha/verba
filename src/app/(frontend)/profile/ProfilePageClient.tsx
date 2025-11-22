@@ -35,7 +35,7 @@ export function ProfilePageClient({ hasPin: initialHasPin }: Props) {
         <div>
           <h2 className="text-lg font-medium">Vanema PIN</h2>
           <p className="text-sm text-muted-foreground">
-            PIN-i kasutatakse vanema vaate avamiseks Desktopil.
+            PIN-i kasutatakse vanema vaate avamiseks koduvaates.
           </p>
           <p className="mt-2 text-sm">
             Staatus:{' '}

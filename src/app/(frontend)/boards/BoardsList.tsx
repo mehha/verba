@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from 'react'
 import Link from 'next/link'
-import type { App } from '@/payload-types'
+import type { Board } from '@/payload-types'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -30,39 +30,39 @@ import {
   Trash2,
 } from 'lucide-react'
 
-type AppsListProps = {
-  apps: App[]
+type BoardsListProps = {
+  boards: Board[]
   isAdmin: boolean
-  togglePinned: (formData: FormData) => Promise<void> // server action (/apps/page.tsx)
-  deleteApp: (formData: FormData) => Promise<void> // server action (/apps/page.tsx)
+  togglePinned: (formData: FormData) => Promise<void> // server action (/boards/page.tsx)
+  deleteBoard: (formData: FormData) => Promise<void> // server action (/boards/page.tsx)
 }
 
-export function AppsList({
-  apps,
+export function BoardsList({
+  boards,
   isAdmin,
   togglePinned,
-  deleteApp,
-}: AppsListProps) {
+  deleteBoard,
+}: BoardsListProps) {
   const [query, setQuery] = useState('')
 
-  const filteredApps = useMemo(() => {
+  const filteredBoards = useMemo(() => {
     const q = query.toLowerCase().trim()
-    if (!q) return apps
+    if (!q) return boards
 
-    return apps.filter((app) => {
-      const name = app.name?.toLowerCase() ?? ''
+    return boards.filter((board) => {
+      const name = board.name?.toLowerCase() ?? ''
       const ownerName =
-        typeof app.owner === 'object' && app.owner
-          ? ((app.owner as any).name || (app.owner as any).email || '').toLowerCase()
+        typeof board.owner === 'object' && board.owner
+          ? ((board.owner as any).name || (board.owner as any).email || '').toLowerCase()
           : ''
       return name.includes(q) || ownerName.includes(q)
     })
-  }, [apps, query])
+  }, [boards, query])
 
-  if (!apps.length) {
+  if (!boards.length) {
     return (
       <p className="text-sm text-muted-foreground">
-        Sul pole veel ühtegi äppi. Lisa ülal paremal nupust “Lisa uus äpp”.
+        Sul pole veel ühtegi tahvlit. Lisa ülal paremal nupust “Lisa uus tahvel”.
       </p>
     )
   }
@@ -74,7 +74,7 @@ export function AppsList({
           <div className="flex-1">
             <Input
               type="search"
-              placeholder="Otsi äppe nime või omaniku järgi…"
+              placeholder="Otsi tahvleid nime või omaniku järgi…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="max-w-xs"
@@ -82,11 +82,11 @@ export function AppsList({
           </div>
 
           <div className="text-xs text-muted-foreground">
-            Kokku <span className="font-medium">{apps.length}</span> äppi
-            {filteredApps.length !== apps.length && (
+            Kokku <span className="font-medium">{boards.length}</span> tahvlit
+            {filteredBoards.length !== boards.length && (
               <>
                 {' · '}filtris{' '}
-                <span className="font-medium">{filteredApps.length}</span>
+                <span className="font-medium">{filteredBoards.length}</span>
               </>
             )}
           </div>
@@ -108,7 +108,7 @@ export function AppsList({
                   </TableHead>
                 )}
                 <TableHead className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Desktop
+                  Koduvaade
                 </TableHead>
                 <TableHead className="px-3 py-2 text-right text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Tegevused
@@ -117,16 +117,16 @@ export function AppsList({
             </TableHeader>
 
             <TableBody>
-              {filteredApps.map((app, index) => {
-                const isPinned = !!app.pinned
+              {filteredBoards.map((board, index) => {
+                const isPinned = !!board.pinned
                 const owner =
-                  typeof app.owner === 'object' && app.owner
-                    ? (app.owner as any)
+                  typeof board.owner === 'object' && board.owner
+                    ? (board.owner as any)
                     : null
 
                 return (
                   <TableRow
-                    key={app.id}
+                    key={board.id}
                     className="border-b last:border-b-0 hover:bg-muted/40"
                   >
                     <TableCell className="px-3 py-2 align-middle text-xs text-muted-foreground">
@@ -136,14 +136,14 @@ export function AppsList({
                     <TableCell className="px-3 py-2 align-middle">
                       <div className="flex flex-col gap-0.5">
                         <Link
-                          href={`/app/${app.id}`}
+                          href={`/boards/${board.id}`}
                           className="font-medium underline-offset-2 hover:underline"
                         >
-                          {app.name || 'Nimetu äpp'}
+                          {board.name || 'Nimetu tahvel'}
                         </Link>
                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
                           <Link
-                            href={`/app/${app.id}`}
+                            href={`/boards/${board.id}`}
                             className="inline-flex items-center gap-1 underline-offset-2 hover:underline"
                           >
                             <Monitor className="h-3 w-3" />
@@ -151,7 +151,7 @@ export function AppsList({
                           </Link>
                           <span aria-hidden="true">·</span>
                           <Link
-                            href={`/app/${app.id}/edit`}
+                            href={`/boards/${board.id}/edit`}
                             className="inline-flex items-center gap-1 underline-offset-2 hover:underline"
                           >
                             <Edit3 className="h-3 w-3" />
@@ -190,11 +190,11 @@ export function AppsList({
                           variant={isPinned ? 'default' : 'outline'}
                           className="px-2 py-0.5 text-[11px]"
                         >
-                          {isPinned ? 'Desktopil' : 'Peidetud'}
+                          {isPinned ? 'Koduvaates' : 'Peidetud'}
                         </Badge>
 
                         <form action={togglePinned}>
-                          <input type="hidden" name="appId" value={app.id as string} />
+                          <input type="hidden" name="boardId" value={board.id as string} />
                           <input
                             type="hidden"
                             name="pinned"
@@ -218,8 +218,8 @@ export function AppsList({
                             <TooltipContent>
                               <p>
                                 {isPinned
-                                  ? 'Eemalda desktopilt'
-                                  : 'Lisa desktopile'}
+                                  ? 'Eemalda koduvaatest'
+                                  : 'Lisa koduvaatesse'}
                               </p>
                             </TooltipContent>
                           </Tooltip>
@@ -229,11 +229,11 @@ export function AppsList({
 
                     <TableCell className="px-3 py-2 align-middle text-right">
                       <form
-                        action={deleteApp}
+                        action={deleteBoard}
                         onSubmit={(e) => {
                           if (
                             !window.confirm(
-                              `Kas soovid kindlasti kustutada äpi “${app.name || 'Nimetu äpp'}”?`,
+                              `Kas soovid kindlasti kustutada tahvli “${board.name || 'Nimetu tahvel'}”?`,
                             )
                           ) {
                             e.preventDefault()
@@ -241,7 +241,7 @@ export function AppsList({
                         }}
                         className="inline-flex"
                       >
-                        <input type="hidden" name="appId" value={app.id} />
+                        <input type="hidden" name="boardId" value={board.id} />
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
@@ -254,7 +254,7 @@ export function AppsList({
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>Kustuta äpp</p>
+                            <p>Kustuta tahvel</p>
                           </TooltipContent>
                         </Tooltip>
                       </form>

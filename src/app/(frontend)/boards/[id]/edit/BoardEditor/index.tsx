@@ -1,12 +1,12 @@
-// src/components/AppEditor/index.tsx (või src/app/(frontend)/app/[id]/edit/AppEditor/index.tsx)
+// src/components/BoardEditor/index.tsx (või src/app/(frontend)/boards/[id]/edit/AppEditor/index.tsx)
 'use client'
 
 import RGL, { WidthProvider } from 'react-grid-layout'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
-import type { App, Media } from '@/payload-types'
-import { useAppGrid } from './useAppGrid'
-import { AppEditorToolbar } from './Toolbar'
+import type { Board, Media } from '@/payload-types'
+import { useBoardGrid } from './useBoardGrid'
+import { BoardEditorToolbar } from './Toolbar'
 import { useViewportHeight } from '@/utilities/useViewportHeight'
 import { CellEditModal } from './CellEditModal'
 import { useState } from 'react'
@@ -22,13 +22,13 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 const ReactGridLayout = WidthProvider(RGL)
 
 type Props = {
-  app: App
-  renameApp: (formData: FormData) => Promise<void>
+  board: Board
+  renameBoard: (formData: FormData) => Promise<void>
 }
 
-type Compound = NonNullable<App['compounds']>[number]
+type Compound = NonNullable<Board['compounds']>[number]
 
-export default function AppEditor({ app, renameApp }: Props) {
+export default function BoardEditor({ board, renameBoard }: Props) {
   const {
     saving,
     dirty,
@@ -48,14 +48,14 @@ export default function AppEditor({ app, renameApp }: Props) {
     saveDraft,
     aiEnabled,
     updateAi,
-  } = useAppGrid(app)
+  } = useBoardGrid(board)
 
   const vh = useViewportHeight()
   const [editingCellId, setEditingCellId] = useState<string | null>(null)
 
   // title edit local state
   const [isEditingTitle, setIsEditingTitle] = useState(false)
-  const [titleDraft, setTitleDraft] = useState(app.name ?? '')
+  const [titleDraft, setTitleDraft] = useState(board.name ?? '')
 
   const rowsNeeded = layout.length > 0 ? Math.max(...layout.map((l) => (l.y ?? 0) + (l.h ?? 1))) : 1
 
@@ -102,7 +102,7 @@ export default function AppEditor({ app, renameApp }: Props) {
     )
   }
 
-  const compounds = (app.compounds ?? []) as Compound[]
+  const compounds = (board.compounds ?? []) as Compound[]
 
   return (
     <TooltipProvider>
@@ -113,20 +113,20 @@ export default function AppEditor({ app, renameApp }: Props) {
             <div className="flex items-center gap-2">
               {isEditingTitle ? (
                 <form
-                  action={renameApp}
+                  action={renameBoard}
                   className="flex items-center gap-2"
                   onSubmit={() => {
                     setIsEditingTitle(false)
                   }}
                 >
-                  <input type="hidden" name="appId" value={app.id as string} />
+                  <input type="hidden" name="boardId" value={board.id as string} />
                   <Input
                     name="name"
                     autoFocus
                     value={titleDraft}
                     onChange={(e) => setTitleDraft(e.target.value)}
                     className="h-9 w-64 text-lg font-semibold"
-                    placeholder="Nimetu äpp"
+                    placeholder="Nimetu tahvel"
                   />
                   <Button type="submit" size="icon" variant="ghost" className="h-8 w-8">
                     <Check className="h-4 w-4" />
@@ -138,15 +138,15 @@ export default function AppEditor({ app, renameApp }: Props) {
                     className="h-8 w-8"
                     onClick={() => {
                       setIsEditingTitle(false)
-                      setTitleDraft(app.name ?? '')
-                    }}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </form>
-              ) : (
-                <>
-                  <h1 className="text-3xl font-semibold leading-6">{app.name || 'Nimetu äpp'}</h1>
+                      setTitleDraft(board.name ?? '')
+                  }}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </form>
+            ) : (
+              <>
+                <h1 className="text-3xl font-semibold leading-6">{board.name || 'Nimetu tahvel'}</h1>
                   <Button
                     type="button"
                     size="icon"
@@ -175,7 +175,7 @@ export default function AppEditor({ app, renameApp }: Props) {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button variant="secondary" size="sm" asChild>
-                    <Link href={`/app/${app.id}/compounds`}>
+                    <Link href={`/boards/${board.id}/compounds`}>
                       <WholeWord className="mr-2 h-5 w-5 text-pink-600" />
                       Halda sõnaühendeid
                     </Link>
@@ -200,7 +200,7 @@ export default function AppEditor({ app, renameApp }: Props) {
                 </TooltipContent>
               </Tooltip>
 
-              <Link href={`/app/${app.id}`}>
+              <Link href={`/boards/${board.id}`}>
                 <Button variant="positive" size="sm">
                   <Play className="h-5 w-5" />
                 </Button>
@@ -209,7 +209,7 @@ export default function AppEditor({ app, renameApp }: Props) {
           </div>
 
           <div className="flex items-center justify-between gap-2">
-            <AppEditorToolbar
+            <BoardEditorToolbar
               onAddCellAction={addCell}
               onMake2x2Action={make2x2}
               onMake4x4Action={make4x4}

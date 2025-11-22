@@ -2,8 +2,8 @@ import type { CollectionConfig } from 'payload'
 import { authenticated } from '@/access/authenticated'
 import { isAdminOrOwner } from '@/access/isAdminOrOwner'
 
-export const Apps: CollectionConfig = {
-  slug: 'apps',
+export const Boards: CollectionConfig = {
+  slug: 'boards',
   admin: { useAsTitle: 'name' },
   access: {
     read: isAdminOrOwner,
@@ -19,23 +19,21 @@ export const Apps: CollectionConfig = {
       relationTo: 'users',
       required: true,
       admin: { readOnly: true },
-      defaultValue: ({ user }) => user?.id, // auto-assign
+      defaultValue: ({ user }) => user?.id,
     },
-    // NEW: kas näidatakse desktopil
     {
       name: 'pinned',
       type: 'checkbox',
-      label: 'Näita desktopil',
+      label: 'Näita koduvaates',
       defaultValue: true,
     },
-    // NEW: sortimisnumber
     {
       name: 'order',
       type: 'number',
       label: 'Järjekord',
       admin: {
         position: 'sidebar',
-        description: 'Mida väiksem number, seda eespool desktopil.',
+        description: 'Mida väiksem number, seda eespool koduvaates.',
       },
     },
     { name: 'thumbnail', type: 'upload', relationTo: 'media' },
@@ -70,7 +68,7 @@ export const Apps: CollectionConfig = {
       type: 'group',
       fields: [
         { name: 'cols', type: 'number', defaultValue: 12, min: 1 },
-        { name: 'rows', type: 'number', defaultValue: 8, min: 1 }, // optional, used for editor canvas height
+        { name: 'rows', type: 'number', defaultValue: 8, min: 1 },
         {
           name: 'cells',
           type: 'array',
@@ -80,15 +78,11 @@ export const Apps: CollectionConfig = {
             { name: 'y', type: 'number', required: true },
             { name: 'w', type: 'number', required: true },
             { name: 'h', type: 'number', required: true },
-
             { name: 'title', type: 'text' },
-            // Either upload to Media or keep a remote URL (and optionally “ingest” later)
-            { name: 'image', type: 'upload', relationTo: 'media', required: false },
-            { name: 'externalImageURL', type: 'text' }, // if not uploaded (optional)
-
-            // Optional pre-generated audio (server TTS). If absent, use Web Speech API in the browser.
-            { name: 'audio', type: 'upload', relationTo: 'media', required: false },
-            { name: 'locked', type: 'checkbox', defaultValue: false }, // action cell = true
+            { name: 'image', type: 'upload', relationTo: 'media' },
+            { name: 'externalImageURL', type: 'text' },
+            { name: 'audio', type: 'upload', relationTo: 'media' },
+            { name: 'locked', type: 'checkbox', defaultValue: false },
           ],
         },
       ],
@@ -160,14 +154,13 @@ export const Apps: CollectionConfig = {
       async ({ data, operation, req }) => {
         if (operation !== 'create') return data
 
-        // kui order juba on, ära tee midagi
         if (typeof data.order === 'number') return data
 
         const ownerId = data.owner || req.user?.id
         if (!ownerId) return data
 
         const result = await req.payload.find({
-          collection: 'apps',
+          collection: 'boards',
           where: {
             owner: {
               equals: ownerId,

@@ -1,4 +1,4 @@
-// src/components/AppEditor/CellEditModal.tsx
+// src/components/BoardEditor/CellEditModal.tsx
 'use client'
 
 import React, { useEffect, useMemo, useState } from 'react'

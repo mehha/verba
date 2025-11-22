@@ -2,7 +2,7 @@
 
 import React, { useState, useTransition } from 'react'
 import Link from 'next/link'
-import type { App } from '@/payload-types'
+import type { Board } from '@/payload-types'
 import { DndContext, closestCenter, type DragEndEvent } from '@dnd-kit/core'
 import {
   SortableContext,
@@ -27,39 +27,39 @@ import {
 } from '@/components/ui/tooltip'
 import { Media } from '@/components/Media'
 
-type SortableAppsProps = {
-  apps: App[]
-  canManage: boolean // parent mode
-  isAdmin: boolean   // roll, ainult ikooniks jms
+type SortableBoardsProps = {
+  boards: Board[]
+  canManage: boolean
+  isAdmin: boolean
   onReorder: (ids: string[]) => Promise<void>
   unpinAction: (formData: FormData) => Promise<void>
 }
 
-type SortableAppCardProps = {
-  app: App
+type SortableBoardCardProps = {
+  board: Board
   canManage: boolean
   isAdmin: boolean
   unpinAction: (formData: FormData) => Promise<void>
 }
 
-function getVisualCell(app: App): any | undefined {
-  const cells = (app as any)?.grid?.cells as any[] | undefined
+function getVisualCell(board: Board): any | undefined {
+  const cells = (board as any)?.grid?.cells as any[] | undefined
   if (!Array.isArray(cells) || cells.length === 0) return undefined
   return cells.find((cell) => cell?.image || cell?.externalImageURL)
 }
 
-function SortableAppCard({
-  app,
+function SortableBoardCard({
+  board,
   canManage,
   isAdmin,
   unpinAction,
-}: SortableAppCardProps) {
+}: SortableBoardCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({
-      id: app.id,
+      id: board.id,
     })
 
-  const visualCell = getVisualCell(app)
+  const visualCell = getVisualCell(board)
   const hasUploadImage =
     visualCell?.image && typeof visualCell.image === 'object' && visualCell.image.url
   const hasExternalImage = visualCell?.externalImageURL
@@ -85,7 +85,7 @@ function SortableAppCard({
             {...attributes}
             onClick={(e) => e.preventDefault()}
             className="cursor-grab active:cursor-grabbing touch-none hover:bg-muted"
-            aria-label="Muuda rakenduse järjekorda"
+            aria-label="Muuda tahvli järjekorda"
           >
             <GripVertical className="w-5 h-5" />
           </button>
@@ -100,7 +100,7 @@ function SortableAppCard({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Link href={`/app/${app.id}/edit`}>
+                  <Link href={`/boards/${board.id}/edit`}>
                     <Edit className="w-5 h-5" />
                   </Link>
                 </TooltipTrigger>
@@ -111,14 +111,14 @@ function SortableAppCard({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <form className="flex items-center" action={unpinAction}>
-                    <input type="hidden" name="appId" value={app.id} />
+                    <input type="hidden" name="boardId" value={board.id} />
                     <button type="submit">
                       <TrashIcon className="w-5 h-5 text-red-600" />
                     </button>
                   </form>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Eemalda desktopilt</p>
+                  <p>Eemalda koduvaatest</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -130,7 +130,7 @@ function SortableAppCard({
         {hasUploadImage ? (
           <Media
             resource={visualCell.image}
-            alt={visualCell.image.alt || app.name}
+            alt={visualCell.image.alt || board.name}
             pictureClassName="block h-full w-full rounded-xl"
             imgClassName="h-full w-full object-contain"
             priority={false}
@@ -138,7 +138,7 @@ function SortableAppCard({
         ) : hasExternalImage ? (
           <img
             src={visualCell.externalImageURL as string}
-            alt={app.name}
+            alt={board.name}
             className="h-full w-full object-contain rounded-2xl"
           />
         ) : (
@@ -147,10 +147,10 @@ function SortableAppCard({
       </div>
 
       <Link
-        href={`/app/${app.id}`}
+        href={`/boards/${board.id}`}
         className="flex-1 flex gap-2 items-center justify-between bg-gray-900/95 text-white py-1 px-3 shadow-sm ring-1 ring-gray-900/5 rounded-xl"
       >
-        <h2 className="font-medium">{app.name}</h2>
+        <h2 className="font-medium">{board.name}</h2>
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -166,14 +166,14 @@ function SortableAppCard({
   )
 }
 
-export function SortableApps({
-  apps,
+export function SortableBoards({
+  boards,
   canManage,
   isAdmin,
   onReorder,
   unpinAction,
-}: SortableAppsProps) {
-  const [items, setItems] = useState<App[]>(apps)
+}: SortableBoardsProps) {
+  const [items, setItems] = useState<Board[]>(boards)
   const [isPending, startTransition] = useTransition()
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -203,10 +203,10 @@ export function SortableApps({
           strategy={rectSortingStrategy}
         >
           <ul className="flex flex-wrap gap-4">
-            {items.map((app) => (
-              <SortableAppCard
-                key={app.id}
-                app={app}
+            {items.map((board) => (
+              <SortableBoardCard
+                key={board.id}
+                board={board}
                 canManage={canManage}
                 isAdmin={isAdmin}
                 unpinAction={unpinAction}

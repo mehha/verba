@@ -11,15 +11,18 @@ import { HeaderNav } from '@/Header/Nav'
 import { UserMenu } from '@/Header/Nav/UserMenu'
 import { getClientSideURL } from '@/utilities/getURL'
 import { Button } from '@/components/ui/button'
-import { LogIn } from 'lucide-react'
+import { Baby, LogIn } from 'lucide-react'
+import { ParentUnlockDialog } from '@/app/(frontend)/home/ParentUnlockDialog'
+import { switchToChildModeAction } from '@/app/(frontend)/home/modeActions'
 
 interface HeaderClientProps {
   data: Header
   currentUser: User | null
   isParentMode?: boolean
+  hasPin: boolean
 }
 
-export const HeaderClient: React.FC<HeaderClientProps> = ({ data, currentUser, isParentMode }) => {
+export const HeaderClient: React.FC<HeaderClientProps> = ({ data, currentUser, isParentMode, hasPin }) => {
   /* Storing the value in a useState to avoid hydration errors */
   const [theme, setTheme] = useState<string | null>(null)
   const { headerTheme, setHeaderTheme } = useHeaderTheme()
@@ -79,22 +82,36 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data, currentUser, i
 
         <HeaderNav data={data} />
 
-        {/* ainult siis, kui on sisse loginud */}
-        {currentUser ? (
-          <UserMenu
-            name={name}
-            email={currentUser.email ?? ''}
-            onSignOut={handleSignOut}
-            isParentMode={isParentMode}
-          />
-        ) : (
-          <Link
-            href="/login"
-            className="flex items-center"
-          >
-            <Button variant="secondary" size="xs"><LogIn /></Button>
-          </Link>
-        )}
+        <div className={'flex items-center gap-4'}>
+          <div className="flex items-center gap-3">
+            {isParentMode ? (
+              <form action={switchToChildModeAction} className={'flex items-center'}>
+                <Button variant="muted" size="icon" roundness="full">
+                  <Baby className="h-6 w-6" />
+                </Button>
+              </form>
+            ) : (
+              <ParentUnlockDialog hasPin={Boolean(hasPin)} />
+            )}
+          </div>
+
+          {/* ainult siis, kui on sisse loginud */}
+          {currentUser ? (
+            <UserMenu
+              name={name}
+              email={currentUser.email ?? ''}
+              onSignOut={handleSignOut}
+              isParentMode={isParentMode}
+            />
+          ) : (
+            <Link
+              href="/login"
+              className="flex items-center"
+            >
+              <Button variant="secondary" size="xs"><LogIn /></Button>
+            </Link>
+          )}
+        </div>
       </div>
     </header>
   )

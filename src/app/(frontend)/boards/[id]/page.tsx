@@ -1,8 +1,8 @@
-// src/app/(frontend)/app/[id]/page.tsx
+// src/app/(frontend)/boards/[id]/page.tsx
 import { notFound, redirect } from 'next/navigation'
-import type { App } from '@/payload-types'
+import type { Board } from '@/payload-types'
 import { getCurrentUser } from '@/utilities/getCurrentUser'
-import Runner from '@/app/(frontend)/app/[id]/Runner'
+import Runner from './Runner'
 import PageClient from './page.client'
 import React from 'react'
 import { isParentModeUtil } from '@/utilities/uiMode'
@@ -13,7 +13,7 @@ type Args = {
   }>
 }
 
-export default async function AppRunPage({ params: paramsPromise }: Args) {
+export default async function BoardRunPage({ params: paramsPromise }: Args) {
   const { id } = await paramsPromise
 
   const { payload, user } = await getCurrentUser()
@@ -26,7 +26,7 @@ export default async function AppRunPage({ params: paramsPromise }: Args) {
 
   // will be filtered by access rules in Payload anyway
   const doc = await payload.findByID({
-    collection: 'apps',
+    collection: 'boards',
     id,
     depth: 2,
   }).catch(() => null)
@@ -35,12 +35,12 @@ export default async function AppRunPage({ params: paramsPromise }: Args) {
     notFound()
   }
 
-  const app = doc as App
+  const board = doc as Board
 
   return (
     <>
       <PageClient />
-      <Runner app={app} isParentMode={isParentMode} />
+      <Runner board={board} isParentMode={isParentMode} />
     </>
   )
 }

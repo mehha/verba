@@ -1,17 +1,17 @@
-// src/app/(frontend)/apps/page.tsx
+// src/app/(frontend)/boards/page.tsx
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getPayload } from 'payload'
 import configPromise from '@payload-config'
-import type { App } from '@/payload-types'
-import { AppsList } from './AppsList'
+import type { Board } from '@/payload-types'
+import { BoardsList } from './BoardsList'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
 export const dynamic = 'force-dynamic'
 
-export default async function AppsPage() {
+export default async function BoardsPage() {
   const payload = await getPayload({ config: configPromise })
   const requestHeaders = await headers()
 
@@ -20,10 +20,10 @@ export default async function AppsPage() {
 
   const isAdmin = user.role === 'admin'
 
-  const appsRes = await payload.find({
-    collection: 'apps',
+  const boardsRes = await payload.find({
+    collection: 'boards',
     where: isAdmin
-      ? {} // admin kõik äpid
+      ? {} // admin näeb kõiki tahvleid
       : {
           owner: { equals: user.id },
         },
@@ -31,11 +31,11 @@ export default async function AppsPage() {
     depth: 1,
   })
 
-  const apps = appsRes.docs as App[]
+  const boards = boardsRes.docs as Board[]
 
   // --- server actions ---
 
-  async function createApp(formData: FormData) {
+  async function createBoard(formData: FormData) {
     'use server'
 
     const payload = await getPayload({ config: configPromise })
@@ -43,25 +43,25 @@ export default async function AppsPage() {
     const { user } = await payload.auth({ headers: requestHeaders })
     if (!user) redirect('/admin')
 
-    const name = (formData.get('name') as string) || 'Uus äpp'
+    const name = (formData.get('name') as string) || 'Uus tahvel'
 
     await payload.create({
-      collection: 'apps',
+      collection: 'boards',
       data: {
         name,
         owner: user.id,
         grid: { cols: 6, rows: 8, cells: [] },
-        pinned: false, // vaikimisi mitte desktopil
+        pinned: false, // vaikimisi mitte koduvaates
       },
     })
 
-    redirect('/apps')
+    redirect('/boards')
   }
 
   async function togglePinned(formData: FormData) {
     'use server'
 
-    const appId = formData.get('appId') as string
+    const boardId = formData.get('boardId') as string
     const pinned = formData.get('pinned') === 'true'
 
     const payload = await getPayload({ config: configPromise })
@@ -70,24 +70,22 @@ export default async function AppsPage() {
     if (!user) redirect('/admin')
 
     await payload.update({
-      collection: 'apps',
-      id: appId,
+      collection: 'boards',
+      id: boardId,
       data: { pinned },
     })
 
-    // ei pea redirecti tegema, kui kasutad form+`return redirect('/apps')`,
-    // aga lihtsa variandi jaoks jätame:
-    redirect('/apps')
+    redirect('/boards')
   }
 
-  async function deleteApp(formData: FormData) {
+  async function deleteBoard(formData: FormData) {
     'use server'
 
-    const appId = formData.get('appId')
+    const boardId = formData.get('boardId')
 
-    if (!appId || typeof appId !== 'string') {
-      console.error('Missing appId in deleteApp', appId)
-      throw new Error('appId puudub FormData-st')
+    if (!boardId || typeof boardId !== 'string') {
+      console.error('Missing boardId in deleteBoard', boardId)
+      throw new Error('boardId puudub FormData-st')
     }
 
     const payload = await getPayload({ config: configPromise })
@@ -95,40 +93,39 @@ export default async function AppsPage() {
     const { user } = await payload.auth({ headers: requestHeaders })
     if (!user) redirect('/admin')
 
-    await payload.delete({ collection: 'apps', id: appId })
+    await payload.delete({ collection: 'boards', id: boardId })
 
-    redirect('/apps')
+    redirect('/boards')
   }
 
   return (
     <main className="container space-y-6">
       <header className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">Kõik rakendused</h1>
+        <h1 className="text-2xl font-semibold">Kõik tahvlid</h1>
 
-        {/* vana CreateAppButton loogika siin */}
-        <form action={createApp} className="flex gap-2">
+        <form action={createBoard} className="flex gap-2">
           <div className="">
             <Label htmlFor="name" className="sr-only">
-              Uue äpi nimi
+              Uue tahvli nimi
             </Label>
             <Input
               id="name"
               name="name"
-              placeholder="Uue äpi nimi"
+              placeholder="Uue tahvli nimi"
             />
           </div>
 
           <Button type="submit">
-            Lisa uus äpp
+            Lisa uus tahvel
           </Button>
         </form>
       </header>
 
-      <AppsList
-        apps={apps}
+      <BoardsList
+        boards={boards}
         isAdmin={isAdmin}
         togglePinned={togglePinned}
-        deleteApp={deleteApp}
+        deleteBoard={deleteBoard}
       />
     </main>
   )

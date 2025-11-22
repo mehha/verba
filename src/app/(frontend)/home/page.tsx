@@ -2,18 +2,15 @@ import { redirect } from 'next/navigation'
 import { getPayload } from 'payload'
 import configPromise from '@payload-config'
 import { headers } from 'next/headers'
-import type { App, User } from '@/payload-types'
-import { SortableApps } from './SortableApps'
-import { reorderApps } from './reorderApps'
+import type { Board, User } from '@/payload-types'
+import { SortableBoards } from './SortableBoards'
+import { reorderBoards } from './reorderBoards'
 import { MonitorCheck } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { ParentUnlockDialog } from './ParentUnlockDialog'
-import { switchToChildModeAction } from './modeActions'
 import { isParentModeUtil } from '@/utilities/uiMode'
 
 export const dynamic = 'force-dynamic'
 
-export default async function DesktopPage() {
+export default async function HomePage() {
   const payload = await getPayload({ config: configPromise })
   const requestHeaders = await headers()
 
@@ -26,8 +23,8 @@ export default async function DesktopPage() {
   const isParentMode = await isParentModeUtil()
   const u = user as User
 
-  const appsRes = await payload.find({
-    collection: 'apps',
+  const boardsRes = await payload.find({
+    collection: 'boards',
     where: u.role === 'admin'
       ? {
           pinned: {
@@ -52,46 +49,34 @@ export default async function DesktopPage() {
     depth: 1,
   })
 
-  const apps = appsRes.docs as App[]
+  const boards = boardsRes.docs as Board[]
 
   return (
     <main className="p-6 space-y-6">
       <header className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-2">
           <MonitorCheck className="h-6 w-6 text-pink-500" />
-          <h1 className="text-2xl font-semibold">Desktop</h1>
-        </div>
-
-        <div className="flex items-center gap-3">
-          {isParentMode ? (
-            <form action={switchToChildModeAction}>
-              <Button variant="outline" size="sm">
-                Lapse vaade
-              </Button>
-            </form>
-          ) : (
-            <ParentUnlockDialog hasPin={Boolean(u.parentPinHash)} />
-          )}
+          <h1 className="text-2xl font-semibold">Kodu</h1>
         </div>
       </header>
 
-      {apps.length === 0 ? (
-        <p className="text-muted-foreground">Sul pole veel rakendusi.</p>
+      {boards.length === 0 ? (
+        <p className="text-muted-foreground">Sul pole veel tahvleid.</p>
       ) : (
-        <SortableApps
-          apps={apps}
+        <SortableBoards
+          boards={boards}
           // canManage = ainult parent mode
           canManage={isParentMode}
           isAdmin={u.role === 'admin'}
-          onReorder={reorderApps}
-          // NB: unpinAction ikka sinu olemasolev server action DesktopPage'st
+          onReorder={reorderBoards}
+          // NB: unpinAction ikka sinu olemasolev server action koduvaates
           // kui tahad, võime selle ka eraldi actions-faili tõsta
           unpinAction={async (formData: FormData) => {
             'use server'
 
-            const appId = formData.get('appId') as string | null
-            if (!appId) {
-              redirect('/desktop')
+            const boardId = formData.get('boardId') as string | null
+            if (!boardId) {
+              redirect('/home')
             }
 
             const payload = await getPayload({ config: configPromise })
@@ -103,14 +88,14 @@ export default async function DesktopPage() {
             }
 
             await payload.update({
-              collection: 'apps',
-              id: appId,
+              collection: 'boards',
+              id: boardId,
               data: {
                 pinned: false,
               },
             })
 
-            redirect('/desktop')
+            redirect('/home')
           }}
         />
       )}

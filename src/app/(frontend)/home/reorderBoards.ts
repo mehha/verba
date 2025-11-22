@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation'
 import { getPayload } from 'payload'
 import configPromise from '@payload-config'
 
-export async function reorderApps(appIds: string[]) {
+export async function reorderBoards(boardIds: string[]) {
   const payload = await getPayload({ config: configPromise })
   const requestHeaders = await headers()
   const { user } = await payload.auth({ headers: requestHeaders })
@@ -16,9 +16,9 @@ export async function reorderApps(appIds: string[]) {
 
   // Kirjuta uued order väärtused järjest (1, 2, 3, ...)
   await Promise.all(
-    appIds.map((id, index) =>
+    boardIds.map((id, index) =>
       payload.update({
-        collection: 'apps',
+        collection: 'boards',
         id,
         data: {
           order: index + 1,

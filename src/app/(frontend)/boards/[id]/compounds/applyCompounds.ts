@@ -1,12 +1,12 @@
 // src/lib/aac/applyCompounds.ts
-import type { App } from '@/payload-types'
+import type { Board } from '@/payload-types'
 
 export type SelectedToken = {
   id: string
   text: string
 }
 
-export type Compound = NonNullable<App['compounds']>[number]
+export type Compound = NonNullable<Board['compounds']>[number]
 
 export type NormalizedToken = {
   id: string

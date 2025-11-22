@@ -1,16 +1,16 @@
-// src/app/(frontend)/app/[id]/edit/page.tsx
+// src/app/(frontend)/boards/[id]/edit/page.tsx
 import { notFound, redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
-import AppEditor from './AppEditor/index'
+import BoardEditor from './BoardEditor/index'
 import { getCurrentUser } from '@/utilities/getCurrentUser'
-import type { App, User } from '@/payload-types'
+import type { Board, User } from '@/payload-types'
 import { requireParentMode } from '@/utilities/uiMode'
 
 type Params = {
   id: string
 }
 
-export default async function AppEditPage({
+export default async function BoardEditPage({
   params,
 }: {
   params: Promise<Params>
@@ -27,7 +27,7 @@ export default async function AppEditPage({
 
   const doc = await payload
     .findByID({
-      collection: 'apps',
+      collection: 'boards',
       id,
       depth: 2,
     })
@@ -37,20 +37,20 @@ export default async function AppEditPage({
     notFound()
   }
 
-  const app = doc as App
+  const board = doc as Board
 
   const isAdmin = user.role === 'admin'
   const ownerId =
-    typeof app.owner === 'object' && app.owner !== null
-      ? (app.owner as User).id
-      : app.owner
+    typeof board.owner === 'object' && board.owner !== null
+      ? (board.owner as User).id
+      : board.owner
 
   if (!isAdmin && ownerId !== user.id) {
-    redirect('/desktop')
+    redirect('/home')
   }
 
-  // --- server action: renameApp ---
-  async function renameApp(formData: FormData) {
+  // --- server action: renameBoard ---
+  async function renameBoard(formData: FormData) {
     'use server'
 
     const { payload, user } = await getCurrentUser()
@@ -58,20 +58,19 @@ export default async function AppEditPage({
       redirect('/admin')
     }
 
-    const appId = formData.get('appId') as string
+    const boardId = formData.get('boardId') as string
     const rawName = (formData.get('name') as string) ?? ''
-    const name = rawName.trim() || 'Nimetu äpp'
+    const name = rawName.trim() || 'Nimetu tahvel'
 
     await payload.update({
-      collection: 'apps',
-      id: appId, // ei kasuta where, meil on id olemas
+      collection: 'boards',
+      id: boardId, // ei kasuta where, meil on id olemas
       data: { name },
     })
 
-    // värskenda edit-lehte ja listi
-    revalidatePath(`/app/${appId}/edit`)
-    revalidatePath('/apps')
+    revalidatePath(`/boards/${boardId}/edit`)
+    revalidatePath('/boards')
   }
 
-  return <AppEditor app={app} renameApp={renameApp} />
+  return <BoardEditor board={board} renameBoard={renameBoard} />
 }

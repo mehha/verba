@@ -62,7 +62,7 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
         ].join('; ')
       }
 
-      router.push('/desktop')
+      router.push('/home')
       router.refresh()
     } catch (err) {
       console.error(err)

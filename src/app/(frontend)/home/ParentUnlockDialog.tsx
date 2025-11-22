@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState, useEffect, useRef, useState } from 'react'
+import React, { useActionState, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { unlockParentModeAction, type UnlockState } from './modeActions'
 import { Button } from '@/components/ui/button'
@@ -16,6 +16,7 @@ import {
   InputOTPSlot,
 } from '@/components/ui/input-otp'
 import { Label } from '@/components/ui/label'
+import { Baby, UserLock } from 'lucide-react'
 
 const initialState: UnlockState = {
   success: false,
@@ -33,12 +34,12 @@ export function ParentUnlockDialog({ hasPin }: ParentUnlockDialogProps) {
   const router = useRouter()
   const formRef = useRef<HTMLFormElement | null>(null)
 
-  // edu korral: sulge dialog ja refres-hi desktop
+  // edu korral: sulge dialog ja refres-hi koduvaade
   useEffect(() => {
     if (state.success) {
       setOpen(false)
       setPin('')
-      router.push('/desktop')
+      router.push('/home')
     }
   }, [state.success, router])
 
@@ -52,12 +53,13 @@ export function ParentUnlockDialog({ hasPin }: ParentUnlockDialogProps) {
   return (
     <>
       <Button
-        variant="outline"
-        size="sm"
+        variant="muted"
+        roundness="full"
+        size="icon"
         onClick={() => setOpen(true)}
         disabled={!hasPin}
       >
-        Vanema vaade (PIN)
+        <UserLock className="h-6 w-6" />
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>

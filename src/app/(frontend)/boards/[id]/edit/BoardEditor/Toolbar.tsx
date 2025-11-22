@@ -12,7 +12,7 @@ type ToolbarProps = {
   disableClear: boolean
 }
 
-export function AppEditorToolbar({
+export function BoardEditorToolbar({
   onAddCellAction,
   onMake2x2Action,
   onMake4x4Action,

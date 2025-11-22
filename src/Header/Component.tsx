@@ -9,10 +9,11 @@ import { cookies } from 'next/headers'
 export async function Header() {
   const headerData: Header = await getCachedGlobal('header', 1)()
   const { user } = await getCurrentUser()
+  const u = user as User
   const cookieStore = await cookies()
 
   const uiModeCookie = cookieStore.get('uiMode')?.value
   const isParentMode = uiModeCookie === 'parent'
 
-  return <HeaderClient data={headerData} currentUser={user as User | null} isParentMode={isParentMode} />
+  return <HeaderClient data={headerData} currentUser={user as User | null} isParentMode={isParentMode} hasPin={Boolean(u.parentPinHash)} />
 }

@@ -1,12 +1,12 @@
-// src/components/AppEditor/useAppGrid.ts
+// src/components/BoardEditor/useBoardGrid.ts
 'use client'
 
 import { useCallback, useMemo, useState } from 'react'
 import type { Layout } from 'react-grid-layout'
-import type { App } from '@/payload-types'
+import type { Board } from '@/payload-types'
 import { getClientSideURL } from '@/utilities/getURL'
 
-type Grid = NonNullable<App['grid']>
+type Grid = NonNullable<Board['grid']>
 type Cells = NonNullable<Grid['cells']>
 type Cell = Cells[number]
 
@@ -14,23 +14,23 @@ type LocalCell = Cell & {
   image?: Cell['image'] | { id: string | number; url?: string } | null
 }
 
-export function useAppGrid(app: App) {
-  const baseCols = app.grid?.cols ?? 12
+export function useBoardGrid(board: Board) {
+  const baseCols = board.grid?.cols ?? 12
 
   // ---- DRAFT STATE (no autosave) ----
   const [saving, setSaving] = useState(false)
   const [dirty, setDirty] = useState(false)
 
   const [actionBar, setActionBar] = useState<{ enabled: boolean }>(() => ({
-    enabled: app.actionBar?.enabled !== false,
+    enabled: board.actionBar?.enabled !== false,
   }))
 
   const [aiEnabled, setAiEnabled] = useState<boolean>(() => {
-    return app.extra?.ai ?? false // vaikimisi false
+    return board.extra?.ai ?? false // vaikimisi false
   })
 
   const [cells, setCells] = useState<LocalCell[]>(() => {
-    const initial = app.grid?.cells ?? []
+    const initial = board.grid?.cells ?? []
     return initial.map((c) => c as LocalCell)
   })
 
@@ -64,22 +64,22 @@ export function useAppGrid(app: App) {
     })
 
     setSaving(true)
-    await fetch(`${getClientSideURL()}/api/apps/${app.id}`, {
+    await fetch(`${getClientSideURL()}/api/boards/${board.id}`, {
       method: 'PATCH',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         actionBar,
         extra: {
-          ...(app.extra || {}),
+          ...(board.extra || {}),
           ai: aiEnabled,
         },
-        grid: { ...(app.grid || {}), cols: baseCols, cells: cellsForServer },
+        grid: { ...(board.grid || {}), cols: baseCols, cells: cellsForServer },
       }),
     })
     setSaving(false)
     setDirty(false)
-  }, [app.id, app.grid, baseCols, cells, actionBar, aiEnabled, app.extra])
+  }, [board.id, board.grid, baseCols, cells, actionBar, aiEnabled, board.extra])
 
   // ---- RGL change: mark dirty, no save ----
   const onLayoutChange = useCallback((newLayout: Layout[]) => {

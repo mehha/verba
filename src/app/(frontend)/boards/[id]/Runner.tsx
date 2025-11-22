@@ -1,23 +1,24 @@
-// src/app/(frontend)/app/[id]/Runner.tsx
+// src/app/(frontend)/boards/[id]/Runner.tsx
 'use client'
 
 import { useState, useMemo } from 'react'
 import Image from 'next/image'
-import type { App, Media } from '@/payload-types'
+import type { Board, Media } from '@/payload-types'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Sparkles, Slash } from 'lucide-react'
+import { Sparkles, Slash, WholeWord } from 'lucide-react'
 import RGL, { WidthProvider, type Layout } from 'react-grid-layout'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 
 // UUS: sõnaühendite util
-import { applyCompounds, type SelectedToken } from './compounds/applyCompounds'
-import { getCompoundFormForLastToken } from '@/app/(frontend)/app/[id]/compounds/getCompoundFormForLastToken'
+import { applyCompounds, Compound, type SelectedToken } from './compounds/applyCompounds'
+import { getCompoundFormForLastToken } from './compounds/getCompoundFormForLastToken'
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip'
 
 const ReactGridLayout = WidthProvider(RGL)
 
-type RunnerProps = { app: App, isParentMode: boolean }
+type RunnerProps = { board: Board; isParentMode: boolean }
 
 type SequenceItem = {
   cellId: string
@@ -57,18 +58,18 @@ async function playTTS(text: string) {
   URL.revokeObjectURL(url)
 }
 
-export default function Runner({ app, isParentMode }: RunnerProps) {
+export default function Runner({ board, isParentMode }: RunnerProps) {
   // UUS: hoiame cellId + teksti
   const [sequence, setSequence] = useState<SequenceItem[]>([])
   const [busy, setBusy] = useState(false)
   const [tempLabel, setTempLabel] = useState<{ id: string; text: string } | null>(null)
 
-  const aiAllowed = app.extra?.ai ?? false
-  const actionBarEnabled = app.actionBar?.enabled ?? false
+  const aiAllowed = board.extra?.ai ?? false
+  const actionBarEnabled = board.actionBar?.enabled ?? false
   const [aiEnabled, setAiEnabled] = useState<boolean>(aiAllowed)
 
-  const cols = app.grid?.cols ?? 6
-  const cells = (app.grid?.cells ?? []).filter((c) => !c.locked)
+  const cols = board.grid?.cols ?? 6
+  const cells = (board.grid?.cells ?? []).filter((c) => !c.locked)
 
   const layout: Layout[] = useMemo(
     () =>
@@ -100,8 +101,8 @@ export default function Runner({ app, isParentMode }: RunnerProps) {
     }
 
     // AI väljas: rakenda compounds
-    return applyCompounds(tokens, app.compounds)
-  }, [tokens, app.compounds, aiEnabled])
+    return applyCompounds(tokens, board.compounds)
+  }, [tokens, board.compounds, aiEnabled])
 
   const phrase = compoundsResult.display
   const ttsAll = compoundsResult.tts
@@ -148,7 +149,7 @@ export default function Runner({ app, isParentMode }: RunnerProps) {
 
       // 3) Kui AI on väljas, proovi compounds; kui AI sees, ära kasuta compounds
       const compoundForm = !aiEnabled
-        ? getCompoundFormForLastToken(nextTokens, app.compounds)
+        ? getCompoundFormForLastToken(nextTokens, board.compounds)
         : null
 
       const spoken = compoundForm ? compoundForm.tts : surface
@@ -198,36 +199,78 @@ export default function Runner({ app, isParentMode }: RunnerProps) {
     )
   }
 
+  const compounds = (board.compounds ?? []) as Compound[]
+
   return (
     <div>
       <div className="container">
-        <div className="mb-10 flex justify-between gap-2">
-          <h1 className="text-center text-3xl font-semibold">{app.name}</h1>
+        <TooltipProvider>
+          <div className="mb-10 flex justify-between gap-2">
+            <h1 className="text-center text-3xl font-semibold">{board.name}</h1>
 
-          <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              size="sm"
-              roundness="2xl"
-              variant={aiEnabled ? 'positive' : 'muted'}
-              onClick={() => setAiEnabled((v) => !v)}
-              aria-pressed={aiEnabled}
-              title={aiEnabled ? 'AI on: parandab sõna kuju' : 'AI off: loeb täpselt valitud sõna'}
-              className="inline-flex items-center gap-2"
-            >
-              {aiEnabled ? <Sparkles size={16} /> : <Slash size={16} />}
-              {aiEnabled ? 'AI: sees' : 'AI: väljas'}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                size="sm"
+                roundness="2xl"
+                variant={aiEnabled ? 'positive' : 'muted'}
+                onClick={() => setAiEnabled((v) => !v)}
+                aria-pressed={aiEnabled}
+                title={
+                  aiEnabled ? 'AI on: parandab sõna kuju' : 'AI off: loeb täpselt valitud sõna'
+                }
+                className="inline-flex items-center gap-2"
+              >
+                {aiEnabled ? <Sparkles size={16} /> : <Slash size={16} />}
+                {aiEnabled ? 'AI: sees' : 'AI: väljas'}
+              </Button>
 
-            {isParentMode &&
-              <Link href={`/app/${app.id}/edit`}>
-                <Button variant="default" roundness="2xl" size="sm">
-                  Muuda
-                </Button>
-              </Link>
-            }
+              {/* Halda sõnaühendeid + tooltip */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  {isParentMode ? (
+                    <Button variant="secondary" size="sm" asChild>
+                      <Link href={`/boards/${board.id}/compounds`}>
+                        <WholeWord className="mr-2 h-5 w-5 text-pink-600" />
+                        Halda sõnaühendeid
+                      </Link>
+                    </Button>
+                  ) : (
+                    <Button variant="secondary" size="sm">
+                      <WholeWord className="h-5 w-5" />
+                      <span className="sr-only">Sõnaühendite haldus</span>
+                    </Button>
+                  )}
+                </TooltipTrigger>
+                <TooltipContent className="max-w-sm">
+                  {compounds.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">Sõnaühendeid pole veel lisatud.</p>
+                  ) : (
+                    <div className="max-h-[260px] space-y-2 overflow-y-auto text-xs">
+                      {compounds.map((compound) => {
+                        const surfaces = compound.parts?.map((p) => p.surface).join(' ') ?? ''
+
+                        return (
+                          <div key={compound.id} className="rounded border bg-muted/40 px-2 py-1">
+                            <div className="font-medium">{surfaces || '—'}</div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </TooltipContent>
+              </Tooltip>
+
+              {isParentMode && (
+                <Link href={`/boards/${board.id}/edit`}>
+                  <Button variant="default" roundness="2xl" size="sm">
+                    Muuda
+                  </Button>
+                </Link>
+              )}
+            </div>
           </div>
-        </div>
+        </TooltipProvider>
 
         {actionBarEnabled && (
           <div className="mb-14 mx-auto flex max-w-[800px] items-center gap-3 rounded-full border bg-white ps-6 pe-2 py-2 shadow-lg ring-1 ring-gray-900/5">

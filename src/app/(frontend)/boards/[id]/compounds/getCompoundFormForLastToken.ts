@@ -1,6 +1,6 @@
 // src/lib/aac/getCompoundFormForLastToken.ts
-import type { App } from '@/payload-types'
-import {SelectedToken} from "@/app/(frontend)/app/[id]/compounds/applyCompounds";
+import type { Board } from '@/payload-types'
+import { SelectedToken } from './applyCompounds'
 
 /**
  * Leia vorm viimasele tokenile:
@@ -12,7 +12,7 @@ import {SelectedToken} from "@/app/(frontend)/app/[id]/compounds/applyCompounds"
  */
 export function getCompoundFormForLastToken(
   tokens: SelectedToken[],
-  rules: App['compounds'] | null | undefined,
+  rules: Board['compounds'] | null | undefined,
 ): { surface: string; tts: string } | null {
   if (!rules?.length || tokens.length === 0) return null
 

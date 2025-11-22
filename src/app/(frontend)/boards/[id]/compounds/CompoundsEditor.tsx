@@ -20,20 +20,20 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion'
 import { Badge } from '@/components/ui/badge'
-import type { App } from '@/payload-types'
+import type { Board } from '@/payload-types'
 
 type CellOption = {
   id: string
   title: string
 }
 
-type Compound = NonNullable<App['compounds']>[number]
+type Compound = NonNullable<Board['compounds']>[number]
 
 type CompoundsEditorProps = {
-  appId: string
+  boardId: string
   initialCompounds: Compound[] | null | undefined
   cells: CellOption[]
-  onSave: (appId: string, compounds: Compound[]) => Promise<void>
+  onSave: (boardId: string, compounds: Compound[]) => Promise<void>
 }
 
 // Hoia cells/parts sama pikkusega
@@ -92,7 +92,7 @@ function getCompoundPreview(
 }
 
 export function CompoundsEditor({
-  appId,
+  boardId,
   initialCompounds,
   cells,
   onSave,
@@ -302,7 +302,7 @@ export function CompoundsEditor({
     }
 
     startTransition(() => {
-      onSave(appId, compounds)
+      onSave(boardId, compounds)
         .then(() => {
           setStatus('Salvestatud.')
         })
@@ -362,7 +362,7 @@ export function CompoundsEditor({
 
       {!cells.length && (
         <p className="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">
-          Sellel appil ei ole ühtegi celli. Lisa kõigepealt cellid, et saaksid
+          Sellel tahvlil ei ole ühtegi celli. Lisa kõigepealt cellid, et saaksid
           neist sõnaühendeid koostada.
         </p>
       )}
@@ -610,7 +610,7 @@ export function CompoundsEditor({
           >
             {isPending ? 'Salvestan…' : 'Salvesta kõik'}
           </Button>
-          <Link href={`/app/${appId}`}>
+          <Link href={`/boards/${boardId}`}>
             <Button variant="positive" size="sm">
               <Play className="h-5 w-5" />
             </Button>

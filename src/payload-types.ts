@@ -72,7 +72,7 @@ export interface Config {
     media: Media;
     categories: Category;
     users: User;
-    apps: App;
+    boards: Board;
     redirects: Redirect;
     forms: Form;
     'form-submissions': FormSubmission;
@@ -89,7 +89,7 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
-    apps: AppsSelect<false> | AppsSelect<true>;
+    boards: BoardsSelect<false> | BoardsSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
@@ -848,15 +848,15 @@ export interface AacFeaturesBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "apps".
+ * via the `definition` "boards".
  */
-export interface App {
+export interface Board {
   id: string;
   name: string;
   owner: string | User;
   pinned?: boolean | null;
   /**
-   * Mida väiksem number, seda eespool desktopil.
+   * Mida väiksem number, seda eespool koduvaates.
    */
   order?: number | null;
   thumbnail?: (string | null) | Media;
@@ -1117,8 +1117,8 @@ export interface PayloadLockedDocument {
         value: string | User;
       } | null)
     | ({
-        relationTo: 'apps';
-        value: string | App;
+        relationTo: 'boards';
+        value: string | Board;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -1571,9 +1571,9 @@ export interface UsersSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "apps_select".
+ * via the `definition` "boards_select".
  */
-export interface AppsSelect<T extends boolean = true> {
+export interface BoardsSelect<T extends boolean = true> {
   name?: T;
   owner?: T;
   pinned?: T;
