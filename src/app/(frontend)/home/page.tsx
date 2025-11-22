@@ -65,9 +65,12 @@ export default async function HomePage() {
       {boards.length === 0 ? (
         <>
           <p className="text-muted-foreground">Sul pole veel midagi lisatud kodu vaatesse.</p>
-          <Button variant="outline">
-            <Link href="/boards" className="flex items-center gap-2">Mine lisama <ArrowRight className={`w-4 h-4`} /></Link>
-          </Button>
+          {!isParentMode && <p className="text-muted-foreground">Lisamiseks lülituse vanema vaatesse</p>}
+          {isParentMode &&
+            <Button variant="outline">
+              <Link href="/boards" className="flex items-center gap-2">Mine lisama <ArrowRight className={`w-4 h-4`} /></Link>
+            </Button>
+          }
 
         </>
       ) : (

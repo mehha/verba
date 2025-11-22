@@ -8,6 +8,7 @@ import { BoardsList } from './BoardsList'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { requireParentMode } from '@/utilities/uiMode'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,6 +17,9 @@ export default async function BoardsPage() {
   const requestHeaders = await headers()
 
   const { user } = await payload.auth({ headers: requestHeaders })
+
+  await requireParentMode()
+
   if (!user) redirect('/admin')
 
   const isAdmin = user.role === 'admin'

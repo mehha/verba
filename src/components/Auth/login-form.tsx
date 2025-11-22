@@ -129,8 +129,8 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
 
             <div className="mt-2 text-center text-sm text-muted-foreground">
               Pole kontot?{' '}
-              <Link href='/kontakt' className="underline underline-offset-4">
-                Võta ühendust administraatoriga
+              <Link href='/register' className="underline underline-offset-4">
+                Registreeru
               </Link>
             </div>
           </form>
