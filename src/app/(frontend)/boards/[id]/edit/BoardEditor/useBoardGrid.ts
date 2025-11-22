@@ -129,9 +129,25 @@ export function useBoardGrid(board: Board) {
     setDirty(true)
   }, [baseCols, cells])
 
+  const appendRow = useCallback((cellCount: number) => {
+    const cellW = Math.max(1, Math.floor(baseCols / cellCount))
+    const startY = cells.reduce((m, c) => Math.max(m, (c.y ?? 0) + (c.h ?? 1)), 0)
+
+    const newOnes: LocalCell[] = Array.from({ length: cellCount }, (_, idx) => ({
+      id: `cell-row-${cellCount}-${Date.now()}-${idx}`,
+      x: idx * cellW,
+      y: startY,
+      w: cellW,
+      h: 1,
+      title: '',
+    }))
+
+    setCells(prev => [...prev, ...newOnes])
+    setDirty(true)
+  }, [baseCols, cells])
+
   const make2x2 = useCallback(() => appendLogicalGrid(2), [appendLogicalGrid])
-  const make4x4 = useCallback(() => appendLogicalGrid(4), [appendLogicalGrid])
-  const make6x6 = useCallback(() => appendLogicalGrid(6), [appendLogicalGrid])
+  const addRow = useCallback(() => appendRow(6), [appendRow])
 
   const deleteCell = useCallback((cellId: string) => {
     setCells(prev => prev.filter(c => c.id !== cellId))
@@ -169,7 +185,7 @@ export function useBoardGrid(board: Board) {
     // callbacks
     onLayoutChange,
     addCell,
-    make2x2, make4x4, make6x6,
+    make2x2, addRow,
     deleteCell, clearGrid,
     updateCellAction, updateActionBar,
     saveDraft,

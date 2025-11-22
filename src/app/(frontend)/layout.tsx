@@ -35,7 +35,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           />
 
           <Header />
-          <div className="py-20 px-4">
+          <div className="py-10 px-4">
             {children}
           </div>
           <Footer />

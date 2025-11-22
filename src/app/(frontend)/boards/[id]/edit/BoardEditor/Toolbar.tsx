@@ -6,8 +6,7 @@ import { Grid2X2, Trash } from 'lucide-react'
 type ToolbarProps = {
   onAddCellAction: () => void
   onMake2x2Action: () => void
-  onMake4x4Action: () => void
-  onMake6x6Action: () => void
+  onAddRowAction: () => void
   onClearAction: () => void
   disableClear: boolean
 }
@@ -15,8 +14,7 @@ type ToolbarProps = {
 export function BoardEditorToolbar({
   onAddCellAction,
   onMake2x2Action,
-  onMake4x4Action,
-  onMake6x6Action,
+  onAddRowAction,
   onClearAction,
   disableClear,
 }: ToolbarProps) {
@@ -29,11 +27,8 @@ export function BoardEditorToolbar({
       <Button variant="outline" size="xs" type="button" className="relative pr-6" onClick={onMake2x2Action}>
         Lisa 2×2 <Grid2X2 width={14} className="absolute right-2 top-1/2 -translate-y-1/2" />
       </Button>
-      <Button variant="outline" size="xs" type="button" className="relative pr-6" onClick={onMake4x4Action}>
-        Lisa 4×4 <Grid2X2 width={14} className="absolute right-2 top-1/2 -translate-y-1/2" />
-      </Button>
-      <Button variant="outline" size="xs" type="button" className="relative pr-6" onClick={onMake6x6Action}>
-        Lisa 6×6 <Grid2X2 width={14} className="absolute right-2 top-1/2 -translate-y-1/2" />
+      <Button variant="outline" size="xs" type="button" className="relative pr-6" onClick={onAddRowAction}>
+        Lisa rida <Grid2X2 width={14} className="absolute right-2 top-1/2 -translate-y-1/2" />
       </Button>
 
       <Button

@@ -38,8 +38,7 @@ export default function BoardEditor({ board, renameBoard }: Props) {
     onLayoutChange,
     addCell,
     make2x2,
-    make4x4,
-    make6x6,
+    addRow,
     deleteCell,
     clearGrid,
     updateCellAction,
@@ -212,8 +211,7 @@ export default function BoardEditor({ board, renameBoard }: Props) {
             <BoardEditorToolbar
               onAddCellAction={addCell}
               onMake2x2Action={make2x2}
-              onMake4x4Action={make4x4}
-              onMake6x6Action={make6x6}
+              onAddRowAction={addRow}
               onClearAction={clearGrid}
               disableClear={cells.length === 0}
             />

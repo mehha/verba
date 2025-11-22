@@ -61,7 +61,7 @@ export default async function HomePage() {
       </header>
 
       {boards.length === 0 ? (
-        <p className="text-muted-foreground">Sul pole veel tahvleid.</p>
+        <p className="text-muted-foreground">Sul pole veel midagi lisatud kodu vaatesse.</p>
       ) : (
         <SortableBoards
           boards={boards}

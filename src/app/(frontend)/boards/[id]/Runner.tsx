@@ -6,7 +6,7 @@ import Image from 'next/image'
 import type { Board, Media } from '@/payload-types'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Sparkles, Slash, WholeWord } from 'lucide-react'
+import { Sparkles, Slash, WholeWord, Trash, Undo2, Volume, Volume2Icon } from 'lucide-react'
 import RGL, { WidthProvider, type Layout } from 'react-grid-layout'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
@@ -15,6 +15,7 @@ import 'react-resizable/css/styles.css'
 import { applyCompounds, Compound, type SelectedToken } from './compounds/applyCompounds'
 import { getCompoundFormForLastToken } from './compounds/getCompoundFormForLastToken'
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip'
+import { AnimatedVolumeIcon } from '@/components/Animations/AnimatedVolumeIcon'
 
 const ReactGridLayout = WidthProvider(RGL)
 
@@ -177,7 +178,28 @@ export default function Runner({ board, isParentMode }: RunnerProps) {
     }
   }
 
-  const handleClear = () => setSequence([])
+  const handleClear = () => {
+    setSequence([])
+    setTempLabel(null)
+  }
+
+  const handleUndoLast = () => {
+    if (!sequence.length || busy) return
+
+    setSequence((prev) => {
+      const next = prev.slice(0, -1)
+      const removed = prev[prev.length - 1]
+
+      // kui viimane tempLabel oli selle celli küljes, nulli see
+      if (removed) {
+        setTempLabel((current) =>
+          current && current.id === removed.cellId ? null : current,
+        )
+      }
+
+      return next
+    })
+  }
 
   const renderCellImage = (cell: any) => {
     const src =
@@ -279,20 +301,34 @@ export default function Runner({ board, isParentMode }: RunnerProps) {
             </div>
             <div className="flex gap-2">
               <Button
-                variant={sequence.length && !busy ? 'default' : 'muted'}
-                disabled={!sequence.length || busy}
                 onClick={handlePlayAll}
                 roundness="2xl"
               >
-                {busy ? 'Kuulan…' : 'Kuula'}
+                {busy ? (
+                  <span className="inline-flex items-center gap-2">
+                    <AnimatedVolumeIcon busy className="h-4 w-4" />
+                  </span>
+                ) : (
+                  <Volume2Icon className="h-4 w-4" />
+                )}
               </Button>
               <Button
                 variant={sequence.length && !busy ? 'secondary' : 'muted'}
+                size="icon"
+                disabled={!sequence.length || busy}
+                onClick={handleUndoLast}
+                roundness="full"
+              >
+                <Undo2 className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={sequence.length && !busy ? 'secondary' : 'muted'}
+                size="icon"
                 disabled={!sequence.length || busy}
                 onClick={handleClear}
-                roundness="2xl"
+                roundness="full"
               >
-                Kustuta
+                <Trash className="h-4 w-4" />
               </Button>
             </div>
           </div>

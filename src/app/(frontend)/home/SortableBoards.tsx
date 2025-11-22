@@ -2,6 +2,7 @@
 
 import React, { useState, useTransition } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import type { Board } from '@/payload-types'
 import { DndContext, closestCenter, type DragEndEvent } from '@dnd-kit/core'
 import {
@@ -54,6 +55,8 @@ function SortableBoardCard({
   isAdmin,
   unpinAction,
 }: SortableBoardCardProps) {
+  const router = useRouter()
+
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({
       id: board.id,
@@ -70,11 +73,26 @@ function SortableBoardCard({
     opacity: isDragging ? 0.6 : 1,
   }
 
+  const handleCardClick = () => {
+    router.push(`/boards/${board.id}`)
+  }
+
+  const handleCardKeyDown: React.KeyboardEventHandler<HTMLLIElement> = (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      handleCardClick()
+    }
+  }
+
   return (
     <li
       ref={setNodeRef}
       style={style}
-      className="relative border p-3 flex flex-col gap-3 aspect-[4/3] w-[280px] rounded-xl bg-white shadow-sm ring-1 ring-gray-900/5"
+      role="button"
+      tabIndex={0}
+      onClick={handleCardClick}
+      onKeyDown={handleCardKeyDown}
+      className="relative border p-3 flex flex-col gap-3 aspect-[4/3] w-[280px] rounded-xl bg-white shadow-sm ring-1 ring-gray-900/5 cursor-pointer"
     >
       <div className="flex items-center justify-between gap-2">
         {/* DRAG HANDLE – ainult parent mode saab sortida */}
@@ -83,7 +101,10 @@ function SortableBoardCard({
             type="button"
             {...listeners}
             {...attributes}
-            onClick={(e) => e.preventDefault()}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+            }}
             className="cursor-grab active:cursor-grabbing touch-none hover:bg-muted"
             aria-label="Muuda tahvli järjekorda"
           >
@@ -100,7 +121,10 @@ function SortableBoardCard({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Link href={`/boards/${board.id}/edit`}>
+                  <Link
+                    href={`/boards/${board.id}/edit`}
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <Edit className="w-5 h-5" />
                   </Link>
                 </TooltipTrigger>
@@ -108,9 +132,14 @@ function SortableBoardCard({
                   <p>Muuda</p>
                 </TooltipContent>
               </Tooltip>
+
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <form className="flex items-center" action={unpinAction}>
+                  <form
+                    className="flex items-center"
+                    action={unpinAction}
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <input type="hidden" name="boardId" value={board.id} />
                     <button type="submit">
                       <TrashIcon className="w-5 h-5 text-red-600" />
@@ -146,22 +175,25 @@ function SortableBoardCard({
         )}
       </div>
 
-      <Link
-        href={`/boards/${board.id}`}
-        className="flex-1 flex gap-2 items-center justify-between bg-gray-900/95 text-white py-1 px-3 shadow-sm ring-1 ring-gray-900/5 rounded-xl"
-      >
+      <div className="flex-1 flex gap-2 items-center justify-between bg-gray-900/95 text-white py-1 px-3 shadow-sm ring-1 ring-gray-900/5 rounded-xl">
         <h2 className="font-medium">{board.name}</h2>
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <CircleArrowRight className="w-8 h-8 stroke-1 fill-pink-100 stroke-gray-900" />
+              <span
+                className="inline-flex"
+                onClick={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+              >
+                <CircleArrowRight className="w-8 h-8 stroke-1 fill-pink-100 stroke-gray-900" />
+              </span>
             </TooltipTrigger>
             <TooltipContent>
               <p>Mängi</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
-      </Link>
+      </div>
     </li>
   )
 }
