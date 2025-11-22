@@ -11,13 +11,20 @@ import { Header } from '@/Header/Component'
 import { Providers } from '@/providers'
 import { InitTheme } from '@/providers/Theme/InitTheme'
 import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
-import { draftMode } from 'next/headers'
+import { draftMode, headers } from 'next/headers'
 
 import './globals.css'
 import { getServerSideURL } from '@/utilities/getURL'
+import { getPayload } from 'payload'
+import configPromise from '@payload-config'
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const { isEnabled } = await draftMode()
+  const payload = await getPayload({ config: configPromise })
+  const requestHeaders = await headers()
+
+  const { user } = await payload.auth({ headers: requestHeaders })
+  const isAdmin = user?.role === 'admin'
 
   return (
     <html className={cn(GeistSans.variable, GeistMono.variable)} lang="en" suppressHydrationWarning>
@@ -28,11 +35,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body className="bg-gray-50 dark:bg-gray-900">
         <Providers>
-          <AdminBar
-            adminBarProps={{
-              preview: isEnabled,
-            }}
-          />
+          {isAdmin && (
+            <AdminBar
+              adminBarProps={{
+                preview: isEnabled,
+              }}
+            />
+          )}
 
           <Header />
           <div className="py-10 px-4">

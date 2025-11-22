@@ -5,8 +5,10 @@ import { headers } from 'next/headers'
 import type { Board, User } from '@/payload-types'
 import { SortableBoards } from './SortableBoards'
 import { reorderBoards } from './reorderBoards'
-import { MonitorCheck } from 'lucide-react'
+import { ArrowRight, MonitorCheck } from 'lucide-react'
 import { isParentModeUtil } from '@/utilities/uiMode'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
 
 export const dynamic = 'force-dynamic'
 
@@ -61,7 +63,13 @@ export default async function HomePage() {
       </header>
 
       {boards.length === 0 ? (
-        <p className="text-muted-foreground">Sul pole veel midagi lisatud kodu vaatesse.</p>
+        <>
+          <p className="text-muted-foreground">Sul pole veel midagi lisatud kodu vaatesse.</p>
+          <Button variant="outline">
+            <Link href="/boards" className="flex items-center gap-2">Mine lisama <ArrowRight className={`w-4 h-4`} /></Link>
+          </Button>
+
+        </>
       ) : (
         <SortableBoards
           boards={boards}

@@ -15,5 +15,5 @@ export async function Header() {
   const uiModeCookie = cookieStore.get('uiMode')?.value
   const isParentMode = uiModeCookie === 'parent'
 
-  return <HeaderClient data={headerData} currentUser={user as User | null} isParentMode={isParentMode} hasPin={Boolean(u.parentPinHash)} />
+  return <HeaderClient data={headerData} currentUser={user as User | null} isParentMode={isParentMode} hasPin={Boolean(u?.parentPinHash)} />
 }

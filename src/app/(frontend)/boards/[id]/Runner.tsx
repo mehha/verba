@@ -1,12 +1,12 @@
 // src/app/(frontend)/boards/[id]/Runner.tsx
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import type { Board, Media } from '@/payload-types'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Sparkles, Slash, WholeWord, Trash, Undo2, Volume, Volume2Icon } from 'lucide-react'
+import { Sparkles, Slash, WholeWord, Trash, Undo2, Volume2Icon, Edit3 } from 'lucide-react'
 import RGL, { WidthProvider, type Layout } from 'react-grid-layout'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
@@ -68,6 +68,7 @@ export default function Runner({ board, isParentMode }: RunnerProps) {
   const aiAllowed = board.extra?.ai ?? false
   const actionBarEnabled = board.actionBar?.enabled ?? false
   const [aiEnabled, setAiEnabled] = useState<boolean>(aiAllowed)
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null)
 
   const cols = board.grid?.cols ?? 6
   const cells = (board.grid?.cells ?? []).filter((c) => !c.locked)
@@ -216,6 +217,7 @@ export default function Runner({ board, isParentMode }: RunnerProps) {
           fill
           sizes="(max-width: 768px) 100vw, 1200px"
           className="object-contain rounded"
+          priority={false}
         />
       </div>
     )
@@ -223,14 +225,113 @@ export default function Runner({ board, isParentMode }: RunnerProps) {
 
   const compounds = (board.compounds ?? []) as Compound[]
 
+  const sequenceCells = useMemo(
+    () =>
+      sequence.map((item) => ({
+        ...item,
+        cell: cells.find((c) => String(c.id) === item.cellId) ?? null,
+      })),
+    [sequence, cells],
+  )
+
+  useEffect(() => {
+    const el = scrollContainerRef.current
+    if (!el) return
+
+    el.scrollTo({
+      left: el.scrollWidth,
+      behavior: 'smooth',
+    })
+  }, [sequenceCells.length])
+
   return (
     <div>
       <div className="container">
         <TooltipProvider>
-          <div className="mb-10 flex justify-between gap-2">
-            <h1 className="text-center text-3xl font-semibold">{board.name}</h1>
+          <div className="mb-10 flex items-center justify-between gap-4 lg:gap-10">
+            <h1 className="text-center text-3xl font-semibold sr-only">{board.name}</h1>
 
-            <div className="flex items-center gap-2">
+            {actionBarEnabled && (
+              <div className="flex flex-1 min-h-[122px] items-center gap-3 rounded-3xl border bg-white ps-6 pe-2 py-2 shadow-lg ring-1 ring-gray-900/5">
+                <div ref={scrollContainerRef} className="flex-1 flex items-center gap-2 overflow-x-auto py-1">
+                  {sequenceCells.length === 0 ? (
+                    <span className="text-sm text-slate-400">
+                      Vali pilte, et fraasi koostada
+                    </span>
+                  ) : (
+                    sequenceCells.map(({ cellId, cell, text }, index) => {
+                      const src =
+                        cell?.externalImageURL ||
+                        (cell?.image &&
+                          typeof cell.image === 'object' &&
+                          (cell.image as Media).url) ||
+                        ''
+
+                      return (
+                        <div
+                          key={`${cellId}-${index}`}
+                          className="relative h-24 w-24 shrink-0 overflow-hidden rounded-lg bg-white"
+                        >
+                          {src ? (
+                            <>
+                              <Image
+                                src={src}
+                                alt={cell?.title ?? text}
+                                fill
+                                sizes="96px"
+                                className="object-contain"
+                                priority={false}
+                              />
+                              {/* a11y: tekst ekraanilugejale */}
+                              <span className="sr-only">{text}</span>
+                            </>
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center px-1 text-center text-[10px] font-semibold uppercase leading-tight">
+                              {text}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handlePlayAll}
+                    roundness="full"
+                    size="icon"
+                  >
+                    {busy ? (
+                      <span className="inline-flex items-center gap-2">
+                        <AnimatedVolumeIcon busy className="h-6 w-6" />
+                      </span>
+                    ) : (
+                      <Volume2Icon className="h-6 w-6" />
+                    )}
+                  </Button>
+                  <Button
+                    variant={sequence.length && !busy ? 'secondary' : 'muted'}
+                    size="icon"
+                    disabled={!sequence.length || busy}
+                    onClick={handleUndoLast}
+                    roundness="full"
+                  >
+                    <Undo2 className="h-6 w-6" />
+                  </Button>
+                  <Button
+                    variant={sequence.length && !busy ? 'destructive' : 'muted'}
+                    size="icon"
+                    disabled={!sequence.length || busy}
+                    onClick={handleClear}
+                    roundness="full"
+                  >
+                    <Trash className="h-6 w-6" />
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-end flex-col gap-2">
               <Button
                 type="button"
                 size="sm"
@@ -285,54 +386,14 @@ export default function Runner({ board, isParentMode }: RunnerProps) {
 
               {isParentMode && (
                 <Link href={`/boards/${board.id}/edit`}>
-                  <Button variant="default" roundness="2xl" size="sm">
-                    Muuda
+                  <Button variant="secondary" roundness="full" size="icon">
+                    <Edit3 className="h-5 w-5" />
                   </Button>
                 </Link>
               )}
             </div>
           </div>
         </TooltipProvider>
-
-        {actionBarEnabled && (
-          <div className="mb-14 mx-auto flex max-w-[800px] items-center gap-3 rounded-full border bg-white ps-6 pe-2 py-2 shadow-lg ring-1 ring-gray-900/5">
-            <div className="flex-1 h-full text-xl font-semibold uppercase text-slate-900">
-              {sequence.length ? phrase : ''}
-            </div>
-            <div className="flex gap-2">
-              <Button
-                onClick={handlePlayAll}
-                roundness="2xl"
-              >
-                {busy ? (
-                  <span className="inline-flex items-center gap-2">
-                    <AnimatedVolumeIcon busy className="h-4 w-4" />
-                  </span>
-                ) : (
-                  <Volume2Icon className="h-4 w-4" />
-                )}
-              </Button>
-              <Button
-                variant={sequence.length && !busy ? 'secondary' : 'muted'}
-                size="icon"
-                disabled={!sequence.length || busy}
-                onClick={handleUndoLast}
-                roundness="full"
-              >
-                <Undo2 className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={sequence.length && !busy ? 'secondary' : 'muted'}
-                size="icon"
-                disabled={!sequence.length || busy}
-                onClick={handleClear}
-                roundness="full"
-              >
-                <Trash className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        )}
       </div>
 
       <ReactGridLayout
