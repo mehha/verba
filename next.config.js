@@ -28,6 +28,11 @@ const nextConfig = {
       },
       { protocol: 'https', hostname: 'static.arasaac.org' },
       { protocol: 'https', hostname: 'unpkg.com' },
+      {
+        protocol: 'https',
+        hostname: 'verba.mehh.ee',
+        pathname: '/api/media/**',
+      },
     ],
   },
   webpack: (webpackConfig) => {
