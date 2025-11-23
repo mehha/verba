@@ -35,13 +35,13 @@ function prepareForTTS(text: string): string {
 }
 
 async function playTTS(text: string) {
-  const res = await fetch('/next/tts-tartu', {
+  const res = await fetch('/next/tts-ms', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       text: prepareForTTS(text),
-      speaker: 'mari', // eeldusel, et see on config.yaml-is olemas
-      speed: 1,
+      // kui tahad häält dünaamiliselt muuta:
+      // speaker: 'en-US-Ava:DragonHDLatestNeural',
     }),
   })
 
