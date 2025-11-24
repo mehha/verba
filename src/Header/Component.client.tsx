@@ -11,9 +11,8 @@ import { HeaderNav } from '@/Header/Nav'
 import { UserMenu } from '@/Header/Nav/UserMenu'
 import { getClientSideURL } from '@/utilities/getURL'
 import { Button } from '@/components/ui/button'
-import { Baby, LogIn } from 'lucide-react'
-import { ParentUnlockDialog } from '@/app/(frontend)/home/ParentUnlockDialog'
-import { switchToChildModeAction } from '@/app/(frontend)/home/modeActions'
+import { LogIn } from 'lucide-react'
+import { ParentModeToggle } from '@/Header/Nav/ParentModeToggle'
 
 interface HeaderClientProps {
   data: Header
@@ -22,7 +21,12 @@ interface HeaderClientProps {
   hasPin: boolean
 }
 
-export const HeaderClient: React.FC<HeaderClientProps> = ({ data, currentUser, isParentMode, hasPin }) => {
+export const HeaderClient: React.FC<HeaderClientProps> = ({
+  data,
+  currentUser,
+  isParentMode,
+  hasPin,
+}) => {
   /* Storing the value in a useState to avoid hydration errors */
   const [theme, setTheme] = useState<string | null>(null)
   const { headerTheme, setHeaderTheme } = useHeaderTheme()
@@ -45,12 +49,7 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data, currentUser, i
       // isegi kui failib, proovime ikkagi kasutaja "välja lükata"
     } finally {
       if (typeof document !== 'undefined') {
-        document.cookie = [
-          'uiMode=',
-          'path=/',
-          'max-age=0',
-          'samesite=lax',
-        ].join('; ')
+        document.cookie = ['uiMode=', 'path=/', 'max-age=0', 'samesite=lax'].join('; ')
       }
 
       router.push('/login')
@@ -68,10 +67,7 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data, currentUser, i
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [headerTheme])
 
-  const name =
-    currentUser?.name && true
-      ? currentUser.name
-      : currentUser?.email ?? ''
+  const name = currentUser?.name && true ? currentUser.name : (currentUser?.email ?? '')
 
   return (
     <header className="container mt-6 relative z-20  " {...(theme ? { 'data-theme': theme } : {})}>
@@ -83,32 +79,22 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data, currentUser, i
         <HeaderNav data={data} />
 
         <div className={'flex items-center gap-4'}>
-          <div className="flex items-center gap-3">
-            {isParentMode ? (
-              <form action={switchToChildModeAction} className={'flex items-center'}>
-                <Button variant="muted" size="icon" roundness="full">
-                  <Baby className="h-6 w-6" />
-                </Button>
-              </form>
-            ) : (
-              <ParentUnlockDialog hasPin={Boolean(hasPin)} />
-            )}
-          </div>
-
           {/* ainult siis, kui on sisse loginud */}
           {currentUser ? (
-            <UserMenu
-              name={name}
-              email={currentUser.email ?? ''}
-              onSignOut={handleSignOut}
-              isParentMode={isParentMode}
-            />
+            <>
+              <ParentModeToggle isParentMode={isParentMode} hasPin={Boolean(hasPin)} />
+              <UserMenu
+                name={name}
+                email={currentUser.email ?? ''}
+                onSignOut={handleSignOut}
+                isParentMode={isParentMode}
+              />
+            </>
           ) : (
-            <Link
-              href="/login"
-              className="flex items-center"
-            >
-              <Button variant="secondary" size="xs"><LogIn /></Button>
+            <Link href="/login" className="flex items-center">
+              <Button variant="secondary" size="xs">
+                <LogIn />
+              </Button>
             </Link>
           )}
         </div>

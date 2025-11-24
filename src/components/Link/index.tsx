@@ -51,7 +51,7 @@ export const CMSLink: React.FC<CMSLinkType> = (props) => {
   const isAccent = accent === true
 
   const accentClass = accent
-    ? 'px-4 py-2 rounded-full text-sm inline-flex items-center justify-center whitespace-nowrap font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-accent text-accent-foreground hover:bg-accent/90'
+    ? 'px-4 py-2 rounded-full text-sm inline-flex items-center justify-center whitespace-nowrap font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-secondary text-secondary-foreground hover:bg-secondary/90'
     : undefined
 
   /* Ensure we don't break any styles set by richText */

@@ -16,7 +16,8 @@ import {
   InputOTPSlot,
 } from '@/components/ui/input-otp'
 import { Label } from '@/components/ui/label'
-import { Baby, UserLock } from 'lucide-react'
+import { UserLock } from 'lucide-react'
+import { cn } from '@/utilities/ui'
 
 const initialState: UnlockState = {
   success: false,
@@ -25,14 +26,19 @@ const initialState: UnlockState = {
 
 type ParentUnlockDialogProps = {
   hasPin: boolean
+  className?: string
+  children?: React.ReactNode
 }
 
-export function ParentUnlockDialog({ hasPin }: ParentUnlockDialogProps) {
+export function ParentUnlockDialog({ hasPin, className, children }: ParentUnlockDialogProps) {
   const [open, setOpen] = useState(false)
   const [pin, setPin] = useState('')
   const [state, formAction] = useActionState(unlockParentModeAction, initialState)
   const router = useRouter()
   const formRef = useRef<HTMLFormElement | null>(null)
+
+  // ref esimesele OTP slotile
+  const firstSlotRef = useRef<HTMLInputElement | null>(null)
 
   // edu korral: sulge dialog ja refres-hi koduvaade
   useEffect(() => {
@@ -50,17 +56,48 @@ export function ParentUnlockDialog({ hasPin }: ParentUnlockDialogProps) {
     }
   }, [pin, open])
 
+  // VALE PIN: tühjenda ja liiguta fookus algusesse
+  useEffect(() => {
+    if (!state.success && state.error) {
+      setPin('')
+      // väike viivitus, et DOM jõuaks uuenduda
+      setTimeout(() => {
+        firstSlotRef.current?.focus()
+      }, 0)
+    }
+  }, [state])
+
+  const handleOpen = () => {
+    if (!hasPin) return
+    setOpen(true)
+  }
+
   return (
     <>
-      <Button
-        variant="muted"
-        roundness="full"
-        size="icon"
-        onClick={() => setOpen(true)}
-        disabled={!hasPin}
-      >
-        <UserLock className="h-6 w-6" />
-      </Button>
+      {children ? (
+        // custom trigger (ButtonGroup jms jaoks)
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={handleOpen}
+          disabled={!hasPin}
+          className={cn(className, !hasPin && 'cursor-not-allowed opacity-60')}
+        >
+          {children}
+        </Button>
+      ) : (
+        // default ümmargune ikooninupp
+        <Button
+          variant="secondary"
+          roundness="full"
+          size="icon"
+          onClick={handleOpen}
+          disabled={!hasPin}
+        >
+          <UserLock className="h-6 w-6" />
+        </Button>
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
@@ -82,7 +119,7 @@ export function ParentUnlockDialog({ hasPin }: ParentUnlockDialogProps) {
                 containerClassName="justify-start"
               >
                 <InputOTPGroup>
-                  <InputOTPSlot index={0} />
+                  <InputOTPSlot index={0} ref={firstSlotRef} />
                   <InputOTPSlot index={1} />
                   <InputOTPSlot index={2} />
                   <InputOTPSlot index={3} />

@@ -30,6 +30,7 @@ const buttonVariants = cva(
         secondary: 'bg-secondary border border-border text-secondary-foreground hover:bg-secondary/80',
         muted: "bg-slate-100 text-slate-900 hover:bg-slate-200",
         positive: 'bg-emerald-600 text-white hover:bg-emerald-700',
+        accent: 'bg-accent hover:bg-accent-foreground hover:text-white',
       },
       roundness: {
         none: 'rounded-none',
