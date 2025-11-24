@@ -326,7 +326,7 @@ Inner
 1. mongodb://root:eZv4tvD0at9e1f8L34vcmMf7rwNUP6aqlUvzVCNVCZNggx48sD7EGBu45lhnZe2m@fkwoo80s80kk0wsg88o0s0wg:27017/verba?authSource=admin&directConnection=true
 2. mongosh "mongodb://root:eZv4tvD0at9e1f8L34vcmMf7rwNUP6aqlUvzVCNVCZNggx48sD7EGBu45lhnZe2m@fkwoo80s80kk0wsg88o0s0wg:27017/verba?authSource=admin&directConnection=true"
 3. Dump DB: mongorestore \
-  --uri="mongodb://root:eZv4tvD0at9e1f8L34vcmMf7rwNUP6aqlUvzVCNVCZNggx48sD7EGBu45lhnZe2m@95.216.220.34:5432/?authSource=admin&directConnection=true" \
+  --uri="mongodb://<user,password,id>/?authSource=admin&directConnection=true" \
   --db=verba \
   --drop \
   ./dump/verba
