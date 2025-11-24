@@ -21,8 +21,6 @@ export default async function BoardCompoundsPage({ params }: any) {
   const { user } = await payload.auth({ headers: requestHeaders })
   if (!user) redirect('/admin')
 
-  const isAdmin = user.role === 'admin'
-
   const boardRes = await payload.findByID({
     collection: 'boards',
     id,
@@ -31,8 +29,13 @@ export default async function BoardCompoundsPage({ params }: any) {
 
   const board = boardRes as Board
 
+  const ownerId =
+    typeof board.owner === 'object' && board.owner !== null
+      ? board.owner.id
+      : board.owner
+
   // omaniku kontroll
-  if (!isAdmin && board.owner !== user.id) {
+  if (ownerId !== user.id) {
     redirect('/boards')
   }
 

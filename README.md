@@ -319,3 +319,15 @@ You can also deploy your app manually, check out the [deployment documentation](
 ## Questions
 
 If you have any issues or questions, reach out to us on [Discord](https://discord.com/invite/payload) or start a [GitHub discussion](https://github.com/payloadcms/payload/discussions).
+
+## DB
+
+Inner
+1. mongodb://root:eZv4tvD0at9e1f8L34vcmMf7rwNUP6aqlUvzVCNVCZNggx48sD7EGBu45lhnZe2m@fkwoo80s80kk0wsg88o0s0wg:27017/verba?authSource=admin&directConnection=true
+2. mongosh "mongodb://root:eZv4tvD0at9e1f8L34vcmMf7rwNUP6aqlUvzVCNVCZNggx48sD7EGBu45lhnZe2m@fkwoo80s80kk0wsg88o0s0wg:27017/verba?authSource=admin&directConnection=true"
+3. Dump DB: mongorestore \
+  --uri="mongodb://root:eZv4tvD0at9e1f8L34vcmMf7rwNUP6aqlUvzVCNVCZNggx48sD7EGBu45lhnZe2m@95.216.220.34:5432/?authSource=admin&directConnection=true" \
+  --db=verba \
+  --drop \
+  ./dump/verba
+4. Check in Coolify terminal: mongosh "mongodb://root:eZv4tvD0at9e1f8L34vcmMf7rwNUP6aqlUvzVCNVCZNggx48sD7EGBu45lhnZe2m@fkwoo80s80kk0wsg88o0s0wg:27017/?directConnection=true"
