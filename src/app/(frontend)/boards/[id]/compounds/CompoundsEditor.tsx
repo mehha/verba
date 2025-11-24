@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/accordion'
 import { Badge } from '@/components/ui/badge'
 import type { Board } from '@/payload-types'
+import { toast } from 'sonner'
 
 type CellOption = {
   id: string
@@ -57,7 +58,7 @@ function normalizeCompoundStructure(c: Compound): Compound {
 
 function isCompoundValid(c: Compound): boolean {
   if (!c.id || !c.id.trim()) return false
-  if (!c.cells || c.cells.length === 0) return false
+  if (!c.cells || c.cells.length < 2) return false // ← vähemalt 2 rida
   if (!c.parts || c.parts.length !== c.cells.length) return false
   if (c.parts.some((p) => !p.surface || !p.surface.trim())) return false
   return true
@@ -295,20 +296,37 @@ export function CompoundsEditor({
     const invalid = compounds.find((c) => !isCompoundValid(c))
 
     if (invalid) {
-      setError(
-        'Kõik sõnaühendid vajavad vähemalt ühte celli ja igale positsioonile surface väärtust.',
-      )
+      const rowCount = invalid.cells?.length ?? 0
+
+      let message =
+        'Kõik sõnaühendid vajavad vähemalt ühte celli ja igale positsioonile surface väärtust.'
+
+      // UUS: konkreetne sõnum, kui ainult 1 rida
+      if (rowCount < 2) {
+        message =
+          'Iga sõnaühend peab sisaldama vähemalt kahte rida (vähemalt 2 celli).'
+      }
+
+      toast.error(message)
+      setError(message)
       return
     }
 
     startTransition(() => {
       onSave(boardId, compounds)
         .then(() => {
-          setStatus('Salvestatud.')
+          const msg = 'Sõnaühendid salvestatud.'
+          setStatus(msg)
+          toast.success(msg)
         })
         .catch((err) => {
           console.error(err)
-          setError('Salvestamine ebaõnnestus.')
+          const msg =
+            err instanceof Error && err.message
+              ? err.message
+              : 'Salvestamine ebaõnnestus.'
+          setError(msg)
+          toast.error(msg)
         })
     })
   }

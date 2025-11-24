@@ -3,7 +3,7 @@ import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getPayload } from 'payload'
 import configPromise from '@payload-config'
-import type { Board } from '@/payload-types'
+import type { Board, User } from '@/payload-types'
 import { CompoundsEditor } from './CompoundsEditor'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -53,15 +53,22 @@ export default async function BoardCompoundsPage({ params }: any) {
     const { user } = await payload.auth({ headers: requestHeaders })
     if (!user) redirect('/admin')
 
-    const isAdmin = user.role === 'admin'
-
     const existing = (await payload.findByID({
       collection: 'boards',
       id: boardId,
     })) as Board
 
-    if (!isAdmin && existing.owner !== user.id) {
+    const existingOwnerId =
+      typeof existing.owner === 'object' && existing.owner !== null
+        ? (existing.owner as User).id
+        : existing.owner
+
+    if (existingOwnerId !== user.id) {
       throw new Error('No access')
+    }
+
+    if (compounds && compounds.some((c) => (c?.cells?.length ?? 0) < 2)) {
+      throw new Error('Iga sõnaühend peab sisaldama vähemalt kahte rida (vähemalt 2 celli).')
     }
 
     await payload.update({

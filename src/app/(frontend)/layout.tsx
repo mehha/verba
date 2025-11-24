@@ -17,6 +17,7 @@ import './globals.css'
 import { getServerSideURL } from '@/utilities/getURL'
 import { getPayload } from 'payload'
 import configPromise from '@payload-config'
+import { Toaster } from '@/components/ui/sonner'
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const { isEnabled } = await draftMode()
@@ -43,6 +44,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             />
           )}
 
+          <Toaster />
           <Header />
           <div className="py-10 px-4">
             {children}
