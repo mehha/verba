@@ -31,7 +31,7 @@ export function ParentModeToggle({ isParentMode, hasPin }: ParentModeToggleProps
             className="rounded-full rounded-r-none border-none text-muted-foreground hover:bg-accent hover:text-accent-foreground"
           >
             <Smile className="mr-1 h-3.5 w-3.5" />
-            Laps
+            <span className="hidden sm:inline-block">Laps</span>
           </Button>
         </form>
       ) : (
@@ -44,7 +44,7 @@ export function ParentModeToggle({ isParentMode, hasPin }: ParentModeToggleProps
           className="rounded-full rounded-r-none bg-accent text-accent-foreground hover:bg-accent disabled:opacity-100"
         >
           <Smile className="mr-1 h-3.5 w-3.5" />
-          Laps
+          <span className="hidden sm:inline-block">Laps</span>
         </Button>
       )}
 
@@ -59,7 +59,7 @@ export function ParentModeToggle({ isParentMode, hasPin }: ParentModeToggleProps
           className="rounded-full rounded-l-none bg-accent text-accent-foreground hover:bg-accent disabled:opacity-100"
         >
           <Baby className="mr-1 h-3.5 w-3.5" />
-          Vanem
+          <span className="hidden sm:inline-block">Vanem</span>
         </Button>
       ) : (
         // lapse vaates -> Vanema nupp on klikitav (avatakse PIN dialog)
@@ -68,7 +68,7 @@ export function ParentModeToggle({ isParentMode, hasPin }: ParentModeToggleProps
           className="rounded-full rounded-l-none border-none text-muted-foreground hover:bg-accent hover:text-accent-foreground"
         >
           <Baby className="mr-1 h-3.5 w-3.5" />
-          Vanem
+          <span className="hidden sm:inline-block">Vanem</span>
         </ParentUnlockDialog>
       )}
     </ButtonGroup>

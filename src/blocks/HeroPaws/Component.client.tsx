@@ -80,7 +80,7 @@ export const HeroPawsClient: React.FC<HeroPawsClientProps> = ({
         <Users className="h-4 w-4" />
       </span>
 
-      <div className="mx-auto max-w-6xl px-6 pt-14 pb-10 text-center">
+      <div className="mx-auto max-w-6xl sm:px-6 pt-14 pb-10 text-center">
         <div className="mb-6 text-sm text-slate-600">
           <span className="mr-2 inline-block h-2 w-2 rounded-full bg-red-500 align-middle" />
           {eyebrow}
@@ -139,7 +139,7 @@ export const HeroPawsClient: React.FC<HeroPawsClientProps> = ({
         )}
       </div>
 
-      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-6 pb-16 sm:grid-cols-3">
+      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 sm:px-6 pb-16 sm:grid-cols-3">
         {cards.map((c) => {
           const Icon = ICONS[c.icon] || MessageCircle
 

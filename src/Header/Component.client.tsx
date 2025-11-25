@@ -9,6 +9,7 @@ import type { Header, User } from '@/payload-types'
 import { Logo } from '@/components/Logo/Logo'
 import { HeaderNav } from '@/Header/Nav'
 import { UserMenu } from '@/Header/Nav/UserMenu'
+import { NavMobile } from '@/Header/Nav/NavMobile'
 import { getClientSideURL } from '@/utilities/getURL'
 import { Button } from '@/components/ui/button'
 import { LogIn } from 'lucide-react'
@@ -70,15 +71,19 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({
   const name = currentUser?.name && true ? currentUser.name : (currentUser?.email ?? '')
 
   return (
-    <header className="container mt-6 relative z-20  " {...(theme ? { 'data-theme': theme } : {})}>
-      <div className="p-4 px-8 flex justify-between bg-white rounded-full dark:bg-black shadow-sm ring-1 ring-gray-900/5">
-        <Link href="/" className="flex items-center" aria-label="Verba">
-          <Logo loading="eager" priority="high" className="invert dark:invert-0" />
-        </Link>
+    <header className="container mt-6 relative z-20" {...(theme ? { 'data-theme': theme } : {})}>
+      <div className="p-4 sm:px-8 flex items-center justify-between gap-4 bg-white rounded-full dark:bg-black shadow-sm ring-1 ring-gray-900/5">
+        <div className="flex items-center gap-4 sm:gap-6">
+          <Link href="/" className="flex items-center" aria-label="Verba">
+            <Logo loading="eager" priority="high" className="invert dark:invert-0" />
+          </Link>
 
-        <HeaderNav data={data} />
+          <div className="hidden lg:block">
+            <HeaderNav data={data} />
+          </div>
+        </div>
 
-        <div className={'flex items-center gap-4'}>
+        <div className="flex items-center gap-2 sm:gap-4">
           {/* ainult siis, kui on sisse loginud */}
           {currentUser ? (
             <>
@@ -97,6 +102,8 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({
               </Button>
             </Link>
           )}
+
+          <NavMobile data={data} />
         </div>
       </div>
     </header>

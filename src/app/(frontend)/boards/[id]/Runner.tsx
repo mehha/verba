@@ -7,7 +7,7 @@ import type { Board, Media } from '@/payload-types'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Sparkles, Slash, WholeWord, Trash, Undo2, Volume2Icon, Edit3 } from 'lucide-react'
-import RGL, { WidthProvider, type Layout } from 'react-grid-layout'
+import { WidthProvider, Responsive as ResponsiveGrid, type Layout, type Layouts } from 'react-grid-layout'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 
@@ -17,7 +17,7 @@ import { getCompoundFormForLastToken } from './compounds/getCompoundFormForLastT
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip'
 import { AnimatedVolumeIcon } from '@/components/Animations/AnimatedVolumeIcon'
 
-const ReactGridLayout = WidthProvider(RGL)
+const ResponsiveGridLayout = WidthProvider(ResponsiveGrid)
 
 type RunnerProps = { board: Board; isParentMode: boolean }
 
@@ -70,10 +70,10 @@ export default function Runner({ board, isParentMode }: RunnerProps) {
   const [aiEnabled, setAiEnabled] = useState<boolean>(aiAllowed)
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
 
-  const cols = board.grid?.cols ?? 6
+  const cols = Math.max(1, board.grid?.cols ?? 6)
   const cells = (board.grid?.cells ?? []).filter((c) => !c.locked)
 
-  const layout: Layout[] = useMemo(
+  const baseLayout: Layout[] = useMemo(
     () =>
       cells.map((c) => ({
         i: String(c.id),
@@ -84,6 +84,51 @@ export default function Runner({ board, isParentMode }: RunnerProps) {
         static: true,
       })),
     [cells],
+  )
+
+  const clampLayoutToCols = (items: Layout[], colCount: number): Layout[] =>
+    items.map((item) => {
+      const w = Math.max(1, Math.min(item.w, colCount))
+      const maxX = Math.max(0, colCount - w)
+      return {
+        ...item,
+        w,
+        x: Math.min(item.x, maxX),
+      }
+    })
+
+  const buildTwoColumnLayout = (items: Layout[]): Layout[] => {
+    const sorted = [...items].sort((a, b) => a.y - b.y || a.x - b.x)
+    const colHeights = [0, 0]
+
+    return sorted.map((item) => {
+      const w = Math.max(1, Math.min(item.w, 2))
+      const h = Math.max(1, item.h)
+
+      if (w === 2) {
+        const y = Math.max(colHeights[0], colHeights[1])
+        colHeights[0] = y + h
+        colHeights[1] = y + h
+        return { ...item, x: 0, y, w: 2, h }
+      }
+
+      const colIndex = colHeights[0] <= colHeights[1] ? 0 : 1
+      const y = colHeights[colIndex]
+      colHeights[colIndex] += h
+
+      return { ...item, x: colIndex, y, w: 1, h }
+    })
+  }
+
+  const mdCols = Math.max(1, Math.min(cols, 4))
+  const responsiveLayouts: Layouts = useMemo(
+    () => ({
+      lg: baseLayout,
+      md: clampLayoutToCols(baseLayout, mdCols),
+      sm: buildTwoColumnLayout(baseLayout),
+      xs: buildTwoColumnLayout(baseLayout),
+    }),
+    [baseLayout, mdCols],
   )
 
   const tokens: SelectedToken[] = useMemo(
@@ -248,7 +293,7 @@ export default function Runner({ board, isParentMode }: RunnerProps) {
     <div>
       <div className="container">
         <TooltipProvider>
-          <div className="mb-10 flex items-center justify-between gap-4 lg:gap-10">
+          <div className="mb-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4 lg:gap-10">
             <h1 className="text-center text-3xl font-semibold sr-only">{board.name}</h1>
 
             {actionBarEnabled && (
@@ -331,7 +376,7 @@ export default function Runner({ board, isParentMode }: RunnerProps) {
               </div>
             )}
 
-            <div className="flex items-end flex-col gap-2">
+            <div className="flex flex-wrap md:items-end md:flex-col gap-2">
               <Button
                 type="button"
                 size="sm"
@@ -396,17 +441,17 @@ export default function Runner({ board, isParentMode }: RunnerProps) {
         </TooltipProvider>
       </div>
 
-      <ReactGridLayout
+      <ResponsiveGridLayout
         className="layout"
-        cols={cols}
+        breakpoints={{ lg: 1024, md: 768, sm: 640, xs: 0 }}
+        cols={{ lg: cols, md: mdCols, sm: 2, xs: 2 }}
         rowHeight={200}
-        width={1200}
         isResizable={false}
         isDraggable={false}
         margin={[16, 16]}
         compactType={null}
         preventCollision
-        layout={layout}
+        layouts={responsiveLayouts}
       >
         {cells.map((cell) => {
           const cellIdString = String(cell.id)
@@ -443,7 +488,7 @@ export default function Runner({ board, isParentMode }: RunnerProps) {
             </div>
           )
         })}
-      </ReactGridLayout>
+      </ResponsiveGridLayout>
     </div>
   )
 }
