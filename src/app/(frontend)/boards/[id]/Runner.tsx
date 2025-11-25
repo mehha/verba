@@ -34,31 +34,6 @@ function prepareForTTS(text: string): string {
   return `${trimmed}.`
 }
 
-async function playTTS(text: string) {
-  const res = await fetch('/next/tts-ms', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      text: prepareForTTS(text),
-      // kui tahad häält dünaamiliselt muuta:
-      // speaker: 'en-US-Ava:DragonHDLatestNeural',
-    }),
-  })
-
-  if (!res.ok) return
-
-  const blob = await res.blob()
-  const url = URL.createObjectURL(blob)
-  const audio = new Audio(url)
-
-  await audio.play()
-  await new Promise<void>((resolve) => {
-    audio.onended = () => resolve()
-    audio.onerror = () => resolve()
-  })
-  URL.revokeObjectURL(url)
-}
-
 export default function Runner({ board, isParentMode }: RunnerProps) {
   // UUS: hoiame cellId + teksti
   const [sequence, setSequence] = useState<SequenceItem[]>([])
@@ -69,6 +44,8 @@ export default function Runner({ board, isParentMode }: RunnerProps) {
   const actionBarEnabled = board.actionBar?.enabled ?? false
   const [aiEnabled, setAiEnabled] = useState<boolean>(aiAllowed)
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const audioUnlockedRef = useRef(false)
 
   const cols = Math.max(1, board.grid?.cols ?? 6)
   const cells = (board.grid?.cells ?? []).filter((c) => !c.locked)
@@ -154,10 +131,87 @@ export default function Runner({ board, isParentMode }: RunnerProps) {
   const phrase = compoundsResult.display
   const ttsAll = compoundsResult.tts
 
+  const ensureAudioUnlocked = () => {
+    if (!audioRef.current) {
+      audioRef.current = new Audio()
+      audioRef.current.preload = 'auto'
+    }
+
+    if (audioUnlockedRef.current || !audioRef.current) return
+
+    const el = audioRef.current
+    try {
+      // tiny silent wav to satisfy Safari/iOS user-gesture requirement
+      el.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YQAAAAA='
+      el.muted = true
+      const attempt = el.play()
+
+      if (attempt && typeof attempt.then === 'function') {
+        attempt
+          .then(() => {
+            audioUnlockedRef.current = true
+            el.pause()
+            el.currentTime = 0
+          })
+          .catch(() => {
+            audioUnlockedRef.current = false
+          })
+      } else {
+        audioUnlockedRef.current = true
+      }
+    } catch {
+      audioUnlockedRef.current = false
+    } finally {
+      el.muted = false
+    }
+  }
+
+  const playTTS = async (text: string) => {
+    ensureAudioUnlocked()
+
+    const res = await fetch('/next/tts-ms', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text: prepareForTTS(text),
+      }),
+    })
+
+    if (!res.ok) return
+
+    const blob = await res.blob()
+    const url = URL.createObjectURL(blob)
+    const audioEl = audioRef.current ?? new Audio()
+    audioRef.current = audioEl
+
+    await new Promise<void>((resolve) => {
+      let done = false
+      const cleanup = () => {
+        if (done) return
+        done = true
+        audioEl.onended = null
+        audioEl.onerror = null
+        URL.revokeObjectURL(url)
+        resolve()
+      }
+
+      audioEl.onended = cleanup
+      audioEl.onerror = cleanup
+      audioEl.src = url
+      audioEl.currentTime = 0
+
+      const started = audioEl.play()
+      if (started && typeof started.catch === 'function') {
+        started.catch(() => cleanup())
+      }
+    })
+  }
+
   const handleCellClick = async (cell: any) => {
     const raw = cell?.title?.toString().trim()
     if (!raw) return
 
+    ensureAudioUnlocked()
     setBusy(true)
     try {
       let surface = raw
@@ -215,6 +269,7 @@ export default function Runner({ board, isParentMode }: RunnerProps) {
 
   const handlePlayAll = async () => {
     if (!sequence.length) return
+    ensureAudioUnlocked()
     setBusy(true)
     try {
       // Sõnaühendite järgi kombineeritud fraas
