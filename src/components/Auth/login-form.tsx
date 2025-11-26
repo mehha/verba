@@ -34,8 +34,7 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
     setLoading(true)
 
     try {
-      const baseUrl = getClientSideURL()
-      const res = await fetch(`${baseUrl}/api/users/login`, {
+      const res = await fetch('/api/users/login', {
         method: 'POST',
         credentials: 'include',
         headers: {

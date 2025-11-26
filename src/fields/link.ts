@@ -68,9 +68,9 @@ export const link: LinkType = ({ appearances, disableLabel = false, overrides = 
         name: 'accent',
         label: 'Accent',
         type: 'select',
-        defaultValue: undefined,
+        defaultValue: 'none',
         options: [
-          { label: 'None', value: '' },
+          { label: 'None', value: 'none' },
           { label: 'Board view', value: 'board' },
           { label: 'Tools view', value: 'tools' },
         ],

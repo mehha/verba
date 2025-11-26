@@ -23,7 +23,15 @@ export const HeaderNav: React.FC<{ data: HeaderType }> = ({ data }) => {
 
         const isCurrent = currentSlug === linkSlug
 
-        return <CMSLink key={i} {...link} appearance="link" className={`${isCurrent ? 'underline' : ''}`} />
+        return (
+          <CMSLink
+            key={i}
+            {...link}
+            accent={link?.accent === 'none' ? null : link?.accent}
+            appearance="link"
+            className={`${isCurrent ? 'underline' : ''}`}
+          />
+        )
       })}
       {/*<Link href="/search">*/}
       {/*  <span className="sr-only">Search</span>*/}

@@ -177,7 +177,7 @@ export interface Page {
             /**
              * Optional aktsent konkreetsetes vaadetes.
              */
-            accent?: ('' | 'board' | 'tools') | null;
+            accent?: ('none' | 'board' | 'tools') | null;
             reference?:
               | ({
                   relationTo: 'pages';
@@ -509,7 +509,7 @@ export interface CallToActionBlock {
           /**
            * Optional aktsent konkreetsetes vaadetes.
            */
-          accent?: ('' | 'board' | 'tools') | null;
+          accent?: ('none' | 'board' | 'tools') | null;
           reference?:
             | ({
                 relationTo: 'pages';
@@ -563,7 +563,7 @@ export interface ContentBlock {
           /**
            * Optional aktsent konkreetsetes vaadetes.
            */
-          accent?: ('' | 'board' | 'tools') | null;
+          accent?: ('none' | 'board' | 'tools') | null;
           reference?:
             | ({
                 relationTo: 'pages';
@@ -1921,7 +1921,7 @@ export interface Header {
           /**
            * Optional aktsent konkreetsetes vaadetes.
            */
-          accent?: ('' | 'board' | 'tools') | null;
+          accent?: ('none' | 'board' | 'tools') | null;
           reference?:
             | ({
                 relationTo: 'pages';
@@ -1946,7 +1946,7 @@ export interface Header {
                 /**
                  * Optional aktsent konkreetsetes vaadetes.
                  */
-                accent?: ('' | 'board' | 'tools') | null;
+                accent?: ('none' | 'board' | 'tools') | null;
                 reference?:
                   | ({
                       relationTo: 'pages';
@@ -1982,7 +1982,7 @@ export interface Footer {
           /**
            * Optional aktsent konkreetsetes vaadetes.
            */
-          accent?: ('' | 'board' | 'tools') | null;
+          accent?: ('none' | 'board' | 'tools') | null;
           reference?:
             | ({
                 relationTo: 'pages';

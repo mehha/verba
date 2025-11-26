@@ -12,7 +12,7 @@ type CMSLinkType = {
   className?: string
   label?: string | null
   newTab?: boolean | null
-  accent?: 'board' | 'tools' | null
+  accent?: 'board' | 'tools' | 'none' | null
   reference?: {
     relationTo: 'pages' | 'posts'
     value: Page | Post | string | number
@@ -48,7 +48,7 @@ export const CMSLink: React.FC<CMSLinkType> = (props) => {
   const size = appearance === 'link' ? 'clear' : sizeFromProps
   const newTabProps = newTab ? { rel: 'noopener noreferrer', target: '_blank' } : {}
 
-  const accentStyles: Record<NonNullable<typeof accent>, { className: string; icon: React.ReactNode }> = {
+  const accentStyles: Record<'board' | 'tools', { className: string; icon: React.ReactNode }> = {
     board: {
       className:
         'px-4 py-2 rounded-full text-sm inline-flex items-center justify-center whitespace-nowrap font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-emerald-100 text-emerald-900 hover:bg-emerald-200',
@@ -61,7 +61,7 @@ export const CMSLink: React.FC<CMSLinkType> = (props) => {
     },
   }
 
-  const accentInfo = accent ? accentStyles[accent] : null
+  const accentInfo = accent && accent !== 'none' ? accentStyles[accent] : null
   const accentClass = accentInfo?.className
 
   /* Ensure we don't break any styles set by richText */
