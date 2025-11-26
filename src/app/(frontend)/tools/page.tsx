@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { getCurrentUser } from '@/utilities/getCurrentUser'
-import { Heart, MessageCircle, ArrowRight, Sparkles } from 'lucide-react'
+import { Heart, MessageCircle, ArrowRight, Sparkles, PencilRuler } from 'lucide-react'
 
 const tools = [
   {
@@ -19,6 +19,14 @@ const tools = [
     icon: MessageCircle,
     badge: 'Kiirnupud',
     color: 'from-emerald-200 to-emerald-400 text-emerald-950',
+  },
+  {
+    slug: '/connect-dots',
+    title: 'Ühenda punktid',
+    description: 'Puutetundlik joonistus kassiga: toksa 1 → 12, joon tõmmatakse ise. Sobib peenmotoorika harjutamiseks.',
+    icon: PencilRuler,
+    badge: 'Mäng',
+    color: 'from-sky-200 to-indigo-300 text-sky-950',
   },
 ]
 
