@@ -105,10 +105,12 @@ export interface Config {
   globals: {
     header: Header;
     footer: Footer;
+    'quick-chat': QuickChat;
   };
   globalsSelect: {
     header: HeaderSelect<false> | HeaderSelect<true>;
     footer: FooterSelect<false> | FooterSelect<true>;
+    'quick-chat': QuickChatSelect<false> | QuickChatSelect<true>;
   };
   locale: null;
   user: User & {
@@ -1982,6 +1984,32 @@ export interface Footer {
   createdAt?: string | null;
 }
 /**
+ * Vali, millised kiirsuhtluse nupud on nähtavad ja mida TTS lausub.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "quick-chat".
+ */
+export interface QuickChat {
+  id: string;
+  buttons?:
+    | {
+        label: string;
+        /**
+         * Täislause, mida TTS ette loeb.
+         */
+        phrase: string;
+        enabled?: boolean | null;
+        /**
+         * Tausta aktsent lapsele eristatavaks.
+         */
+        color?: ('emerald' | 'rose' | 'sky' | 'amber' | 'purple' | 'indigo' | 'slate') | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "header_select".
  */
@@ -2040,6 +2068,24 @@ export interface FooterSelect<T extends boolean = true> {
               url?: T;
               label?: T;
             };
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "quick-chat_select".
+ */
+export interface QuickChatSelect<T extends boolean = true> {
+  buttons?:
+    | T
+    | {
+        label?: T;
+        phrase?: T;
+        enabled?: T;
+        color?: T;
         id?: T;
       };
   updatedAt?: T;

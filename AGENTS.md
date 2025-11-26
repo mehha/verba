@@ -23,6 +23,7 @@ Use this guide when contributing to keep the Next.js + Payload stack consistent 
 ## Project-Specific Flows
 - Boards feature: UI lives under `src/app/(frontend)/boards`; collection config at `src/collections/Boards`. Access rules restrict reads/updates to admins or board owners. Server actions on `/boards/page.tsx` handle create/pin/delete—keep them in sync with `BoardsList`.
 - Parent/Child mode: PIN-based toggle (`ParentUnlockDialog` in `src/app/(frontend)/home/ParentUnlockDialog.tsx`, actions in `modeActions.ts`, helpers in `src/utilities/uiMode.ts`). PIN hashes live on users (`parentPinHash`, default from `DEFAULT_PARENT_PIN` env or `0000`). `requireParentMode()` guards routes like `/boards`; set the `uiMode` cookie to switch modes. When adjusting PIN flows, preserve the auto-submit/validation UX and cookie attributes.
+- Quick Chat: admin-configurable buttons live in the `quick-chat` global (`src/QuickChat/config.ts`, registered in `payload.config.ts`). Frontend lives at `/quick-chat` with TTS playback per button (`src/app/(frontend)/quick-chat`). Use the global to toggle which buttons are visible and adjust phrases/colors; defaults cover “Jah/ Ei/ Veel/ Aita/ Lõpeta/ Kus on WC?/ Valus.”
 
 ## Build, Test, and Development Commands
 - `pnpm install` with Node 18.20+ or 20+ (pnpm 9+) to set up dependencies.
