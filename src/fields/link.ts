@@ -62,18 +62,22 @@ export const link: LinkType = ({ appearances, disableLabel = false, overrides = 
             },
             label: 'Open in new tab',
           },
-          {
-            name: 'accent',
-            type: 'checkbox',
-            admin: {
-              style: {
-                alignSelf: 'flex-end',
-              },
-              width: '33%',
-            },
-            label: 'Accent style',
-          },
         ],
+      },
+      {
+        name: 'accent',
+        label: 'Accent',
+        type: 'select',
+        defaultValue: undefined,
+        options: [
+          { label: 'None', value: '' },
+          { label: 'Board view', value: 'board' },
+          { label: 'Tools view', value: 'tools' },
+        ],
+        admin: {
+          width: '50%',
+          description: 'Optional aktsent konkreetsetes vaadetes.',
+        },
       },
     ],
   }

@@ -174,7 +174,10 @@ export interface Page {
           link: {
             type?: ('reference' | 'custom') | null;
             newTab?: boolean | null;
-            accent?: boolean | null;
+            /**
+             * Optional aktsent konkreetsetes vaadetes.
+             */
+            accent?: ('' | 'board' | 'tools') | null;
             reference?:
               | ({
                   relationTo: 'pages';
@@ -503,7 +506,10 @@ export interface CallToActionBlock {
         link: {
           type?: ('reference' | 'custom') | null;
           newTab?: boolean | null;
-          accent?: boolean | null;
+          /**
+           * Optional aktsent konkreetsetes vaadetes.
+           */
+          accent?: ('' | 'board' | 'tools') | null;
           reference?:
             | ({
                 relationTo: 'pages';
@@ -554,7 +560,10 @@ export interface ContentBlock {
         link?: {
           type?: ('reference' | 'custom') | null;
           newTab?: boolean | null;
-          accent?: boolean | null;
+          /**
+           * Optional aktsent konkreetsetes vaadetes.
+           */
+          accent?: ('' | 'board' | 'tools') | null;
           reference?:
             | ({
                 relationTo: 'pages';
@@ -1909,7 +1918,10 @@ export interface Header {
         link: {
           type?: ('reference' | 'custom') | null;
           newTab?: boolean | null;
-          accent?: boolean | null;
+          /**
+           * Optional aktsent konkreetsetes vaadetes.
+           */
+          accent?: ('' | 'board' | 'tools') | null;
           reference?:
             | ({
                 relationTo: 'pages';
@@ -1931,7 +1943,10 @@ export interface Header {
               link: {
                 type?: ('reference' | 'custom') | null;
                 newTab?: boolean | null;
-                accent?: boolean | null;
+                /**
+                 * Optional aktsent konkreetsetes vaadetes.
+                 */
+                accent?: ('' | 'board' | 'tools') | null;
                 reference?:
                   | ({
                       relationTo: 'pages';
@@ -1964,7 +1979,10 @@ export interface Footer {
         link: {
           type?: ('reference' | 'custom') | null;
           newTab?: boolean | null;
-          accent?: boolean | null;
+          /**
+           * Optional aktsent konkreetsetes vaadetes.
+           */
+          accent?: ('' | 'board' | 'tools') | null;
           reference?:
             | ({
                 relationTo: 'pages';
