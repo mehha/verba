@@ -453,6 +453,11 @@ export interface User {
    */
   parentPinHash?: string | null;
   pinUpdatedAt?: string | null;
+  /**
+   * Lapse viimane emotsiooniratta valik.
+   */
+  lastFeeling?: ('rõõmus' | 'kurb' | 'pahane' | 'hirmul' | 'elevil' | 'väsinud') | null;
+  lastFeelingAt?: string | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -1552,6 +1557,8 @@ export interface UsersSelect<T extends boolean = true> {
   role?: T;
   parentPinHash?: T;
   pinUpdatedAt?: T;
+  lastFeeling?: T;
+  lastFeelingAt?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;

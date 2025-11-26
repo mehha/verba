@@ -9,6 +9,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
 import { requireParentMode } from '@/utilities/uiMode'
+import { revalidatePath } from 'next/cache'
 
 export const dynamic = 'force-dynamic'
 
@@ -80,7 +81,7 @@ export default async function BoardCompoundsPage({ params }: any) {
     })
 
     // soovi korral:
-    // revalidatePath(`/boards/${boardId}/compounds`)
+    revalidatePath(`/boards/${boardId}/compounds`)
   }
 
   return (
