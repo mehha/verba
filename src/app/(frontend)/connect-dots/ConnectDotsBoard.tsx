@@ -180,17 +180,17 @@ export function ConnectDotsBoard({ puzzle }: ConnectDotsBoardProps) {
                     onTap={() => handleSelect(point.id)}
                     onMouseMove={() => handlePointerMove(point)}
                     onTouchMove={() => handlePointerMove(point)}
-                    onMouseLeave={clearHoverLine}
+                    onMouseLeave={(e) => {
+                      clearHoverLine()
+                      const stage = e.target.getStage()
+                      if (!stage) return
+                      stage.container().style.cursor = 'default'
+                    }}
                     onTouchEnd={clearHoverLine}
                     onMouseEnter={(e) => {
                       const stage = e.target.getStage()
                       if (!stage) return
                       stage.container().style.cursor = 'pointer'
-                    }}
-                    onMouseLeave={(e) => {
-                      const stage = e.target.getStage()
-                      if (!stage) return
-                      stage.container().style.cursor = 'default'
                     }}
                   />
                   <Circle
