@@ -5,9 +5,7 @@ import { getPayload } from 'payload'
 import configPromise from '@payload-config'
 import type { Board } from '@/payload-types'
 import { BoardsList } from './BoardsList'
-import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
+import { CreateBoardForm } from './CreateBoardForm'
 import { requireParentMode } from '@/utilities/uiMode'
 
 export const dynamic = 'force-dynamic'
@@ -47,7 +45,12 @@ export default async function BoardsPage() {
     const { user } = await payload.auth({ headers: requestHeaders })
     if (!user) redirect('/admin')
 
-    const name = (formData.get('name') as string) || 'Uus tahvel'
+    const rawName = formData.get('name')
+    const name = typeof rawName === 'string' ? rawName.trim() : ''
+
+    if (!name) {
+      return
+    }
 
     await payload.create({
       collection: 'boards',
@@ -106,23 +109,7 @@ export default async function BoardsPage() {
     <main className="container space-y-6">
       <header className="flex items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold">Kõik tahvlid</h1>
-
-        <form action={createBoard} className="flex gap-2">
-          <div className="">
-            <Label htmlFor="name" className="sr-only">
-              Uue tahvli nimi
-            </Label>
-            <Input
-              id="name"
-              name="name"
-              placeholder="Uue tahvli nimi"
-            />
-          </div>
-
-          <Button type="submit">
-            Lisa uus tahvel
-          </Button>
-        </form>
+        <CreateBoardForm createBoard={createBoard} />
       </header>
 
       <BoardsList

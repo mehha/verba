@@ -54,24 +54,27 @@ export default async function HomePage() {
   const boards = boardsRes.docs as Board[]
 
   return (
-    <main className="p-6 space-y-6">
-      <header className="flex items-center justify-between gap-4">
+    <main className="p-6 space-y-10">
+      <header className="flex items-center gap-6">
         <div className="flex items-center gap-2">
           <MonitorCheck className="h-6 w-6 text-pink-500" />
           <h1 className="text-2xl font-semibold">Kodu</h1>
         </div>
+        {isParentMode && (
+          <Button variant="outline">
+            <Link href="/boards" className="flex items-center gap-2">
+              Lisa kodu vaatesse uus tahvel <ArrowRight className={`w-4 h-4`} />
+            </Link>
+          </Button>
+        )}
       </header>
 
       {boards.length === 0 ? (
         <>
           <p className="text-muted-foreground">Sul pole veel midagi lisatud kodu vaatesse.</p>
-          {!isParentMode && <p className="text-muted-foreground">Lisamiseks lülituse vanema vaatesse</p>}
-          {isParentMode &&
-            <Button variant="outline">
-              <Link href="/boards" className="flex items-center gap-2">Mine lisama <ArrowRight className={`w-4 h-4`} /></Link>
-            </Button>
-          }
-
+          {!isParentMode && (
+            <p className="text-muted-foreground">Lisamiseks lülituse vanema vaatesse</p>
+          )}
         </>
       ) : (
         <SortableBoards

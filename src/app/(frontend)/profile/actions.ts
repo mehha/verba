@@ -60,7 +60,7 @@ export async function clearPinAction(_formData: FormData) {
   const cookieStore = await cookies()
   cookieStore.set('uiMode', 'child', {
     httpOnly: true,
-    secure: true,
+    secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
     maxAge: 60 * 60 * 24,

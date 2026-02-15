@@ -14,5 +14,7 @@ Use these files for Verba-specific behavior and implementation rules.
   - PIN unlock flow, `uiMode` cookie, and parent-route guards.
 - `docs/rules/project/audio-tts.md`
   - Shared TTS endpoint and playback expectations.
+- `docs/rules/project/ui-components.md`
+  - Prefer `@/components/ui` (shadcn/ui) components and install missing ones from the shadcn catalog.
 
 When adding a new route under `src/app/(frontend)`, add a matching rule file here.

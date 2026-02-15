@@ -208,6 +208,8 @@ export default function Runner({ board, isParentMode }: RunnerProps) {
   }
 
   const handleCellClick = async (cell: any) => {
+    if (busy) return
+
     const raw = cell?.title?.toString().trim()
     if (!raw) return
 
@@ -396,37 +398,79 @@ export default function Runner({ board, isParentMode }: RunnerProps) {
                   )}
                 </div>
                 <div className="flex gap-2">
-                  <Button
-                    onClick={handlePlayAll}
-                    roundness="full"
-                    size="icon"
-                  >
-                    {busy ? (
-                      <span className="inline-flex items-center gap-2">
-                        <AnimatedVolumeIcon busy className="h-6 w-6" />
-                      </span>
-                    ) : (
-                      <Volume2Icon className="h-6 w-6" />
-                    )}
-                  </Button>
-                  <Button
-                    variant={sequence.length && !busy ? 'secondary' : 'muted'}
-                    size="icon"
-                    disabled={!sequence.length || busy}
-                    onClick={handleUndoLast}
-                    roundness="full"
-                  >
-                    <Undo2 className="h-6 w-6" />
-                  </Button>
-                  <Button
-                    variant={sequence.length && !busy ? 'destructive' : 'muted'}
-                    size="icon"
-                    disabled={!sequence.length || busy}
-                    onClick={handleClear}
-                    roundness="full"
-                  >
-                    <Trash className="h-6 w-6" />
-                  </Button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        onClick={handlePlayAll}
+                        roundness="full"
+                        size="icon"
+                        disabled={!sequence.length || busy}
+                      >
+                        {busy ? (
+                          <span className="inline-flex items-center gap-2">
+                            <AnimatedVolumeIcon busy className="h-6 w-6" />
+                          </span>
+                        ) : (
+                          <Volume2Icon className="h-6 w-6" />
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>
+                        {!sequence.length
+                          ? 'Lisa enne sõnu'
+                          : busy
+                            ? 'Esitan praegu'
+                            : 'Esita kogu fraas'}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant={sequence.length && !busy ? 'secondary' : 'muted'}
+                        size="icon"
+                        disabled={!sequence.length || busy}
+                        onClick={handleUndoLast}
+                        roundness="full"
+                      >
+                        <Undo2 className="h-6 w-6" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>
+                        {!sequence.length
+                          ? 'Pole midagi tagasi võtta'
+                          : busy
+                            ? 'Oota, heli mängib'
+                            : 'Võta viimane tagasi'}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant={sequence.length && !busy ? 'destructive' : 'muted'}
+                        size="icon"
+                        disabled={!sequence.length || busy}
+                        onClick={handleClear}
+                        roundness="full"
+                      >
+                        <Trash className="h-6 w-6" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>
+                        {!sequence.length
+                          ? 'Pole midagi tühjendada'
+                          : busy
+                            ? 'Oota, heli mängib'
+                            : 'Tühjenda fraas'}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
               </div>
             )}
@@ -519,7 +563,9 @@ export default function Runner({ board, isParentMode }: RunnerProps) {
           return (
             <div
               key={cellIdString}
-              className="relative flex aspect-[4/3] flex-col gap-1 overflow-hidden rounded-xl border bg-white p-0 shadow-lg ring-1 ring-gray-900/5"
+              className={`relative flex aspect-[4/3] flex-col gap-1 overflow-hidden rounded-xl border bg-white p-0 shadow-lg ring-1 ring-gray-900/5 ${
+                busy ? 'cursor-not-allowed' : 'cursor-pointer'
+              }`}
             >
               {renderCellImage(cell)}
 
@@ -538,7 +584,7 @@ export default function Runner({ board, isParentMode }: RunnerProps) {
                 type="button"
                 onClick={() => void handleCellClick(cell)}
                 disabled={busy}
-                className="absolute inset-0"
+                className={`absolute inset-0 ${busy ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                 aria-label={titleToShow ?? 'valik'}
               />
             </div>

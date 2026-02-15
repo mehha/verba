@@ -45,7 +45,7 @@ export async function unlockParentModeAction(
   // 1h parent mode
   cookieStore.set('uiMode', 'parent', {
     httpOnly: false,
-    secure: true,
+    secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
     maxAge: 60 * 60,
@@ -59,7 +59,7 @@ export async function switchToChildModeAction() {
 
   cookieStore.set('uiMode', 'child', {
     httpOnly: false,
-    secure: true,
+    secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
     maxAge: 60 * 60 * 24,

@@ -53,6 +53,8 @@ Use this file as the quick-start for contributors. Keep deeper guidance in `docs
 
 ## Coding and PR Conventions
 - TypeScript-first. Use `PascalCase` for components, `camelCase` for utilities/hooks.
+- Prefer shadcn/ui components from `@/components/ui` when possible.
+- If a needed shadcn component is missing locally, install it instead of building a duplicate custom primitive. Reference: `https://ui.shadcn.com/docs/components`.
 - Keep diffs scoped and avoid unrelated refactors.
 - Follow Conventional Commits.
 - PRs should include: what changed, why, test evidence, and any schema/env impact.
