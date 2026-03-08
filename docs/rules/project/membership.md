@@ -8,6 +8,7 @@ tags: [verba, stripe, membership, profile]
 
 ## Scope
 - Checkout route: `src/app/(frontend)/next/stripe/checkout/route.ts`
+- Billing portal route: `src/app/(frontend)/next/stripe/portal/route.ts`
 - Webhook route: `src/app/(frontend)/next/stripe/webhook/route.ts`
 - Profile UX: `src/app/(frontend)/profile/*`
 - User fields: `src/collections/Users/index.ts`
@@ -15,6 +16,7 @@ tags: [verba, stripe, membership, profile]
 ## Core Rules
 - Membership state source of truth is Stripe webhooks, not redirect query params.
 - Checkout should always create subscription with `trial_period_days: 14`.
+- Membership cancel/manage flow should use Stripe Billing Portal.
 - Active membership statuses are only `trialing` and `active`.
 - Premium routes and premium API handlers must enforce membership on the server side.
 - Webhook must update user membership fields:
@@ -51,6 +53,7 @@ tags: [verba, stripe, membership, profile]
 - `STRIPE_SECRET_KEY`
 - `STRIPE_WEBHOOK_SECRET`
 - `STRIPE_PRICE_ID_MEMBERSHIP`
+- `STRIPE_BILLING_PORTAL_CONFIGURATION_ID` (optional)
 - `NEXT_PUBLIC_SERVER_URL` (for success/cancel URLs)
 
 ## Change Checklist

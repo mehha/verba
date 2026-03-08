@@ -23,6 +23,7 @@ type Props = {
   membershipStatus?: 'none' | 'trialing' | 'active' | 'past_due' | 'canceled' | null
   trialEndsAt?: string | null
   currentPeriodEndsAt?: string | null
+  hasStripeCustomer?: boolean
 }
 
 const MEMBERSHIP_LABELS: Record<NonNullable<Props['membershipStatus']>, string> = {
@@ -50,10 +51,12 @@ export function ProfilePageClient({
   membershipStatus,
   trialEndsAt,
   currentPeriodEndsAt,
+  hasStripeCustomer = false,
 }: Props) {
   const [pin, setPin] = useState('')
   const [state, formAction] = useActionState(updatePinAction, initialState)
   const [checkoutLoading, setCheckoutLoading] = useState(false)
+  const [portalLoading, setPortalLoading] = useState(false)
   const [checkoutError, setCheckoutError] = useState<string | null>(null)
 
   // derived staatus: kui server action õnnestus, eelda et PIN on nüüd olemas
@@ -62,6 +65,7 @@ export function ProfilePageClient({
 
   const membership = membershipStatus ?? 'none'
   const isMembershipActive = membership === 'active' || membership === 'trialing'
+  const canManageMembership = hasStripeCustomer || membership !== 'none'
   const trialEndsLabel = formatDate(trialEndsAt)
   const periodEndsLabel = formatDate(currentPeriodEndsAt)
 
@@ -87,6 +91,31 @@ export function ProfilePageClient({
       console.error('Stripe checkout failed', err)
       setCheckoutError('Checkouti avamine ebaõnnestus. Proovi uuesti.')
       setCheckoutLoading(false)
+    }
+  }
+
+  const openMembershipPortal = async () => {
+    if (portalLoading || !canManageMembership) return
+
+    setPortalLoading(true)
+    setCheckoutError(null)
+
+    try {
+      const res = await fetch('/next/stripe/portal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok || !json?.url) {
+        throw new Error(json?.error || 'Billing portal creation failed')
+      }
+
+      window.location.href = json.url as string
+    } catch (err) {
+      console.error('Stripe billing portal failed', err)
+      setCheckoutError('Liikmelisuse haldus ei avanenud. Proovi uuesti.')
+      setPortalLoading(false)
     }
   }
 
@@ -146,6 +175,17 @@ export function ProfilePageClient({
             'Alusta liikmelisust (14 päeva tasuta)'
           )}
         </Button>
+        {canManageMembership && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={openMembershipPortal}
+            disabled={portalLoading}
+            className="ms-2"
+          >
+            {portalLoading ? 'Avan halduse...' : 'Halda liikmelisust'}
+          </Button>
+        )}
       </section>
 
       <section className="rounded-2xl border bg-card p-6 space-y-4">
