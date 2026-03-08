@@ -504,6 +504,7 @@ export interface User {
   membershipStatus?: ('none' | 'trialing' | 'active' | 'past_due' | 'canceled') | null;
   trialEndsAt?: string | null;
   currentPeriodEndsAt?: string | null;
+  membershipCancelAtPeriodEnd?: boolean | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -1635,6 +1636,7 @@ export interface UsersSelect<T extends boolean = true> {
   membershipStatus?: T;
   trialEndsAt?: T;
   currentPeriodEndsAt?: T;
+  membershipCancelAtPeriodEnd?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;

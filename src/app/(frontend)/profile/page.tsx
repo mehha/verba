@@ -58,6 +58,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Sear
         membershipStatus={u.membershipStatus}
         trialEndsAt={u.trialEndsAt}
         currentPeriodEndsAt={u.currentPeriodEndsAt}
+        membershipCancelAtPeriodEnd={u.membershipCancelAtPeriodEnd}
         hasStripeCustomer={Boolean(u.stripeCustomerId)}
       />
     </div>

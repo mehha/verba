@@ -85,6 +85,7 @@ const updateMembershipFromSubscription = async (subscription: Stripe.Subscriptio
       membershipStatus: toMembershipStatus(subscription.status),
       trialEndsAt: toISO(subscription.trial_end),
       currentPeriodEndsAt: toISO(getCurrentPeriodEnd(subscription)),
+      membershipCancelAtPeriodEnd: Boolean(subscription.cancel_at_period_end),
     },
   })
 }

@@ -142,6 +142,16 @@ export const Users: CollectionConfig = {
         position: 'sidebar',
       },
     },
+    {
+      name: 'membershipCancelAtPeriodEnd',
+      label: 'Lõpetamine perioodi lõpus',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: {
+        readOnly: true,
+        position: 'sidebar',
+      },
+    },
   ],
   timestamps: true,
 }

@@ -25,6 +25,9 @@ tags: [verba, stripe, membership, profile]
   - `membershipStatus`
   - `trialEndsAt`
   - `currentPeriodEndsAt`
+  - `membershipCancelAtPeriodEnd`
+- If subscription is canceled at period end, keep access active until period end,
+  but show explicit UI state that membership is ending.
 
 ## App-Level Access Rules
 - Keep these routes available without membership:

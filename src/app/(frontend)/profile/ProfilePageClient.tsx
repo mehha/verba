@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/input-otp'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/utilities/ui'
-import { Loader2, ShieldCheck } from 'lucide-react'
+import { Loader2, ShieldCheck, CircleSlash } from 'lucide-react'
 
 const initialState = {
   success: false,
@@ -23,6 +23,7 @@ type Props = {
   membershipStatus?: 'none' | 'trialing' | 'active' | 'past_due' | 'canceled' | null
   trialEndsAt?: string | null
   currentPeriodEndsAt?: string | null
+  membershipCancelAtPeriodEnd?: boolean | null
   hasStripeCustomer?: boolean
 }
 
@@ -51,6 +52,7 @@ export function ProfilePageClient({
   membershipStatus,
   trialEndsAt,
   currentPeriodEndsAt,
+  membershipCancelAtPeriodEnd,
   hasStripeCustomer = false,
 }: Props) {
   const [pin, setPin] = useState('')
@@ -65,6 +67,7 @@ export function ProfilePageClient({
 
   const membership = membershipStatus ?? 'none'
   const isMembershipActive = membership === 'active' || membership === 'trialing'
+  const isPendingCancellation = isMembershipActive && Boolean(membershipCancelAtPeriodEnd)
   const canManageMembership = hasStripeCustomer || membership !== 'none'
   const trialEndsLabel = formatDate(trialEndsAt)
   const periodEndsLabel = formatDate(currentPeriodEndsAt)
@@ -133,12 +136,21 @@ export function ProfilePageClient({
               <span
                 className={cn(
                   'font-medium',
-                  isMembershipActive ? 'text-emerald-600' : 'text-muted-foreground',
+                  isPendingCancellation
+                    ? 'text-amber-600'
+                    : isMembershipActive
+                      ? 'text-emerald-600'
+                      : 'text-muted-foreground',
                 )}
               >
-                {MEMBERSHIP_LABELS[membership]}
+                {isPendingCancellation ? 'Lõpeb perioodi lõpus' : MEMBERSHIP_LABELS[membership]}
               </span>
             </p>
+            {isPendingCancellation && (
+              <p className="text-xs text-amber-700">
+                Liikmelisus on tühistatud ja kehtib kuni perioodi lõpuni.
+              </p>
+            )}
             {trialEndsLabel && (
               <p className="text-xs text-muted-foreground">
                 Trial lõpeb: {trialEndsLabel}
@@ -165,6 +177,11 @@ export function ProfilePageClient({
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
               Suunan checkouti...
+            </>
+          ) : isPendingCancellation ? (
+            <>
+              <CircleSlash className="h-4 w-4" />
+              Tühistatud perioodi lõpus
             </>
           ) : isMembershipActive ? (
             <>
