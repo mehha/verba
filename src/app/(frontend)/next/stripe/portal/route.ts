@@ -29,6 +29,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'missing_email' }, { status: 400 })
   }
 
+  const membershipStatus = (user as { membershipStatus?: string | null }).membershipStatus
+  if (!membershipStatus || membershipStatus === 'none') {
+    return NextResponse.json({ error: 'membership_required' }, { status: 403 })
+  }
+
   const stripe = new Stripe(STRIPE_SECRET_KEY)
 
   try {

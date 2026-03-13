@@ -34,6 +34,12 @@ const toISO = (unixTime?: number | null): string | null => {
   return new Date(unixTime * 1000).toISOString()
 }
 
+const hasScheduledCancellation = (subscription: Stripe.Subscription): boolean => {
+  if (subscription.cancel_at_period_end) return true
+
+  return typeof subscription.cancel_at === 'number' && subscription.cancel_at * 1000 > Date.now()
+}
+
 const getCurrentPeriodEnd = (subscription: Stripe.Subscription): number | null => {
   const periodEnds = subscription.items?.data
     ?.map((item) => item.current_period_end)
@@ -85,7 +91,7 @@ const updateMembershipFromSubscription = async (subscription: Stripe.Subscriptio
       membershipStatus: toMembershipStatus(subscription.status),
       trialEndsAt: toISO(subscription.trial_end),
       currentPeriodEndsAt: toISO(getCurrentPeriodEnd(subscription)),
-      membershipCancelAtPeriodEnd: Boolean(subscription.cancel_at_period_end),
+      membershipCancelAtPeriodEnd: hasScheduledCancellation(subscription),
     },
   })
 }

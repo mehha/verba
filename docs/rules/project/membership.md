@@ -17,6 +17,8 @@ tags: [verba, stripe, membership, profile]
 - Membership state source of truth is Stripe webhooks, not redirect query params.
 - Checkout should always create subscription with `trial_period_days: 14`.
 - Membership cancel/manage flow should use Stripe Billing Portal.
+- Hide membership-management UI when `membershipStatus` is `none`; show only checkout/upgrade in that state.
+- Pending-cancellation profile UI should be driven by `membershipCancelAtPeriodEnd` plus a future `currentPeriodEndsAt`, not only by the current status label.
 - Active membership statuses are only `trialing` and `active`.
 - Premium routes and premium API handlers must enforce membership on the server side.
 - Webhook must update user membership fields:
@@ -31,7 +33,7 @@ tags: [verba, stripe, membership, profile]
 
 ## App-Level Access Rules
 - Keep these routes available without membership:
-  - `/profile` (upgrade/manage)
+  - `/profile` (upgrade/manage when membership exists, otherwise upgrade only)
   - `/login` and `/register`
   - `/home` (navigation shell)
 - Require active membership (`trialing` or `active`) on:

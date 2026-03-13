@@ -24,7 +24,6 @@ type Props = {
   trialEndsAt?: string | null
   currentPeriodEndsAt?: string | null
   membershipCancelAtPeriodEnd?: boolean | null
-  hasStripeCustomer?: boolean
 }
 
 const MEMBERSHIP_LABELS: Record<NonNullable<Props['membershipStatus']>, string> = {
@@ -35,10 +34,15 @@ const MEMBERSHIP_LABELS: Record<NonNullable<Props['membershipStatus']>, string> 
   canceled: 'Lõpetatud',
 }
 
-const formatDate = (value?: string | null): string | null => {
+const parseDate = (value?: string | null): Date | null => {
   if (!value) return null
   const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return null
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
+const formatDate = (value?: string | null): string | null => {
+  const date = parseDate(value)
+  if (!date) return null
 
   return new Intl.DateTimeFormat('et-EE', {
     day: '2-digit',
@@ -53,7 +57,6 @@ export function ProfilePageClient({
   trialEndsAt,
   currentPeriodEndsAt,
   membershipCancelAtPeriodEnd,
-  hasStripeCustomer = false,
 }: Props) {
   const [pin, setPin] = useState('')
   const [state, formAction] = useActionState(updatePinAction, initialState)
@@ -67,13 +70,17 @@ export function ProfilePageClient({
 
   const membership = membershipStatus ?? 'none'
   const isMembershipActive = membership === 'active' || membership === 'trialing'
-  const isPendingCancellation = isMembershipActive && Boolean(membershipCancelAtPeriodEnd)
-  const canManageMembership = hasStripeCustomer || membership !== 'none'
+  const periodEndsAtDate = parseDate(currentPeriodEndsAt)
+  const isPendingCancellation =
+    Boolean(membershipCancelAtPeriodEnd) &&
+    Boolean(periodEndsAtDate && periodEndsAtDate.getTime() > Date.now())
+  const hasMembershipAccess = isMembershipActive || isPendingCancellation
+  const canManageMembership = membership !== 'none'
   const trialEndsLabel = formatDate(trialEndsAt)
   const periodEndsLabel = formatDate(currentPeriodEndsAt)
 
   const startMembershipCheckout = async () => {
-    if (checkoutLoading || isMembershipActive) return
+    if (checkoutLoading || hasMembershipAccess) return
 
     setCheckoutLoading(true)
     setCheckoutError(null)
@@ -170,7 +177,7 @@ export function ProfilePageClient({
         <Button
           type="button"
           onClick={startMembershipCheckout}
-          disabled={checkoutLoading || isMembershipActive}
+          disabled={checkoutLoading || hasMembershipAccess}
           className="gap-2"
         >
           {checkoutLoading ? (
@@ -183,7 +190,7 @@ export function ProfilePageClient({
               <CircleSlash className="h-4 w-4" />
               Tühistatud perioodi lõpus
             </>
-          ) : isMembershipActive ? (
+          ) : hasMembershipAccess ? (
             <>
               <ShieldCheck className="h-4 w-4" />
               Liikmelisus aktiivne
