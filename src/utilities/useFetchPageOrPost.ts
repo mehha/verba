@@ -2,6 +2,12 @@ import { useEffect, useState } from 'react'
 
 type Collection = 'pages' | 'posts'
 
+type CollectionResponse = {
+  docs?: Array<{
+    id?: string | number
+  }>
+}
+
 export function useFetchPageOrPost({
   collection,
   slug,
@@ -28,7 +34,7 @@ export function useFetchPageOrPost({
           return
         }
 
-        const result = await response.json()
+        const result = (await response.json()) as CollectionResponse
         const foundId = result?.docs?.[0]?.id
 
         if (!cancelled) {

@@ -20,6 +20,10 @@ import { getClientSideURL } from '@/utilities/getURL'
 
 type RegisterFormProps = React.ComponentPropsWithoutRef<'div'>
 
+type AuthResponse = {
+  message?: string
+}
+
 export function RegisterForm({ className, ...props }: RegisterFormProps) {
   const router = useRouter()
 
@@ -58,7 +62,7 @@ export function RegisterForm({ className, ...props }: RegisterFormProps) {
         }),
       })
 
-      const createData = await createRes.json().catch(() => null)
+      const createData = (await createRes.json().catch(() => null)) as AuthResponse | null
 
       if (!createRes.ok) {
         setError(createData?.message ?? 'Registreerimine ebaõnnestus')
@@ -79,7 +83,7 @@ export function RegisterForm({ className, ...props }: RegisterFormProps) {
         }),
       })
 
-      const loginData = await loginRes.json().catch(() => null)
+      const loginData = (await loginRes.json().catch(() => null)) as AuthResponse | null
 
       if (!loginRes.ok) {
         // Konto loodi, aga login ebaõnnestus – suhtle kasutajaga ausalt

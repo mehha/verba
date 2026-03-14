@@ -47,6 +47,22 @@ type MediaDoc = {
   sizes?: Record<string, { url?: string }>
 }
 
+type MediaUploadResponse = {
+  doc?: {
+    id?: string | number
+    url?: string | null
+  }
+}
+
+type SymbolsResponse = {
+  items?: SymbolItem[]
+}
+
+type MediaSearchResponse = {
+  docs?: MediaDoc[]
+  totalPages?: number
+}
+
 type CellEditModalProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -127,7 +143,7 @@ export const CellEditModal: React.FC<CellEditModalProps> = ({
         credentials: 'include',
         body: formData,
       })
-      const json = await res.json()
+      const json = (await res.json()) as MediaUploadResponse
 
       if (json?.doc?.id) {
         setUploadedPreview(json.doc.url ?? null)
@@ -139,7 +155,7 @@ export const CellEditModal: React.FC<CellEditModalProps> = ({
 
         if (cell) {
           onSaveAction(cell.id, {
-            image: { id: json.doc.id, url: json.doc.url },
+            image: { id: json.doc.id, url: json.doc.url ?? undefined },
             externalImageURL: '',
             // title: nextTitle,
           })
@@ -168,7 +184,7 @@ export const CellEditModal: React.FC<CellEditModalProps> = ({
         { credentials: 'include' },
       )
       if (!res.ok) throw new Error('Symbols load failed')
-      const json = await res.json()
+      const json = (await res.json()) as SymbolsResponse
       setSymbols(Array.isArray(json.items) ? json.items : [])
     } catch (e) {
       setSymError('Ei õnnestu sümboleid laadida')
@@ -210,7 +226,7 @@ export const CellEditModal: React.FC<CellEditModalProps> = ({
     try {
       const res = await fetch(mediaQueryURL, { credentials: 'include' })
       if (!res.ok) throw new Error('Media load failed')
-      const json = await res.json()
+      const json = (await res.json()) as MediaSearchResponse
       const docs: MediaDoc[] = Array.isArray(json?.docs) ? json.docs : []
       setMediaItems(docs)
       if (typeof json?.totalPages === 'number') {

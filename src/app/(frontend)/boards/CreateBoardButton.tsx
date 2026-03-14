@@ -1,7 +1,7 @@
 'use client'
 
 import { useModal, Modal, ModalContainer, ModalToggler } from '@faceless-ui/modal'
-import { useState } from 'react'
+import { useState, type MouseEvent } from 'react'
 import { CircleX } from 'lucide-react'
 
 type Props = {
@@ -31,7 +31,7 @@ export function CreateBoardButton({ createBoard }: Props) {
         <Modal
           slug={CREATE_BOARD_MODAL}
           className="bg-white rounded-md p-4 w-[360px] max-w-[90vw] relative"
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e: MouseEvent<HTMLDivElement>) => e.stopPropagation()}
           closeOnBlur={false}
         >
           <ModalToggler

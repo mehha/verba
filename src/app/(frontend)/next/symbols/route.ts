@@ -17,13 +17,24 @@ type SymbolItem = {
   raw?: any
 }
 
+type ArasaacPictogram = {
+  _id: string
+  keywords?: Array<{ keyword?: string }>
+}
+
+type OpenMojiEntry = {
+  annotation: string
+  hexcode: string
+  tags?: string[]
+}
+
 async function fetchArasaac(locale: string, q: string, limit: number) {
   const r = await fetch(
     `https://api.arasaac.org/api/pictograms/${encodeURIComponent(locale)}/search/${encodeURIComponent(q)}`,
     { headers: { Accept: 'application/json' } },
   )
   if (!r.ok) return []
-  const arr = await r.json()
+  const arr = (await r.json()) as ArasaacPictogram[]
   return (arr || []).slice(0, limit).map((p: any) => ({
     id: `arasaac-${p._id}`,
     title: p.keywords?.[0]?.keyword || q,
@@ -83,14 +94,14 @@ export async function GET(req: Request) {
   try {
     if (source === 'openmoji') {
       const r = await fetch('https://unpkg.com/openmoji@15.0.0/data/openmoji.json')
-      const data = await r.json()
+      const data = (await r.json()) as OpenMojiEntry[]
       const needle = q.toLowerCase()
       const items: SymbolItem[] = data
-        .filter((e: any) =>
-          [e.annotation, ...(e.tags || [])].some((t: string) => String(t).toLowerCase().includes(needle)),
+        .filter((e) =>
+          [e.annotation, ...(e.tags || [])].some((t) => String(t).toLowerCase().includes(needle)),
         )
         .slice(0, limit)
-        .map((e: any) => ({
+        .map((e) => ({
           id: `openmoji-${e.hexcode}`,
           title: e.annotation,
           preview: `https://unpkg.com/openmoji@15.0.0/color/svg/${e.hexcode}.svg`,

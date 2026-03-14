@@ -26,6 +26,10 @@ type SequenceItem = {
   text: string
 }
 
+type MorphResponse = {
+  surface?: string
+}
+
 // Väike abifunktsioon prosody parandamiseks
 function prepareForTTS(text: string): string {
   const trimmed = text.trim()
@@ -231,7 +235,7 @@ export default function Runner({ board, isParentMode }: RunnerProps) {
             signal: AbortSignal.timeout(5000),
           })
           if (mr.ok) {
-            const j = await mr.json().catch(() => null)
+            const j = (await mr.json().catch(() => null)) as MorphResponse | null
             if (j && typeof j.surface === 'string' && j.surface.trim()) {
               surface = j.surface.trim()
             }

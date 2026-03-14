@@ -118,7 +118,7 @@ export default function BoardEditor({ board, renameBoard }: Props) {
                     setIsEditingTitle(false)
                   }}
                 >
-                  <input type="hidden" name="boardId" value={board.id as string} />
+                  <input type="hidden" name="boardId" value={String(board.id)} />
                   <Input
                     name="name"
                     autoFocus

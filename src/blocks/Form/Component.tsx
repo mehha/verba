@@ -19,6 +19,11 @@ export type FormBlockType = {
   introContent?: DefaultTypedEditorState
 }
 
+type FormSubmissionResponse = {
+  errors?: Array<{ message?: string }>
+  status?: string
+}
+
 export const FormBlock: React.FC<
   {
     id?: string
@@ -74,7 +79,7 @@ export const FormBlock: React.FC<
             method: 'POST',
           })
 
-          const res = await req.json()
+          const res = (await req.json()) as FormSubmissionResponse
 
           clearTimeout(loadingTimerID)
 

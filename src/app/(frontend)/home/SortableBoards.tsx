@@ -223,7 +223,7 @@ export function SortableBoards({
     setItems(newItems)
 
     startTransition(async () => {
-      await onReorder(newItems.map((item) => item.id as string))
+      await onReorder(newItems.map((item) => String(item.id)))
     })
   }
 
@@ -231,7 +231,7 @@ export function SortableBoards({
     <>
       <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext
-          items={items.map((item) => item.id as string)}
+          items={items.map((item) => String(item.id))}
           strategy={rectSortingStrategy}
         >
           <ul className="flex flex-wrap gap-4">

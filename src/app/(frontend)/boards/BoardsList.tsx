@@ -194,7 +194,7 @@ export function BoardsList({
                         </Badge>
 
                         <form action={togglePinned}>
-                          <input type="hidden" name="boardId" value={board.id as string} />
+                          <input type="hidden" name="boardId" value={String(board.id)} />
                           <input
                             type="hidden"
                             name="pinned"

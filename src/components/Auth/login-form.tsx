@@ -20,6 +20,10 @@ import Link from 'next/link'
 
 type LoginFormProps = React.ComponentPropsWithoutRef<'div'>
 
+type AuthResponse = {
+  message?: string
+}
+
 export function LoginForm({ className, ...props }: LoginFormProps) {
   const router = useRouter()
 
@@ -43,7 +47,7 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
         body: JSON.stringify({ email, password }),
       })
 
-      const data = await res.json().catch(() => null)
+      const data = (await res.json().catch(() => null)) as AuthResponse | null
 
       if (!res.ok) {
         setError(data?.message ?? 'Sisselogimine ebaõnnestus')

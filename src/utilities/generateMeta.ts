@@ -5,15 +5,23 @@ import type { Media, Page, Post, Config } from '../payload-types'
 import { mergeOpenGraph } from './mergeOpenGraph'
 import { getServerSideURL } from './getURL'
 
+type MediaWithSizes = Media & {
+  sizes?: {
+    og?: {
+      url?: string | null
+    }
+  }
+}
+
 const getImageURL = (image?: Media | Config['db']['defaultIDType'] | null) => {
   const serverUrl = getServerSideURL()
 
   let url = serverUrl + '/website-template-OG.webp'
 
   if (image && typeof image === 'object' && 'url' in image) {
-    const ogUrl = image.sizes?.og?.url
+    const ogUrl = (image as MediaWithSizes).sizes?.og?.url
 
-    url = ogUrl ? serverUrl + ogUrl : serverUrl + image.url
+    url = ogUrl ? serverUrl + ogUrl : serverUrl + (image.thumbnailURL ?? image.url ?? '')
   }
 
   return url

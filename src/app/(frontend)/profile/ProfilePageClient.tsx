@@ -18,6 +18,11 @@ const initialState = {
   error: undefined as string | undefined,
 }
 
+type StripeRedirectResponse = {
+  url?: string
+  error?: string
+}
+
 type Props = {
   hasPin: boolean
   membershipStatus?: 'none' | 'trialing' | 'active' | 'past_due' | 'canceled' | null
@@ -91,7 +96,7 @@ export function ProfilePageClient({
         headers: { 'Content-Type': 'application/json' },
       })
 
-      const json = await res.json().catch(() => ({}))
+      const json = (await res.json().catch(() => ({}))) as StripeRedirectResponse
       if (!res.ok || !json?.url) {
         throw new Error(json?.error || 'Checkout session creation failed')
       }
@@ -116,7 +121,7 @@ export function ProfilePageClient({
         headers: { 'Content-Type': 'application/json' },
       })
 
-      const json = await res.json().catch(() => ({}))
+      const json = (await res.json().catch(() => ({}))) as StripeRedirectResponse
       if (!res.ok || !json?.url) {
         throw new Error(json?.error || 'Billing portal creation failed')
       }
