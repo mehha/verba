@@ -5,6 +5,9 @@ import redirects from './redirects.js'
 const NEXT_PUBLIC_SERVER_URL = process.env.VERCEL_PROJECT_PRODUCTION_URL
   ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
   : undefined || process.env.__NEXT_PRIVATE_ORIGIN || 'http://localhost:3000'
+const NEXT_PUBLIC_MEDIA_BASE_URL =
+  process.env.NEXT_PUBLIC_MEDIA_BASE_URL || 'https://media.suhtleja.ee'
+const mediaURL = new URL(NEXT_PUBLIC_MEDIA_BASE_URL)
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -37,6 +40,11 @@ const nextConfig = {
         protocol: 'http',
         hostname: 'suhtleja.test',
         pathname: '/api/media/**',
+      },
+      {
+        protocol: mediaURL.protocol.replace(':', ''),
+        hostname: mediaURL.hostname,
+        pathname: '/**',
       },
     ],
   },
