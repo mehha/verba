@@ -194,56 +194,30 @@ Although Next.js includes a robust set of caching strategies out of the box, Pay
 
 To spin up this example locally, follow the [Quick Start](#quick-start). Then [Seed](#seed) the database with a few pages, posts, and projects.
 
-### MongoDB Sync from Coolify
+### Cloudflare D1 + R2
 
-If your deployment runs on Coolify and you want a local copy of production/staging data:
+This app uses Cloudflare D1 for Payload data and Cloudflare R2 for uploaded media in production.
 
-1. Configure env vars in `.env` (see `.env.example`):
-   - `COOLIFY_MONGO_URI`
-   - `REMOTE_MONGO_DB` (recommended, e.g. `suhtleja`)
-   - `LOCAL_MONGO_URI` (or use `DATABASE_URI`)
-   - `LOCAL_MONGO_DB` (recommended, e.g. `suhtleja`)
-   - `DB_BACKUP_DIR`
-2. Pull remote DB dump:
-   - `pnpm run db:pull`
-3. Restore latest dump into local DB:
-   - `pnpm run db:restore`
-4. One-command refresh (pull + restore):
-   - `pnpm run db:refresh`
+- Database adapter: `@payloadcms/db-d1-sqlite`
+- Payload config: `src/payload.config.ts`
+- Worker bindings: `wrangler.jsonc`
+- Media storage: `@payloadcms/storage-r2`
 
-Media uploads are stored on disk (`public/media`), so sync those separately:
+For local development, use Wrangler/Miniflare-backed bindings instead of separate MongoDB or filesystem media services.
 
-- Configure:
-  - `COOLIFY_SSH_HOST`
-  - `COOLIFY_MEDIA_PATH`
-  - `LOCAL_MEDIA_PATH`
-- Run:
-  - `pnpm run media:pull`
+To clone the remote D1 database into Wrangler's local D1 state:
 
-Full sync helper:
+```bash
+pnpm run db:clone:remote-to-local
+```
 
-- `pnpm run sync:coolify`
+This exports the first `database_name` from `wrangler.jsonc`, resets `.wrangler/state/v3/d1`, initializes Wrangler's local D1 file, then imports the full export directly into that SQLite file.
 
-Recommended workflow is one-way sync (Coolify -> local), not local -> production.
+If you want the app to actually run against that cloned local D1, do not leave the D1 bindings in `wrangler.jsonc` set to `"remote": true`.
 
-If you see `0 document(s) restored`, it usually means source and target namespaces did not match.
-Set `REMOTE_MONGO_DB` and `LOCAL_MONGO_DB` explicitly (both `suhtleja` in most setups).
+#### D1 migrations
 
-### Working with Postgres
-
-Postgres and other SQL-based databases follow a strict schema for managing your data. In comparison to our MongoDB adapter, this means that there's a few extra steps to working with Postgres.
-
-Note that often times when making big schema changes you can run the risk of losing data if you're not manually migrating it.
-
-#### Local development
-
-Ideally we recommend running a local copy of your database so that schema updates are as fast as possible. By default the Postgres adapter has `push: true` for development environments. This will let you add, modify and remove fields and collections without needing to run any data migrations.
-
-If your database is pointed to production you will want to set `push: false` otherwise you will risk losing data or having your migrations out of sync.
-
-#### Migrations
-
-[Migrations](https://payloadcms.com/docs/database/migrations) are essentially SQL code versions that keeps track of your schema. When deploy with Postgres you will need to make sure you create and then run your migrations.
+[Migrations](https://payloadcms.com/docs/database/migrations) are SQL-backed schema versions. With D1, keep schema changes in Payload migrations and run them as part of deployment.
 
 Locally create a migration
 
@@ -354,15 +328,3 @@ You can also deploy your app manually, check out the [deployment documentation](
 ## Questions
 
 If you have any issues or questions, reach out to us on [Discord](https://discord.com/invite/payload) or start a [GitHub discussion](https://github.com/payloadcms/payload/discussions).
-
-## DB
-
-Inner
-1. mongodb://root:eZv4tvD0at9e1f8L34vcmMf7rwNUP6aqlUvzVCNVCZNggx48sD7EGBu45lhnZe2m@fkwoo80s80kk0wsg88o0s0wg:27017/suhtleja?authSource=admin&directConnection=true
-2. mongosh "mongodb://root:eZv4tvD0at9e1f8L34vcmMf7rwNUP6aqlUvzVCNVCZNggx48sD7EGBu45lhnZe2m@fkwoo80s80kk0wsg88o0s0wg:27017/suhtleja?authSource=admin&directConnection=true"
-3. Dump DB: mongorestore \
-  --uri="mongodb://<user,password,id>/?authSource=admin&directConnection=true" \
-  --db=suhtleja \
-  --drop \
-  ./dump/suhtleja
-4. Check in Coolify terminal: mongosh "mongodb://root:eZv4tvD0at9e1f8L34vcmMf7rwNUP6aqlUvzVCNVCZNggx48sD7EGBu45lhnZe2m@fkwoo80s80kk0wsg88o0s0wg:27017/?directConnection=true"

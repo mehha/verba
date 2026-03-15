@@ -16,6 +16,7 @@ Use this file as the quick-start for contributors. Keep deeper guidance in `docs
 - Domain config: `src/collections`, `src/blocks`, `src/fields`, `src/QuickChat`, `src/payload.config.ts`.
 - Shared UI/logic: `src/components`, `src/hooks`, `src/providers`, `src/utilities`.
 - Tests: `tests/int/*.int.spec.ts` (Vitest), `tests/e2e/*.e2e.spec.ts` (Playwright).
+- Runtime data/storage: Cloudflare D1 for Payload data, Cloudflare R2 for media/object storage.
 
 ## Frontend Feature Map
 - `boards`: `src/app/(frontend)/boards`, collection `src/collections/Boards/index.ts`, rule `docs/rules/project/boards.md`.

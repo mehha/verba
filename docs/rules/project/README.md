@@ -2,6 +2,10 @@
 
 Use these files for Suhtleja-specific behavior and implementation rules.
 
+Infrastructure baseline:
+- Payload data runs on Cloudflare D1.
+- Uploaded media/object storage runs on Cloudflare R2.
+
 - `docs/rules/project/boards.md`
   - Board ownership, pinning, ordering, and home integration.
 - `docs/rules/project/connect-dots.md`
