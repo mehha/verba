@@ -931,6 +931,10 @@ export interface ConnectDotsPuzzle {
   title: string;
   enabled?: boolean | null;
   /**
+   * If disabled, only the owner and admins can see this puzzle.
+   */
+  visibleToAllUsers?: boolean | null;
+  /**
    * Lower numbers appear first in the puzzle picker.
    */
   order?: number | null;
@@ -938,6 +942,7 @@ export interface ConnectDotsPuzzle {
    * Optional short helper text shown under the puzzle selector.
    */
   description?: string | null;
+  owner: number | User;
   /**
    * Optional looping music for the frontend player. Starts after the child first taps the game.
    */
@@ -1629,8 +1634,10 @@ export interface BoardsSelect<T extends boolean = true> {
 export interface ConnectDotsPuzzlesSelect<T extends boolean = true> {
   title?: T;
   enabled?: T;
+  visibleToAllUsers?: T;
   order?: T;
   description?: T;
+  owner?: T;
   backgroundMusic?: T;
   externalImageURL?: T;
   dots?: T;

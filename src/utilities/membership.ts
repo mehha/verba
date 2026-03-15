@@ -6,7 +6,7 @@ export function requireActiveMembership(
   user: Pick<User, 'email' | 'membershipStatus' | 'role'> | null | undefined,
   redirectTo = '/profile?membership=required',
 ) {
-  if (!hctiveMembership(user)) {
+  if (!hasActiveMembership(user)) {
     redirect(redirectTo)
   }
 }

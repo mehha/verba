@@ -8,14 +8,32 @@ tags: [suhtleja, frontend, game, connect-dots, payload]
 
 ## Scope
 - Frontend route: `src/app/(frontend)/connect-dots/page.tsx`
+- Frontend management routes:
+  - `src/app/(frontend)/connect-dots/manage/page.tsx`
+  - `src/app/(frontend)/connect-dots/manage/new/page.tsx`
+  - `src/app/(frontend)/connect-dots/manage/[id]/page.tsx`
 - Shared gameplay UI: `src/components/ConnectDots/ConnectDotsGame.tsx`
+- Frontend editor UI:
+  - `src/components/ConnectDots/ConnectDotsFrontendEditor.tsx`
+  - `src/components/ConnectDots/ConnectDotsManagerList.tsx`
 - Payload collection: `src/collections/ConnectDotsPuzzles/index.ts`
 - Admin editor + preview: `src/components/ConnectDots/ConnectDotsEditorField.tsx`
 - Shared rules / serialization: `src/utilities/connectDots.ts`
+- Shared frontend form parsing: `src/utilities/connectDotsPuzzleForm.ts`
 
 ## Behavior Rules
 - Auth and active membership are required for `/connect-dots`.
+- Parent mode is required for all frontend create/edit/delete puzzle flows.
 - Frontend shows only puzzles with `enabled = true`.
+- Non-admin users should see:
+  - their own enabled puzzles
+  - enabled puzzles where `visibleToAllUsers = true`
+- Admin users may see all enabled puzzles regardless of owner or share state.
+- Frontend management list should show:
+  - admins: all puzzles
+  - non-admin users: only their own puzzles
+- Non-admin users may create puzzles for themselves and edit/delete only their own puzzles.
+- Only admins may mark a puzzle `visibleToAllUsers = true`.
 - A puzzle is playable only when it has:
   - an uploaded image
   - at least 2 valid dots
@@ -44,6 +62,12 @@ tags: [suhtleja, frontend, game, connect-dots, payload]
   - uploaded Payload media
   - external symbol URLs from the shared symbols endpoint
 - Background music is stored as optional Payload media on the puzzle document.
+- Each puzzle has an `owner` relationship to `users`.
+- `visibleToAllUsers` controls whether an enabled puzzle is shared beyond its owner.
+- Frontend create/update parsing must reject submissions without:
+  - a title
+  - a valid image source
+  - at least 2 valid dots
 - If no puzzle-specific track is set, serialization must fall back to `/soft-dots-journey.mp3`.
 - Dot validation must reject:
   - non-array values
@@ -62,4 +86,9 @@ tags: [suhtleja, frontend, game, connect-dots, payload]
   - keep music playback user-gesture-gated and stoppable via mute
 - When changing data access:
   - keep frontend queries filtered to enabled puzzles
+  - keep owner/private-vs-shared visibility rules intact
   - keep frontend route gating unchanged unless intentionally redesigned
+- When changing frontend authoring:
+  - keep parent-mode enforcement on list/create/edit/delete routes
+  - keep non-admin users from changing global visibility
+  - keep owner assignment server-side on create
