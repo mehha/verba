@@ -80,7 +80,9 @@ export async function generateMetadata({ params: paramsPromise }: Args): Promise
     slug: decodedSlug,
   })
 
-  return generateMeta({ doc: page })
+  const path = decodedSlug === 'home' ? '/' : `/${decodedSlug}`
+
+  return generateMeta({ doc: page, path })
 }
 
 const queryPageBySlug = cache(async ({ slug }: { slug: string }) => {

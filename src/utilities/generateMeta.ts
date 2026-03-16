@@ -4,6 +4,7 @@ import type { Media, Page, Post, Config } from '../payload-types'
 
 import { mergeOpenGraph } from './mergeOpenGraph'
 import { getServerSideURL } from './getURL'
+import { DEFAULT_META_DESCRIPTION, SITE_NAME } from './seo'
 
 type MediaWithSizes = Media & {
   sizes?: {
@@ -27,21 +28,35 @@ const getImageURL = (image?: Media | Config['db']['defaultIDType'] | null) => {
   return url
 }
 
+const getCanonicalPath = (path?: string) => {
+  if (!path || path === 'home' || path === '/home') {
+    return '/'
+  }
+
+  return path.startsWith('/') ? path : `/${path}`
+}
+
 export const generateMeta = async (args: {
   doc: Partial<Page> | Partial<Post> | null
+  path?: string
 }): Promise<Metadata> => {
-  const { doc } = args
+  const { doc, path } = args
 
   const ogImage = getImageURL(doc?.meta?.image)
+  const canonicalPath = getCanonicalPath(path)
 
-  const title = doc?.meta?.title
-    ? doc?.meta?.title + ' | Payload Website Template'
-    : 'Payload Website Template'
+  const metaTitle = doc?.meta?.title?.trim()
+  const docTitle = typeof doc?.title === 'string' ? doc.title.trim() : ''
+  const title = metaTitle || docTitle || SITE_NAME
+  const description = doc?.meta?.description || DEFAULT_META_DESCRIPTION
 
   return {
-    description: doc?.meta?.description,
+    alternates: {
+      canonical: canonicalPath,
+    },
+    description,
     openGraph: mergeOpenGraph({
-      description: doc?.meta?.description || '',
+      description,
       images: ogImage
         ? [
             {
@@ -50,8 +65,14 @@ export const generateMeta = async (args: {
           ]
         : undefined,
       title,
-      url: Array.isArray(doc?.slug) ? doc?.slug.join('/') : '/',
+      url: canonicalPath,
     }),
     title,
+    twitter: {
+      card: 'summary_large_image',
+      description,
+      images: ogImage ? [ogImage] : undefined,
+      title,
+    },
   }
 }

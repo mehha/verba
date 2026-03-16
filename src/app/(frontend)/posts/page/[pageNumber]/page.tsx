@@ -8,6 +8,8 @@ import { getPayload } from 'payload'
 import React from 'react'
 import PageClient from './page.client'
 import { notFound } from 'next/navigation'
+import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
+import { SITE_NAME } from '@/utilities/seo'
 
 export const revalidate = 600
 
@@ -64,8 +66,23 @@ export default async function Page({ params: paramsPromise }: Args) {
 
 export async function generateMetadata({ params: paramsPromise }: Args): Promise<Metadata> {
   const { pageNumber } = await paramsPromise
+  const parsedPageNumber = Number(pageNumber)
+  const isFirstPage = !Number.isInteger(parsedPageNumber) || parsedPageNumber <= 1
+  const title = isFirstPage ? 'Blogi' : `Blogi: leht ${parsedPageNumber}`
+  const canonical = isFirstPage ? '/posts' : `/posts/page/${parsedPageNumber}`
+  const description = 'Sirvi Suhtleja blogi artikleid ja AAC teemalisi praktilisi juhendeid.'
+
   return {
-    title: `Payload Website Template Posts Page ${pageNumber || ''}`,
+    alternates: {
+      canonical,
+    },
+    description,
+    openGraph: mergeOpenGraph({
+      description,
+      title: `${title} | ${SITE_NAME}`,
+      url: canonical,
+    }),
+    title,
   }
 }
 
@@ -76,7 +93,7 @@ export async function generateStaticParams() {
     overrideAccess: false,
   })
 
-  const totalPages = Math.ceil(totalDocs / 10)
+  const totalPages = Math.ceil(totalDocs / 12)
 
   const pages: { pageNumber: string }[] = []
 

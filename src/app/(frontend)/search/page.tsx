@@ -7,10 +7,12 @@ import React from 'react'
 import { Search } from '@/search/Component'
 import PageClient from './page.client'
 import { CardPostData } from '@/components/Card'
+import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
+import { SITE_NAME } from '@/utilities/seo'
 
 type Args = {
   searchParams: Promise<{
-    q: string
+    q?: string
   }>
 }
 export default async function Page({ searchParams: searchParamsPromise }: Args) {
@@ -81,8 +83,26 @@ export default async function Page({ searchParams: searchParamsPromise }: Args) 
   )
 }
 
-export function generateMetadata(): Metadata {
+export async function generateMetadata({ searchParams: searchParamsPromise }: Args): Promise<Metadata> {
+  const { q: query = '' } = await searchParamsPromise
+  const trimmedQuery = query.trim()
+  const title = trimmedQuery ? `Otsing: ${trimmedQuery}` : 'Otsing'
+  const description = 'Otsi Suhtleja lehtedelt ja blogipostitustest märksõnu ning teemasisu.'
+
   return {
-    title: `Payload Website Template Search`,
+    alternates: {
+      canonical: '/search',
+    },
+    description,
+    openGraph: mergeOpenGraph({
+      description,
+      title: `${title} | ${SITE_NAME}`,
+      url: '/search',
+    }),
+    robots: {
+      follow: true,
+      index: false,
+    },
+    title,
   }
 }

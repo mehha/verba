@@ -18,6 +18,7 @@ import { getServerSideURL } from '@/utilities/getURL'
 import { getPayload } from 'payload'
 import configPromise from '@payload-config'
 import { Toaster } from '@/components/ui/sonner'
+import { DEFAULT_META_DESCRIPTION, SITE_NAME } from '@/utilities/seo'
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const { isEnabled } = await draftMode()
@@ -28,7 +29,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const isAdmin = user?.role === 'admin'
 
   return (
-    <html className={cn(GeistSans.variable, GeistMono.variable)} lang="en" suppressHydrationWarning>
+    <html className={cn(GeistSans.variable, GeistMono.variable)} lang="et" suppressHydrationWarning>
       <head>
         <InitTheme />
         <link href="/favicon.ico" rel="icon" sizes="32x32" />
@@ -64,10 +65,20 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 }
 
 export const metadata: Metadata = {
+  description: DEFAULT_META_DESCRIPTION,
   metadataBase: new URL(getServerSideURL()),
-  openGraph: mergeOpenGraph(),
+  openGraph: mergeOpenGraph({
+    description: DEFAULT_META_DESCRIPTION,
+    title: SITE_NAME,
+    url: '/',
+  }),
+  title: {
+    default: SITE_NAME,
+    template: `%s | ${SITE_NAME}`,
+  },
   twitter: {
     card: 'summary_large_image',
-    creator: '@payloadcms',
+    description: DEFAULT_META_DESCRIPTION,
+    title: SITE_NAME,
   },
 }

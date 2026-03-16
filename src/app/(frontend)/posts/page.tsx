@@ -7,6 +7,8 @@ import configPromise from '@payload-config'
 import { getPayload } from 'payload'
 import React from 'react'
 import PageClient from './page.client'
+import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
+import { SITE_NAME } from '@/utilities/seo'
 
 export const dynamic = 'force-static'
 export const revalidate = 600
@@ -57,7 +59,19 @@ export default async function Page() {
 }
 
 export function generateMetadata(): Metadata {
+  const title = 'Blogi'
+  const description = 'Suhtleja blogi: nõuanded, ideed ja praktilised AAC kasutuslood peredele ja spetsialistidele.'
+
   return {
-    title: `Payload Website Template Posts`,
+    alternates: {
+      canonical: '/posts',
+    },
+    description,
+    openGraph: mergeOpenGraph({
+      description,
+      title: `${title} | ${SITE_NAME}`,
+      url: '/posts',
+    }),
+    title,
   }
 }

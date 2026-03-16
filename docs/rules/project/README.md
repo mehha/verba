@@ -24,5 +24,7 @@ Infrastructure baseline:
   - `/tools` hub visibility is managed via Payload global toggles.
 - `docs/rules/project/membership.md`
   - Stripe checkout + webhook-based membership flow.
+- `docs/rules/project/seo.md`
+  - Frontend metadata, canonical URLs, Open Graph defaults, and noindex rules.
 
 When adding a new route under `src/app/(frontend)`, add a matching rule file here.
