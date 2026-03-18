@@ -13,7 +13,7 @@
     "deploy:database": "cross-env NODE_ENV=production PAYLOAD_SECRET=ignore payload migrate && wrangler d1 execute D1 --command 'PRAGMA optimize' --remote",
     "postbuild": "next-sitemap --config next-sitemap.config.cjs",
     "dev": "cross-env NODE_OPTIONS=--no-deprecation next dev",
-    "dev:suhtleja": "cross-env NODE_OPTIONS=--no-deprecation NEXT_PUBLIC_SERVER_URL=http://suhtleja.test:3000 next dev -H 0.0.0.0 -p 3000",
+    "dev:suhtleja": "cross-env NODE_OPTIONS=--no-deprecation NEXT_PUBLIC_SERVER_URL=http://suhtleja.test:3000 next dev -H suhtleja.test -p 3000",
     "dev:prod": "cross-env NODE_OPTIONS=--no-deprecation rm -rf .next && pnpm build && pnpm start",
     "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap",
     "generate:types": "pnpm run generate:types:cloudflare && pnpm run generate:types:payload",

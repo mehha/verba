@@ -6,7 +6,6 @@ import { usePathname } from 'next/navigation'
 import type { Header as HeaderType } from '@/payload-types'
 
 import { CMSLink } from '@/components/Link'
-import { UserMenu } from '@/Header/Nav/UserMenu'
 // import Link from 'next/link'
 // import { SearchIcon } from 'lucide-react'
 
@@ -29,7 +28,7 @@ export const HeaderNav: React.FC<{ data: HeaderType }> = ({ data }) => {
             {...link}
             accent={link?.accent === 'none' ? null : link?.accent}
             appearance="link"
-            className={`${isCurrent ? 'underline' : ''}`}
+            className={`text-[16px] ${isCurrent ? 'underline' : ''}`}
           />
         )
       })}

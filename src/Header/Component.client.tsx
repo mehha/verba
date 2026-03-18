@@ -72,18 +72,18 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({
 
   return (
     <header className="container mt-6 relative z-20" {...(theme ? { 'data-theme': theme } : {})}>
-      <div className="p-4 sm:px-8 flex items-center justify-between gap-4 bg-white rounded-full dark:bg-black shadow-sm ring-1 ring-gray-900/5">
-        <div className="flex items-center gap-4 sm:gap-6">
+      <div className="flex items-center justify-between gap-4 rounded-full bg-white p-4 shadow-sm ring-1 ring-gray-900/5 dark:bg-black sm:px-8 lg:grid lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:items-center">
+        <div className="flex items-center lg:justify-self-start">
           <Link href="/" className="flex items-center" aria-label="Suhtleja">
-            <Logo loading="eager" priority="high" className="invert dark:invert-0" />
+            <Logo loading="eager" priority="high" />
           </Link>
-
-          <div className="hidden lg:block">
-            <HeaderNav data={data} />
-          </div>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-4">
+        <div className="hidden lg:flex lg:justify-self-center">
+          <HeaderNav data={data} />
+        </div>
+
+        <div className="flex items-center gap-2 sm:gap-4 lg:justify-self-end">
           {/* ainult siis, kui on sisse loginud */}
           {currentUser ? (
             <>
