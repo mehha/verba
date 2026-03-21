@@ -35,7 +35,8 @@ type MorphResponse = {
 export default function Runner({ board, isParentMode }: RunnerProps) {
   // UUS: hoiame cellId + teksti
   const [sequence, setSequence] = useState<SequenceItem[]>([])
-  const [busy, setBusy] = useState(false)
+  const [activeCellId, setActiveCellId] = useState<string | null>(null)
+  const [phrasePlaying, setPhrasePlaying] = useState(false)
   const [tempLabel, setTempLabel] = useState<{ id: string; text: string } | null>(null)
 
   const aiAllowed = board.extra?.ai ?? false
@@ -44,6 +45,7 @@ export default function Runner({ board, isParentMode }: RunnerProps) {
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const audioUnlockedRef = useRef(false)
+  const playbackTokenRef = useRef(0)
 
   const cols = Math.max(1, board.grid?.cols ?? 6)
   const cells = (board.grid?.cells ?? []).filter((c) => !c.locked)
@@ -177,6 +179,10 @@ export default function Runner({ board, isParentMode }: RunnerProps) {
 
     const audioEl = audioRef.current ?? new Audio()
     audioRef.current = audioEl
+    const playbackToken = ++playbackTokenRef.current
+    audioEl.pause()
+    audioEl.onended = null
+    audioEl.onerror = null
 
     await new Promise<void>((resolve) => {
       let done = false
@@ -196,6 +202,10 @@ export default function Runner({ board, isParentMode }: RunnerProps) {
       const started = audioEl.play()
       if (started && typeof started.catch === 'function') {
         started.catch(() => cleanup())
+      }
+
+      if (playbackToken !== playbackTokenRef.current) {
+        cleanup()
       }
     })
   }
@@ -223,6 +233,10 @@ export default function Runner({ board, isParentMode }: RunnerProps) {
     const url = URL.createObjectURL(blob)
     const audioEl = audioRef.current ?? new Audio()
     audioRef.current = audioEl
+    const playbackToken = ++playbackTokenRef.current
+    audioEl.pause()
+    audioEl.onended = null
+    audioEl.onerror = null
 
     await new Promise<void>((resolve) => {
       let done = false
@@ -244,17 +258,30 @@ export default function Runner({ board, isParentMode }: RunnerProps) {
       if (started && typeof started.catch === 'function') {
         started.catch(() => cleanup())
       }
+
+      if (playbackToken !== playbackTokenRef.current) {
+        cleanup()
+      }
     })
   }
 
-  const handleCellClick = async (cell: any) => {
-    if (busy) return
+  const stopCurrentAudio = () => {
+    playbackTokenRef.current += 1
+    const audioEl = audioRef.current
+    if (!audioEl) return
+    audioEl.pause()
+    audioEl.currentTime = 0
+    audioEl.onended = null
+    audioEl.onerror = null
+  }
 
+  const handleCellClick = async (cell: any) => {
     const raw = cell?.title?.toString().trim()
     if (!raw) return
 
     ensureAudioUnlocked()
-    setBusy(true)
+    stopCurrentAudio()
+    setPhrasePlaying(false)
     try {
       let surface = raw
 
@@ -300,24 +327,28 @@ export default function Runner({ board, isParentMode }: RunnerProps) {
       // 4) Uuenda jada state
       setSequence(nextSequence)
 
-      setTempLabel({ id: String(cell.id), text: spoken })
+      const cellId = String(cell.id)
+      setActiveCellId(cellId)
+      setTempLabel({ id: cellId, text: spoken })
 
       // 5) Loeme ainult selle sõna vormi
       await playSpeech(spoken)
     } finally {
-      setBusy(false)
+      setActiveCellId(null)
     }
   }
 
   const handlePlayAll = async () => {
     if (!sequence.length) return
     ensureAudioUnlocked()
-    setBusy(true)
+    stopCurrentAudio()
+    setActiveCellId(null)
+    setPhrasePlaying(true)
     try {
       // Sõnaühendite järgi kombineeritud fraas
       await playSpeech(ttsAll)
     } finally {
-      setBusy(false)
+      setPhrasePlaying(false)
     }
   }
 
@@ -327,7 +358,7 @@ export default function Runner({ board, isParentMode }: RunnerProps) {
   }
 
   const handleUndoLast = () => {
-    if (!sequence.length || busy) return
+    if (!sequence.length || phrasePlaying) return
 
     setSequence((prev) => {
       const next = prev.slice(0, -1)
@@ -463,9 +494,9 @@ export default function Runner({ board, isParentMode }: RunnerProps) {
                         onClick={handlePlayAll}
                         roundness="full"
                         size="icon"
-                        disabled={!sequence.length || busy}
+                        disabled={!sequence.length || phrasePlaying}
                       >
-                        {busy ? (
+                        {phrasePlaying ? (
                           <span className="inline-flex items-center gap-2">
                             <AnimatedVolumeIcon busy className="h-6 w-6" />
                           </span>
@@ -478,7 +509,7 @@ export default function Runner({ board, isParentMode }: RunnerProps) {
                       <p>
                         {!sequence.length
                           ? 'Lisa enne sõnu'
-                          : busy
+                          : phrasePlaying
                             ? 'Esitan praegu'
                             : 'Esita kogu fraas'}
                       </p>
@@ -488,9 +519,9 @@ export default function Runner({ board, isParentMode }: RunnerProps) {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
-                        variant={sequence.length && !busy ? 'secondary' : 'muted'}
+                        variant={sequence.length && !phrasePlaying ? 'secondary' : 'muted'}
                         size="icon"
-                        disabled={!sequence.length || busy}
+                        disabled={!sequence.length || phrasePlaying}
                         onClick={handleUndoLast}
                         roundness="full"
                       >
@@ -501,7 +532,7 @@ export default function Runner({ board, isParentMode }: RunnerProps) {
                       <p>
                         {!sequence.length
                           ? 'Pole midagi tagasi võtta'
-                          : busy
+                          : phrasePlaying
                             ? 'Oota, heli mängib'
                             : 'Võta viimane tagasi'}
                       </p>
@@ -511,9 +542,9 @@ export default function Runner({ board, isParentMode }: RunnerProps) {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
-                        variant={sequence.length && !busy ? 'destructive' : 'muted'}
+                        variant={sequence.length && !phrasePlaying ? 'destructive' : 'muted'}
                         size="icon"
-                        disabled={!sequence.length || busy}
+                        disabled={!sequence.length || phrasePlaying}
                         onClick={handleClear}
                         roundness="full"
                       >
@@ -524,7 +555,7 @@ export default function Runner({ board, isParentMode }: RunnerProps) {
                       <p>
                         {!sequence.length
                           ? 'Pole midagi tühjendada'
-                          : busy
+                          : phrasePlaying
                             ? 'Oota, heli mängib'
                             : 'Tühjenda fraas'}
                       </p>
@@ -617,13 +648,16 @@ export default function Runner({ board, isParentMode }: RunnerProps) {
 
           // UUS: Kontrollime, kas sellele kaardile on määratud ajutine tekst
           const isOverridden = tempLabel?.id === cellIdString
+          const isActiveCell = activeCellId === cellIdString
           const titleToShow = isOverridden && tempLabel ? tempLabel.text : cell.title
 
           return (
             <div
               key={cellIdString}
-              className={`relative flex aspect-[4/3] flex-col gap-1 overflow-hidden rounded-xl border bg-white p-0 shadow-lg ring-1 ring-gray-900/5 ${
-                busy ? 'cursor-not-allowed' : 'cursor-pointer'
+              className={`relative flex aspect-[4/3] flex-col gap-1 overflow-hidden rounded-xl border bg-white p-0 shadow-lg ring-1 transition-all ${
+                isActiveCell
+                  ? 'cursor-pointer ring-blue-500 shadow-blue-200/70'
+                  : 'cursor-pointer ring-gray-900/5'
               }`}
             >
               {renderCellImage(cell)}
@@ -632,7 +666,7 @@ export default function Runner({ board, isParentMode }: RunnerProps) {
               {titleToShow && (
                 <div
                   className={`pointer-events-none absolute bottom-0 left-0 w-full p-2 text-center text-white transition-colors duration-200 ${
-                    isOverridden ? 'bg-blue-600/90' : 'bg-slate-800/85'
+                    isOverridden || isActiveCell ? 'bg-blue-600/90' : 'bg-slate-800/85'
                   }`}
                 >
                   <div className="break-words text-2xl uppercase leading-4">{titleToShow}</div>
@@ -642,8 +676,7 @@ export default function Runner({ board, isParentMode }: RunnerProps) {
               <button
                 type="button"
                 onClick={() => void handleCellClick(cell)}
-                disabled={busy}
-                className={`absolute inset-0 ${busy ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                className="absolute inset-0 cursor-pointer"
                 aria-label={titleToShow ?? 'valik'}
               />
             </div>
