@@ -116,14 +116,10 @@ export interface Config {
   globals: {
     header: Header;
     footer: Footer;
-    'quick-chat': QuickChat;
-    tools: Tool;
   };
   globalsSelect: {
     header: HeaderSelect<false> | HeaderSelect<true>;
     footer: FooterSelect<false> | FooterSelect<true>;
-    'quick-chat': QuickChatSelect<false> | QuickChatSelect<true>;
-    tools: ToolsSelect<false> | ToolsSelect<true>;
   };
   locale: null;
   widgets: {
@@ -444,11 +440,6 @@ export interface User {
    */
   parentPinHash?: string | null;
   pinUpdatedAt?: string | null;
-  /**
-   * Lapse viimane emotsiooniratta valik.
-   */
-  lastFeeling?: ('rõõmus' | 'kurb' | 'pahane' | 'hirmul' | 'elevil' | 'väsinud') | null;
-  lastFeelingAt?: string | null;
   stripeCustomerId?: string | null;
   stripeSubscriptionId?: string | null;
   membershipStatus?: ('none' | 'trialing' | 'active' | 'past_due' | 'canceled') | null;
@@ -930,6 +921,7 @@ export interface ConnectDotsPuzzle {
   id: number;
   title: string;
   enabled?: boolean | null;
+  pinned?: boolean | null;
   /**
    * If disabled, only the owner and admins can see this puzzle.
    */
@@ -1541,8 +1533,6 @@ export interface UsersSelect<T extends boolean = true> {
   role?: T;
   parentPinHash?: T;
   pinUpdatedAt?: T;
-  lastFeeling?: T;
-  lastFeelingAt?: T;
   stripeCustomerId?: T;
   stripeSubscriptionId?: T;
   membershipStatus?: T;
@@ -1634,6 +1624,7 @@ export interface BoardsSelect<T extends boolean = true> {
 export interface ConnectDotsPuzzlesSelect<T extends boolean = true> {
   title?: T;
   enabled?: T;
+  pinned?: T;
   visibleToAllUsers?: T;
   order?: T;
   description?: T;
@@ -2021,50 +2012,6 @@ export interface Footer {
   createdAt?: string | null;
 }
 /**
- * Vali, millised kiirsuhtluse nupud on nähtavad ja mida TTS lausub.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "quick-chat".
- */
-export interface QuickChat {
-  id: number;
-  buttons?:
-    | {
-        label: string;
-        /**
-         * Täislause, mida TTS ette loeb.
-         */
-        phrase: string;
-        enabled?: boolean | null;
-        /**
-         * Tausta aktsent lapsele eristatavaks.
-         */
-        color?: ('emerald' | 'rose' | 'sky' | 'amber' | 'purple' | 'indigo' | 'slate') | null;
-        id?: string | null;
-      }[]
-    | null;
-  updatedAt?: string | null;
-  createdAt?: string | null;
-}
-/**
- * Vali, millised tööriistad on /tools vaates nähtavad.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "tools".
- */
-export interface Tool {
-  id: number;
-  items?:
-    | {
-        slug: '/feelings' | '/quick-chat' | '/connect-dots';
-        enabled?: boolean | null;
-        id?: string | null;
-      }[]
-    | null;
-  updatedAt?: string | null;
-  createdAt?: string | null;
-}
-/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "header_select".
  */
@@ -2123,40 +2070,6 @@ export interface FooterSelect<T extends boolean = true> {
               url?: T;
               label?: T;
             };
-        id?: T;
-      };
-  updatedAt?: T;
-  createdAt?: T;
-  globalType?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "quick-chat_select".
- */
-export interface QuickChatSelect<T extends boolean = true> {
-  buttons?:
-    | T
-    | {
-        label?: T;
-        phrase?: T;
-        enabled?: T;
-        color?: T;
-        id?: T;
-      };
-  updatedAt?: T;
-  createdAt?: T;
-  globalType?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "tools_select".
- */
-export interface ToolsSelect<T extends boolean = true> {
-  items?:
-    | T
-    | {
-        slug?: T;
-        enabled?: T;
         id?: T;
       };
   updatedAt?: T;

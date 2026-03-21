@@ -13,11 +13,18 @@ import { isParentModeUtil } from '@/utilities/uiMode'
 
 export const dynamic = 'force-dynamic'
 
-export default async function ConnectDotsPage() {
+export default async function ConnectDotsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ puzzle?: string }>
+}) {
   const { payload, user } = await getCurrentUser()
   if (!user) redirect('/login')
   requireActiveMembership(user)
   const isParentMode = await isParentModeUtil()
+  const resolvedSearchParams = searchParams ? await searchParams : undefined
+  const initialPuzzleId =
+    typeof resolvedSearchParams?.puzzle === 'string' ? resolvedSearchParams.puzzle : undefined
 
   const puzzlesResult = await payload.find({
     collection: 'connect-dots-puzzles',
@@ -82,17 +89,17 @@ export default async function ConnectDotsPage() {
 
         {isParentMode ? (
           <Button asChild type="button" variant="outline">
-            <Link href="/connect-dots/manage">Halda puzzle&apos;eid</Link>
+            <Link href="/boards">Halda puzzle&apos;eid</Link>
           </Button>
         ) : null}
       </header>
 
       {puzzles.length > 0 ? (
-        <ConnectDotsGame puzzles={puzzles} revealMode="complete" />
+        <ConnectDotsGame initialPuzzleId={initialPuzzleId} puzzles={puzzles} revealMode="complete" />
       ) : (
         <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center text-sm text-slate-600">
           {isParentMode
-            ? 'Ühtegi aktiivset connect-dots pilti pole veel seadistatud. Ava puzzle\'ite haldus ja lisa esimene.'
+            ? 'Ühtegi aktiivset connect-dots pilti pole veel seadistatud. Ava tahvlite vaade ja lisa esimene puzzle.'
             : 'Ühtegi aktiivset connect-dots pilti pole veel seadistatud.'}
         </div>
       )}

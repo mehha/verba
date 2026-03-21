@@ -49,8 +49,9 @@ export default async function ConnectDotsNewPuzzlePage() {
     })
 
     revalidatePath('/connect-dots')
-    revalidatePath('/connect-dots/manage')
-    redirect('/connect-dots/manage')
+    revalidatePath('/boards')
+    revalidatePath('/home')
+    redirect('/boards')
   }
 
   return (
@@ -64,13 +65,13 @@ export default async function ConnectDotsNewPuzzlePage() {
         </div>
 
         <Button asChild type="button" variant="outline">
-          <Link href="/connect-dots/manage">Tagasi nimekirja</Link>
+          <Link href="/boards">Tagasi nimekirja</Link>
         </Button>
       </div>
 
       <ConnectDotsFrontendEditor
         action={createPuzzle}
-        cancelHref="/connect-dots/manage"
+        cancelHref="/boards"
         canShareGlobally={canShareGlobally}
         submitLabel="Salvesta puzzle"
       />

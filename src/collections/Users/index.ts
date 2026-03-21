@@ -63,33 +63,6 @@ export const Users: CollectionConfig = {
       },
     },
     {
-      name: 'lastFeeling',
-      label: 'Viimane tunne',
-      type: 'select',
-      options: [
-        { label: 'Rõõmus', value: 'rõõmus' },
-        { label: 'Kurb', value: 'kurb' },
-        { label: 'Pahane', value: 'pahane' },
-        { label: 'Hirmul', value: 'hirmul' },
-        { label: 'Elevil', value: 'elevil' },
-        { label: 'Väsinud', value: 'väsinud' },
-      ],
-      admin: {
-        position: 'sidebar',
-        readOnly: true,
-        description: 'Lapse viimane emotsiooniratta valik.',
-      },
-    },
-    {
-      name: 'lastFeelingAt',
-      label: 'Viimati valitud',
-      type: 'date',
-      admin: {
-        position: 'sidebar',
-        readOnly: true,
-      },
-    },
-    {
       name: 'stripeCustomerId',
       label: 'Stripe Customer ID',
       type: 'text',

@@ -39,9 +39,6 @@ tags: [suhtleja, stripe, membership, profile]
   - `/login` and `/register`
   - `/home` (navigation shell)
 - Require active membership (`trialing` or `active`) on:
-  - `/tools`
-  - `/feelings`
-  - `/quick-chat`
   - `/connect-dots`
   - `/boards`
   - `/boards/[id]`

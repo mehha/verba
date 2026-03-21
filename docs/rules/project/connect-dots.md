@@ -8,14 +8,13 @@ tags: [suhtleja, frontend, game, connect-dots, payload]
 
 ## Scope
 - Frontend route: `src/app/(frontend)/connect-dots/page.tsx`
-- Frontend management routes:
-  - `src/app/(frontend)/connect-dots/manage/page.tsx`
+- Frontend editor routes:
   - `src/app/(frontend)/connect-dots/manage/new/page.tsx`
   - `src/app/(frontend)/connect-dots/manage/[id]/page.tsx`
+- Frontend management listing: `src/app/(frontend)/boards/page.tsx`
 - Shared gameplay UI: `src/components/ConnectDots/ConnectDotsGame.tsx`
 - Frontend editor UI:
   - `src/components/ConnectDots/ConnectDotsFrontendEditor.tsx`
-  - `src/components/ConnectDots/ConnectDotsManagerList.tsx`
 - Payload collection: `src/collections/ConnectDotsPuzzles/index.ts`
 - Admin editor + preview: `src/components/ConnectDots/ConnectDotsEditorField.tsx`
 - Shared rules / serialization: `src/utilities/connectDots.ts`
@@ -32,6 +31,7 @@ tags: [suhtleja, frontend, game, connect-dots, payload]
 - Frontend management list should show:
   - admins: all puzzles
   - non-admin users: only their own puzzles
+- Frontend management listing lives under `/boards`, not its own dedicated list route.
 - Non-admin users may create puzzles for themselves and edit/delete only their own puzzles.
 - Only admins may mark a puzzle `visibleToAllUsers = true`.
 - A puzzle is playable only when it has:
@@ -63,6 +63,7 @@ tags: [suhtleja, frontend, game, connect-dots, payload]
   - external symbol URLs from the shared symbols endpoint
 - Background music is stored as optional Payload media on the puzzle document.
 - Each puzzle has an `owner` relationship to `users`.
+- Each puzzle has its own `/home` visibility via `pinned` plus ordering via `order`.
 - `visibleToAllUsers` controls whether an enabled puzzle is shared beyond its owner.
 - Frontend create/update parsing must reject submissions without:
   - a title

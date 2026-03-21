@@ -13,8 +13,6 @@ import { Users } from './collections/Users'
 import { Boards } from './collections/Boards'
 import { Footer } from './Footer/config'
 import { Header } from './Header/config'
-import { QuickChat } from './QuickChat/config'
-import { ToolsGlobal } from './Tools/config'
 import { ConnectDotsPuzzles } from './collections/ConnectDotsPuzzles'
 import { plugins } from './plugins'
 import { defaultLexical } from '@/fields/defaultLexical'
@@ -67,7 +65,7 @@ export default buildConfig({
   }),
   collections: [Pages, Posts, Media, Categories, Users, Boards, ConnectDotsPuzzles],
   cors: [getServerSideURL()].filter(Boolean),
-  globals: [Header, Footer, QuickChat, ToolsGlobal],
+  globals: [Header, Footer],
   plugins,
   secret: process.env.PAYLOAD_SECRET,
   typescript: {

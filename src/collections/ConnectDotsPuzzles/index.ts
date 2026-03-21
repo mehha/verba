@@ -51,6 +51,7 @@ export const ConnectDotsPuzzles: CollectionConfig = {
     title: true,
     slug: true,
     enabled: true,
+    pinned: true,
     visibleToAllUsers: true,
     order: true,
     owner: true,
@@ -71,6 +72,15 @@ export const ConnectDotsPuzzles: CollectionConfig = {
       type: 'checkbox',
       defaultValue: true,
       label: 'Visible in /connect-dots',
+      admin: {
+        position: 'sidebar',
+      },
+    },
+    {
+      name: 'pinned',
+      type: 'checkbox',
+      defaultValue: false,
+      label: 'Visible in /home',
       admin: {
         position: 'sidebar',
       },

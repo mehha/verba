@@ -10,6 +10,7 @@ tags: [suhtleja, frontend, boards, payload]
 - Route UI: `src/app/(frontend)/boards/*`
 - Home pinned listing and ordering: `src/app/(frontend)/home/*`
 - Collection: `src/collections/Boards/index.ts`
+- Related managed game collection: `src/collections/ConnectDotsPuzzles/index.ts`
 
 ## Behavior Rules
 - Access model:
@@ -17,6 +18,7 @@ tags: [suhtleja, frontend, boards, payload]
   - Parent mode is required for `/boards` management route.
   - Owner/admin boundaries must be preserved.
   - Server actions that modify a board must enforce document-level permissions.
+  - `/boards` is also the parent-mode management surface for connect-dots puzzles.
 - Board fields:
   - `name` is required.
   - `owner` is relationship to `users` and should default to current user on create.
@@ -28,10 +30,14 @@ tags: [suhtleja, frontend, boards, payload]
   - In `/boards/[id]/edit`, if there are unsaved changes, leaving the page must require explicit confirmation.
   - The unsaved-changes guard must apply to both anchor navigation and forms marked with `data-navigation-form` (e.g. parent/child mode switch flows).
 - Home page rules:
-  - Show only pinned boards.
+  - Show pinned boards and pinned connect-dots puzzles in separate sections.
   - Sort by `order`.
-  - Reordering is parent-mode only.
+  - Reordering is parent-mode only within each section.
   - Parent mode must expose both actions on `/home`: `Lisa uus tahvel` and `Halda tahvleid`.
+- Boards management rules:
+  - `/boards` must include a separate connect-dots puzzles table.
+  - The puzzles table must indicate that rows are connect-dots games.
+  - The puzzles table must expose `Lisa uus puzzle` and home pin/unpin controls.
 
 ## Change Checklist
 - When changing board schema in `src/collections/Boards/index.ts`:

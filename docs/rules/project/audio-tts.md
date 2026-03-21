@@ -9,8 +9,7 @@ tags: [suhtleja, tts, audio, frontend, nextjs]
 ## Scope
 - Main route: `src/app/(frontend)/next/tts-ms/route.ts`
 - Feature consumers:
-  - `src/app/(frontend)/quick-chat/QuickChatBoard.tsx`
-  - `src/app/(frontend)/feelings/FeelingsBoard.tsx`
+  - `src/app/(frontend)/boards/[id]/Runner.tsx`
 
 ## API Contract
 - Endpoint: `POST /next/tts-ms`
@@ -41,6 +40,6 @@ tags: [suhtleja, tts, audio, frontend, nextjs]
 
 ## Change Checklist
 - If route payload format changes:
-  - Update all feature consumers in same PR.
+  - Update all active feature consumers in same PR.
 - If changing output format:
   - Verify content-type mapping and playback compatibility in browser.

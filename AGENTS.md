@@ -13,16 +13,14 @@ Use this file as the quick-start for contributors. Keep deeper guidance in `docs
 ## Project Structure
 - Frontend app routes: `src/app/(frontend)`.
 - Payload admin/API routes: `src/app/(payload)`.
-- Domain config: `src/collections`, `src/blocks`, `src/fields`, `src/QuickChat`, `src/payload.config.ts`.
+- Domain config: `src/collections`, `src/blocks`, `src/fields`, `src/payload.config.ts`.
 - Shared UI/logic: `src/components`, `src/hooks`, `src/providers`, `src/utilities`.
 - Tests: `tests/int/*.int.spec.ts` (Vitest), `tests/e2e/*.e2e.spec.ts` (Playwright).
 - Runtime data/storage: Cloudflare D1 for Payload data, Cloudflare R2 for media/object storage.
 
 ## Frontend Feature Map
 - `boards`: `src/app/(frontend)/boards`, collection `src/collections/Boards/index.ts`, rule `docs/rules/project/boards.md`.
-- `connect-dots`: `src/app/(frontend)/connect-dots`, rule `docs/rules/project/connect-dots.md`.
-- `feelings`: `src/app/(frontend)/feelings`, user fields in `src/collections/Users/index.ts`, rule `docs/rules/project/feelings.md`.
-- `quick-chat`: `src/app/(frontend)/quick-chat`, global `src/QuickChat/config.ts`, rule `docs/rules/project/quick-chat.md`.
+- `connect-dots`: player route `src/app/(frontend)/connect-dots`, collection `src/collections/ConnectDotsPuzzles/index.ts`, board management surface `src/app/(frontend)/boards`, rule `docs/rules/project/connect-dots.md`.
 - Parent/child mode shared flow: `src/app/(frontend)/home/ParentUnlockDialog.tsx`, `src/app/(frontend)/home/modeActions.ts`, `src/utilities/uiMode.ts`, rule `docs/rules/project/parent-child-mode.md`.
 - Shared speech pattern (`/next/tts-ms`): `src/app/(frontend)/next/tts-ms/route.ts`, rule `docs/rules/project/audio-tts.md`.
 
