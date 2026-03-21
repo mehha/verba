@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useTransition } from 'react'
+import React, { useEffect, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { DndContext, closestCenter, type DragEndEvent } from '@dnd-kit/core'
@@ -11,7 +11,7 @@ import {
   rectSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { CircleArrowRight, Edit, GripVertical, PencilRuler, TrashIcon, UserCog } from 'lucide-react'
+import { CircleArrowRight, Edit, Globe2, GripVertical, PencilRuler, TrashIcon, UserCog } from 'lucide-react'
 
 import {
   Tooltip,
@@ -21,11 +21,15 @@ import {
 } from '@/components/ui/tooltip'
 import type { ConnectDotsPuzzle } from '@/utilities/connectDots'
 
-export type HomeConnectDotsPuzzle = ConnectDotsPuzzle
+export type HomeConnectDotsPuzzle = ConnectDotsPuzzle & {
+  canEdit?: boolean
+  isShared?: boolean
+  unpinLabel?: string
+}
 
 type SortableConnectDotsPuzzlesProps = {
   canManage: boolean
-  isAdmin: boolean
+  isAdmin?: boolean
   onReorder: (ids: string[]) => Promise<void>
   puzzles: HomeConnectDotsPuzzle[]
   unpinAction: (formData: FormData) => Promise<void>
@@ -33,12 +37,17 @@ type SortableConnectDotsPuzzlesProps = {
 
 type SortablePuzzleCardProps = {
   canManage: boolean
-  isAdmin: boolean
+  isAdmin?: boolean
   puzzle: HomeConnectDotsPuzzle
   unpinAction: (formData: FormData) => Promise<void>
 }
 
-function SortablePuzzleCard({ canManage, isAdmin, puzzle, unpinAction }: SortablePuzzleCardProps) {
+function SortablePuzzleCard({
+  canManage,
+  isAdmin,
+  puzzle,
+  unpinAction,
+}: SortablePuzzleCardProps) {
   const router = useRouter()
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -97,33 +106,37 @@ function SortablePuzzleCard({ canManage, isAdmin, puzzle, unpinAction }: Sortabl
             Connect Dots
           </span>
 
-          {canManage && (
+          {(canManage || puzzle.canEdit) && (
             <TooltipProvider>
               <div className="flex items-center gap-2">
                 {isAdmin && <UserCog className="h-5 w-5" />}
+                {puzzle.isShared ? <Globe2 className="h-4 w-4 text-sky-600" /> : null}
 
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Link href={`/connect-dots/manage/${puzzle.id}`} onClick={(e) => e.stopPropagation()}>
-                      <Edit className="h-5 w-5" />
-                    </Link>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Muuda</p>
-                  </TooltipContent>
-                </Tooltip>
+                {puzzle.canEdit ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link href={`/connect-dots/manage/${puzzle.id}`} onClick={(e) => e.stopPropagation()}>
+                        <Edit className="h-5 w-5" />
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Muuda</p>
+                    </TooltipContent>
+                  </Tooltip>
+                ) : null}
 
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <form action={unpinAction} className="flex items-center" onClick={(e) => e.stopPropagation()}>
                       <input name="puzzleId" type="hidden" value={puzzle.id} />
+                      <input name="visible" type="hidden" value="false" />
                       <button type="submit">
                         <TrashIcon className="h-5 w-5 text-red-600" />
                       </button>
                     </form>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Eemalda koduvaatest</p>
+                    <p>{puzzle.unpinLabel ?? 'Eemalda koduvaatest'}</p>
                   </TooltipContent>
                 </Tooltip>
               </div>
@@ -168,6 +181,11 @@ export function SortableConnectDotsPuzzles({
 }: SortableConnectDotsPuzzlesProps) {
   const [items, setItems] = useState<HomeConnectDotsPuzzle[]>(puzzles)
   const [isPending, startTransition] = useTransition()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleDragEnd = (event: DragEndEvent) => {
     if (!canManage) return
@@ -185,6 +203,22 @@ export function SortableConnectDotsPuzzles({
     startTransition(async () => {
       await onReorder(newItems.map((item) => item.id))
     })
+  }
+
+  if (!mounted) {
+    return (
+      <ul className="flex flex-wrap gap-4">
+        {items.map((puzzle) => (
+          <SortablePuzzleCard
+            key={puzzle.id}
+            canManage={false}
+            isAdmin={isAdmin}
+            puzzle={puzzle}
+            unpinAction={unpinAction}
+          />
+        ))}
+      </ul>
+    )
   }
 
   return (

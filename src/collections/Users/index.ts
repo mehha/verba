@@ -125,6 +125,38 @@ export const Users: CollectionConfig = {
         position: 'sidebar',
       },
     },
+    {
+      name: 'hiddenSharedBoardIds',
+      type: 'json',
+      defaultValue: [],
+      admin: {
+        hidden: true,
+      },
+    },
+    {
+      name: 'hiddenSharedPuzzleIds',
+      type: 'json',
+      defaultValue: [],
+      admin: {
+        hidden: true,
+      },
+    },
+    {
+      name: 'sharedBoardOrder',
+      type: 'json',
+      defaultValue: [],
+      admin: {
+        hidden: true,
+      },
+    },
+    {
+      name: 'sharedPuzzleOrder',
+      type: 'json',
+      defaultValue: [],
+      admin: {
+        hidden: true,
+      },
+    },
   ],
   timestamps: true,
 }

@@ -30,11 +30,34 @@ import {
   Trash2,
 } from 'lucide-react'
 
+export type BoardsListBoard = Board & {
+  homeVisible: boolean
+  isOwnedByCurrentUser: boolean
+}
+
 type BoardsListProps = {
-  boards: Board[]
+  boards: BoardsListBoard[]
   isAdmin: boolean
   togglePinned: (formData: FormData) => Promise<void> // server action (/boards/page.tsx)
   deleteBoard: (formData: FormData) => Promise<void> // server action (/boards/page.tsx)
+}
+
+function renderCreator(owner: { email?: string; name?: string; role?: string } | null) {
+  if (!owner) {
+    return <span className="text-xs text-muted-foreground">-</span>
+  }
+
+  if (owner.role === 'admin') {
+    return <span className="text-xs font-medium">Admin</span>
+  }
+
+  return (
+    <div className="flex flex-col">
+      {owner.name ? <span className="text-xs font-medium">{owner.name}</span> : null}
+      {owner.email ? <span className="text-xs text-muted-foreground">{owner.email}</span> : null}
+      {!owner.name && !owner.email ? <span className="text-xs text-muted-foreground">-</span> : null}
+    </div>
+  )
 }
 
 export function BoardsList({
@@ -102,11 +125,9 @@ export function BoardsList({
                 <TableHead className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Nimi
                 </TableHead>
-                {isAdmin && (
-                  <TableHead className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                    Omanik
-                  </TableHead>
-                )}
+                <TableHead className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Looja
+                </TableHead>
                 <TableHead className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Koduvaade
                 </TableHead>
@@ -121,11 +142,12 @@ export function BoardsList({
 
             <TableBody>
               {filteredBoards.map((board, index) => {
-                const isPinned = !!board.pinned
+                const isPinned = !!board.homeVisible
                 const owner =
                   typeof board.owner === 'object' && board.owner
                     ? (board.owner as any)
                     : null
+                const canManageBoard = isAdmin || board.isOwnedByCurrentUser
 
                 return (
                   <TableRow
@@ -152,40 +174,25 @@ export function BoardsList({
                             <Monitor className="h-3 w-3" />
                             <span>Vaata</span>
                           </Link>
-                          <span aria-hidden="true">·</span>
-                          <Link
-                            href={`/boards/${board.id}/edit`}
-                            className="inline-flex items-center gap-1 underline-offset-2 hover:underline"
-                          >
-                            <Edit3 className="h-3 w-3" />
-                            <span>Muuda</span>
-                          </Link>
+                          {canManageBoard ? (
+                            <>
+                              <span aria-hidden="true">·</span>
+                              <Link
+                                href={`/boards/${board.id}/edit`}
+                                className="inline-flex items-center gap-1 underline-offset-2 hover:underline"
+                              >
+                                <Edit3 className="h-3 w-3" />
+                                <span>Muuda</span>
+                              </Link>
+                            </>
+                          ) : null}
                         </div>
                       </div>
                     </TableCell>
 
-                    {isAdmin && (
-                      <TableCell className="px-3 py-2 align-middle">
-                        {owner ? (
-                          <div className="flex flex-col">
-                            {owner.name && (
-                              <span className="text-xs font-medium">
-                                {owner.name}
-                              </span>
-                            )}
-                            {owner.email && (
-                              <span className="text-xs text-muted-foreground">
-                                {owner.email}
-                              </span>
-                            )}
-                          </div>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">
-                            –
-                          </span>
-                        )}
-                      </TableCell>
-                    )}
+                    <TableCell className="px-3 py-2 align-middle">
+                      {renderCreator(owner)}
+                    </TableCell>
 
                     <TableCell className="px-3 py-2 align-middle">
                       <div className="flex items-center gap-2">
@@ -198,6 +205,11 @@ export function BoardsList({
 
                         <form action={togglePinned}>
                           <input type="hidden" name="boardId" value={String(board.id)} />
+                          <input
+                            type="hidden"
+                            name="isOwnedByCurrentUser"
+                            value={board.isOwnedByCurrentUser ? 'true' : 'false'}
+                          />
                           <input
                             type="hidden"
                             name="pinned"
@@ -240,36 +252,40 @@ export function BoardsList({
                     </TableCell>
 
                     <TableCell className="px-3 py-2 align-middle text-right">
-                      <form
-                        action={deleteBoard}
-                        onSubmit={(e) => {
-                          if (
-                            !window.confirm(
-                              `Kas soovid kindlasti kustutada tahvli “${board.name || 'Nimetu tahvel'}”?`,
-                            )
-                          ) {
-                            e.preventDefault()
-                          }
-                        }}
-                        className="inline-flex"
-                      >
-                        <input type="hidden" name="boardId" value={board.id} />
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              type="submit"
-                              size="icon"
-                              variant="ghost"
-                              className="h-7 w-7 text-red-600 hover:bg-red-50 hover:text-red-700"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Kustuta tahvel</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </form>
+                      {canManageBoard ? (
+                        <form
+                          action={deleteBoard}
+                          onSubmit={(e) => {
+                            if (
+                              !window.confirm(
+                                `Kas soovid kindlasti kustutada tahvli “${board.name || 'Nimetu tahvel'}”?`,
+                              )
+                            ) {
+                              e.preventDefault()
+                            }
+                          }}
+                          className="inline-flex"
+                        >
+                          <input type="hidden" name="boardId" value={board.id} />
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                type="submit"
+                                size="icon"
+                                variant="ghost"
+                                className="h-7 w-7 text-red-600 hover:bg-red-50 hover:text-red-700"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Kustuta tahvel</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </form>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">Ainult vaade</span>
+                      )}
                     </TableCell>
                   </TableRow>
                 )

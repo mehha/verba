@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useTransition } from 'react'
+import React, { useEffect, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { Board } from '@/payload-types'
@@ -15,6 +15,7 @@ import { CSS } from '@dnd-kit/utilities'
 import {
   CircleArrowRight,
   Edit,
+  Globe2,
   GripVertical,
   ImageIcon,
   TrashIcon,
@@ -28,30 +29,25 @@ import {
 } from '@/components/ui/tooltip'
 import { Media } from '@/components/Media'
 
+export type HomeBoard = Board & {
+  canEdit?: boolean
+  isShared?: boolean
+  unpinLabel?: string
+}
+
 type SortableBoardsProps = {
-  boards: Board[]
+  boards: HomeBoard[]
   canManage: boolean
-  currentUserId: number | string
-  isAdmin: boolean
+  isAdmin?: boolean
   onReorder: (ids: string[]) => Promise<void>
   unpinAction: (formData: FormData) => Promise<void>
 }
 
 type SortableBoardCardProps = {
-  board: Board
+  board: HomeBoard
   canManage: boolean
-  currentUserId: number | string
-  isAdmin: boolean
+  isAdmin?: boolean
   unpinAction: (formData: FormData) => Promise<void>
-}
-
-function getBoardOwnerId(board: Board): number | string | null {
-  if (!board.owner) return null
-  if (typeof board.owner === 'object') {
-    return board.owner.id
-  }
-
-  return board.owner
 }
 
 function getVisualCell(board: Board): any | undefined {
@@ -63,7 +59,6 @@ function getVisualCell(board: Board): any | undefined {
 function SortableBoardCard({
   board,
   canManage,
-  currentUserId,
   isAdmin,
   unpinAction,
 }: SortableBoardCardProps) {
@@ -75,8 +70,6 @@ function SortableBoardCard({
     })
 
   const visualCell = getVisualCell(board)
-  const ownerId = getBoardOwnerId(board)
-  const canManageBoard = canManage && (isAdmin || ownerId === currentUserId)
   const hasUploadImage =
     visualCell?.image && typeof visualCell.image === 'object' && visualCell.image.url
   const hasExternalImage = visualCell?.externalImageURL
@@ -110,7 +103,7 @@ function SortableBoardCard({
     >
       <div className="flex items-center justify-between gap-2">
         {/* DRAG HANDLE – ainult parent mode saab sortida */}
-        {canManageBoard ? (
+        {canManage ? (
           <button
             type="button"
             {...listeners}
@@ -128,24 +121,27 @@ function SortableBoardCard({
           <span className="w-5 h-5" aria-hidden="true" />
         )}
 
-        {canManageBoard && (
+        {(canManage || board.canEdit) && (
           <div className="flex items-center gap-2">
             {isAdmin && <UserCog className="w-5 h-5" />}
+            {board.isShared ? <Globe2 className="w-4 h-4 text-sky-600" /> : null}
 
             <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Link
-                    href={`/boards/${board.id}/edit`}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <Edit className="w-5 h-5" />
-                  </Link>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Muuda</p>
-                </TooltipContent>
-              </Tooltip>
+              {board.canEdit ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Link
+                      href={`/boards/${board.id}/edit`}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Edit className="w-5 h-5" />
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Muuda</p>
+                  </TooltipContent>
+                </Tooltip>
+              ) : null}
 
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -155,13 +151,14 @@ function SortableBoardCard({
                     onClick={(e) => e.stopPropagation()}
                   >
                     <input type="hidden" name="boardId" value={board.id} />
+                    <input type="hidden" name="visible" value="false" />
                     <button type="submit">
                       <TrashIcon className="w-5 h-5 text-red-600" />
                     </button>
                   </form>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Eemalda koduvaatest</p>
+                  <p>{board.unpinLabel ?? 'Eemalda koduvaatest'}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -215,19 +212,20 @@ function SortableBoardCard({
 export function SortableBoards({
   boards,
   canManage,
-  currentUserId,
   isAdmin,
   onReorder,
   unpinAction,
 }: SortableBoardsProps) {
-  const [items, setItems] = useState<Board[]>(boards)
+  const [items, setItems] = useState<HomeBoard[]>(boards)
   const [isPending, startTransition] = useTransition()
-  const allowReorder =
-    canManage &&
-    (isAdmin || items.every((board) => getBoardOwnerId(board) === currentUserId))
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleDragEnd = (event: DragEndEvent) => {
-    if (!allowReorder) return
+    if (!canManage) return
 
     const { active, over } = event
     if (!over || active.id === over.id) return
@@ -245,6 +243,22 @@ export function SortableBoards({
     })
   }
 
+  if (!mounted) {
+    return (
+      <ul className="flex flex-wrap gap-4">
+        {items.map((board) => (
+          <SortableBoardCard
+            key={board.id}
+            board={board}
+            canManage={false}
+            isAdmin={isAdmin}
+            unpinAction={unpinAction}
+          />
+        ))}
+      </ul>
+    )
+  }
+
   return (
     <>
       <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -257,8 +271,7 @@ export function SortableBoards({
               <SortableBoardCard
                 key={board.id}
                 board={board}
-                canManage={allowReorder}
-                currentUserId={currentUserId}
+                canManage={canManage}
                 isAdmin={isAdmin}
                 unpinAction={unpinAction}
               />

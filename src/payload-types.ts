@@ -446,6 +446,42 @@ export interface User {
   trialEndsAt?: string | null;
   currentPeriodEndsAt?: string | null;
   membershipCancelAtPeriodEnd?: boolean | null;
+  hiddenSharedBoardIds?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  hiddenSharedPuzzleIds?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  sharedBoardOrder?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  sharedPuzzleOrder?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -1543,6 +1579,10 @@ export interface UsersSelect<T extends boolean = true> {
   trialEndsAt?: T;
   currentPeriodEndsAt?: T;
   membershipCancelAtPeriodEnd?: T;
+  hiddenSharedBoardIds?: T;
+  hiddenSharedPuzzleIds?: T;
+  sharedBoardOrder?: T;
+  sharedPuzzleOrder?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;

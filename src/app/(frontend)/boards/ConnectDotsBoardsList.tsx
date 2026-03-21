@@ -13,11 +13,14 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 
 export type ConnectDotsBoardsPuzzle = {
   enabled?: boolean | null
+  homeVisible: boolean
   id: number | string
+  isOwnedByCurrentUser: boolean
   owner?: {
     email?: null | string
     id?: number | string
     name?: null | string
+    role?: null | string
   } | null
   pinned?: boolean | null
   title?: null | string
@@ -30,6 +33,24 @@ type Props = {
   isAdmin: boolean
   puzzles: ConnectDotsBoardsPuzzle[]
   togglePinned: (formData: FormData) => Promise<void>
+}
+
+function renderCreator(owner: ConnectDotsBoardsPuzzle['owner']) {
+  if (!owner) {
+    return <span className="text-xs text-muted-foreground">-</span>
+  }
+
+  if (owner.role === 'admin') {
+    return <span className="text-xs font-medium">Admin</span>
+  }
+
+  return (
+    <div className="flex flex-col text-xs">
+      {owner.name ? <span className="font-medium">{owner.name}</span> : null}
+      {owner.email ? <span className="text-muted-foreground">{owner.email}</span> : null}
+      {!owner.name && !owner.email ? <span className="text-muted-foreground">-</span> : null}
+    </div>
+  )
 }
 
 export function ConnectDotsBoardsList({ deletePuzzle, isAdmin, puzzles, togglePinned }: Props) {
@@ -99,17 +120,17 @@ export function ConnectDotsBoardsList({ deletePuzzle, isAdmin, puzzles, togglePi
               <TableHeader className="bg-muted/60">
                 <TableRow>
                   <TableHead>Puzzle</TableHead>
-                  {isAdmin ? <TableHead>Omanik</TableHead> : null}
-                  <TableHead>Nähtavus</TableHead>
+                  <TableHead>Looja</TableHead>
                   <TableHead>Koduvaade</TableHead>
-                  <TableHead>Uuendatud</TableHead>
+                  <TableHead>Nähtavus</TableHead>
                   <TableHead className="text-right">Tegevused</TableHead>
                 </TableRow>
               </TableHeader>
 
               <TableBody>
                 {filteredPuzzles.map((puzzle) => {
-                  const isPinned = puzzle.pinned === true
+                  const isPinned = puzzle.homeVisible
+                  const canManagePuzzle = isAdmin || puzzle.isOwnedByCurrentUser
 
                   return (
                     <TableRow key={puzzle.id}>
@@ -123,39 +144,19 @@ export function ConnectDotsBoardsList({ deletePuzzle, isAdmin, puzzles, togglePi
                             <Link className="hover:underline" href={`/connect-dots?puzzle=${puzzle.id}`}>
                               Ava mäng
                             </Link>
-                            <span aria-hidden="true">·</span>
-                            <Link className="hover:underline" href={`/connect-dots/manage/${puzzle.id}`}>
-                              Muuda
-                            </Link>
+                            {canManagePuzzle ? (
+                              <>
+                                <span aria-hidden="true">·</span>
+                                <Link className="hover:underline" href={`/connect-dots/manage/${puzzle.id}`}>
+                                  Muuda
+                                </Link>
+                              </>
+                            ) : null}
                           </div>
                         </div>
                       </TableCell>
 
-                      {isAdmin ? (
-                        <TableCell>
-                          {puzzle.owner ? (
-                            <div className="flex flex-col text-xs">
-                              {puzzle.owner.name ? <span className="font-medium">{puzzle.owner.name}</span> : null}
-                              {puzzle.owner.email ? (
-                                <span className="text-muted-foreground">{puzzle.owner.email}</span>
-                              ) : null}
-                            </div>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">-</span>
-                          )}
-                        </TableCell>
-                      ) : null}
-
-                      <TableCell>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <Badge variant={puzzle.enabled ? 'default' : 'outline'}>
-                            {puzzle.enabled ? 'Aktiivne' : 'Peidetud'}
-                          </Badge>
-                          <Badge variant={puzzle.visibleToAllUsers ? 'secondary' : 'outline'}>
-                            {puzzle.visibleToAllUsers ? 'Kõigile nähtav' : 'Ainult omanikule'}
-                          </Badge>
-                        </div>
-                      </TableCell>
+                      <TableCell>{renderCreator(puzzle.owner)}</TableCell>
 
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -164,6 +165,11 @@ export function ConnectDotsBoardsList({ deletePuzzle, isAdmin, puzzles, togglePi
                           </Badge>
                           <form action={togglePinned}>
                             <input name="puzzleId" type="hidden" value={String(puzzle.id)} />
+                            <input
+                              name="isOwnedByCurrentUser"
+                              type="hidden"
+                              value={puzzle.isOwnedByCurrentUser ? 'true' : 'false'}
+                            />
                             <input name="pinned" type="hidden" value={(!isPinned).toString()} />
                             <Tooltip>
                               <TooltipTrigger asChild>
@@ -179,22 +185,31 @@ export function ConnectDotsBoardsList({ deletePuzzle, isAdmin, puzzles, togglePi
                         </div>
                       </TableCell>
 
-                      <TableCell className="text-xs text-muted-foreground">
-                        {puzzle.updatedAt ? new Date(puzzle.updatedAt).toLocaleString('et-EE') : '-'}
+                      <TableCell>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge variant={puzzle.enabled ? 'default' : 'outline'}>
+                            {puzzle.enabled ? 'Aktiivne' : 'Peidetud'}
+                          </Badge>
+                          <Badge variant={puzzle.visibleToAllUsers ? 'secondary' : 'outline'}>
+                            {puzzle.visibleToAllUsers ? 'Kõigile nähtav' : 'Ainult omanikule'}
+                          </Badge>
+                        </div>
                       </TableCell>
 
                       <TableCell className="text-right">
                         <div className="inline-flex items-center gap-1">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button asChild size="icon" variant="ghost">
-                                <Link href={`/connect-dots/manage/${puzzle.id}`}>
-                                  <Pencil className="h-4 w-4" />
-                                </Link>
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Muuda puzzle&apos;it</TooltipContent>
-                          </Tooltip>
+                          {canManagePuzzle ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button asChild size="icon" variant="ghost">
+                                  <Link href={`/connect-dots/manage/${puzzle.id}`}>
+                                    <Pencil className="h-4 w-4" />
+                                  </Link>
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Muuda puzzle&apos;it</TooltipContent>
+                            </Tooltip>
+                          ) : null}
 
                           {puzzle.visibleToAllUsers ? (
                             <Tooltip>
@@ -209,34 +224,38 @@ export function ConnectDotsBoardsList({ deletePuzzle, isAdmin, puzzles, togglePi
                             </Tooltip>
                           ) : null}
 
-                          <form
-                            action={deletePuzzle}
-                            className="inline-flex"
-                            onSubmit={(event) => {
-                              if (
-                                !window.confirm(
-                                  `Kas soovid kindlasti kustutada puzzle'i "${puzzle.title || 'Nimetu puzzle'}"?`,
-                                )
-                              ) {
-                                event.preventDefault()
-                              }
-                            }}
-                          >
-                            <input name="puzzleId" type="hidden" value={String(puzzle.id)} />
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  className="text-red-600 hover:bg-red-50 hover:text-red-700"
-                                  size="icon"
-                                  type="submit"
-                                  variant="ghost"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Kustuta puzzle</TooltipContent>
-                            </Tooltip>
-                          </form>
+                          {canManagePuzzle ? (
+                            <form
+                              action={deletePuzzle}
+                              className="inline-flex"
+                              onSubmit={(event) => {
+                                if (
+                                  !window.confirm(
+                                    `Kas soovid kindlasti kustutada puzzle'i "${puzzle.title || 'Nimetu puzzle'}"?`,
+                                  )
+                                ) {
+                                  event.preventDefault()
+                                }
+                              }}
+                            >
+                              <input name="puzzleId" type="hidden" value={String(puzzle.id)} />
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                                    size="icon"
+                                    type="submit"
+                                    variant="ghost"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Kustuta puzzle</TooltipContent>
+                              </Tooltip>
+                            </form>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">Ainult vaade</span>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
