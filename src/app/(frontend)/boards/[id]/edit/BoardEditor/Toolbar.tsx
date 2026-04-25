@@ -31,8 +31,14 @@ type ToolbarProps = {
 }
 
 type TextCellImageMatch = {
+  groqError?: string
   foundWithGroqTerm?: string
   preview: string
+}
+
+type AiSearchTermsResult = {
+  error?: string
+  terms: string[]
 }
 
 const MIN_DIMENSION = 1
@@ -109,36 +115,63 @@ async function fetchFirstArasaacSymbol(base: string, query: string, options?: { 
   return first && typeof first.preview === 'string' ? first.preview : ''
 }
 
-async function fetchAiArasaacSearchTerms(base: string, label: string) {
-  const res = await fetch(`${base}/next/groq`, {
-    method: 'POST',
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      task: 'symbol-search-terms',
-      token: label,
-    }),
-    signal: AbortSignal.timeout(6000),
-  })
+async function fetchAiArasaacSearchTerms(base: string, label: string): Promise<AiSearchTermsResult> {
+  try {
+    const res = await fetch(`${base}/next/groq`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        task: 'symbol-search-terms',
+        token: label,
+      }),
+      signal: AbortSignal.timeout(6000),
+    })
 
-  if (!res.ok) return []
+    const json = (await res.json().catch(() => ({}))) as {
+      error?: unknown
+      note?: unknown
+      terms?: unknown
+    }
 
-  const json = (await res.json()) as {
-    terms?: unknown
+    if (!res.ok) {
+      return {
+        error: typeof json.error === 'string' ? json.error : `HTTP ${res.status}`,
+        terms: [],
+      }
+    }
+
+    if (json.note === 'sdk_error') {
+      return { error: 'sdk_error', terms: [] }
+    }
+
+    return {
+      terms: Array.isArray(json.terms)
+        ? json.terms.filter((term): term is string => typeof term === 'string')
+        : [],
+    }
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : 'request_failed',
+      terms: [],
+    }
   }
-
-  return Array.isArray(json.terms) ? json.terms.filter((term): term is string => typeof term === 'string') : []
 }
 
 async function findImageForTextCell(base: string, label: string): Promise<TextCellImageMatch | null> {
   const directPreview = await fetchFirstArasaacSymbol(base, label)
   if (directPreview) return { preview: directPreview }
 
-  const fallbackTerms = normalizeSearchTerms(await fetchAiArasaacSearchTerms(base, label))
+  const aiTerms = await fetchAiArasaacSearchTerms(base, label)
+  const fallbackTerms = normalizeSearchTerms(aiTerms.terms)
 
   for (const term of fallbackTerms) {
     const preview = await fetchFirstArasaacSymbol(base, term, { locale: 'en' })
     if (preview) return { foundWithGroqTerm: term, preview }
+  }
+
+  if (aiTerms.error) {
+    return { groqError: aiTerms.error, preview: '' }
   }
 
   return null
@@ -215,6 +248,7 @@ export function BoardEditorToolbar({
           try {
             const imageMatch = await findImageForTextCell(base, line)
             return {
+              groqError: imageMatch?.groqError,
               foundWithGroqTerm: imageMatch?.foundWithGroqTerm,
               title: line,
               externalImageURL: imageMatch?.preview ?? '',
@@ -226,15 +260,28 @@ export function BoardEditorToolbar({
       )
 
       const groqMatches = results.filter(
-        (result): result is { externalImageURL: string; foundWithGroqTerm: string; title: string } =>
-          typeof result.foundWithGroqTerm === 'string' && !!result.externalImageURL,
+        (result) => typeof result.foundWithGroqTerm === 'string' && !!result.externalImageURL,
       )
 
       if (groqMatches.length > 0) {
         toast.info('AI leidis ARASAAC pildid', {
           closeButton: true,
           description: groqMatches
-            .map((match) => `${match.title} -> ${match.foundWithGroqTerm}`)
+            .map((match) => `${match.title} -> ${match.foundWithGroqTerm ?? ''}`)
+            .join(', '),
+          duration: Number.POSITIVE_INFINITY,
+        })
+      }
+
+      const groqErrors = results.filter(
+        (result) => typeof result.groqError === 'string',
+      )
+
+      if (groqErrors.length > 0) {
+        toast.error('AI sünonüümide otsing ei tööta', {
+          closeButton: true,
+          description: groqErrors
+            .map((match) => `${match.title}: ${match.groqError ?? ''}`)
             .join(', '),
           duration: Number.POSITIVE_INFINITY,
         })
