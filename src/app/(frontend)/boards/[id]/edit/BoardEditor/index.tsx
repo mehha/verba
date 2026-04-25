@@ -115,13 +115,13 @@ export default function BoardEditor({
       ''
     if (!src) return null
     return (
-      <div className="relative h-full w-full min-h-[4rem]">
+      <div className="relative min-h-0 w-full flex-1 p-2 pb-1">
         <Image
           src={src}
           alt={cell.title ?? ''}
           fill
           sizes="(max-width: 768px) 100vw, 1200px"
-          className="rounded object-contain"
+          className="rounded object-contain p-2"
         />
       </div>
     )
@@ -393,13 +393,15 @@ export default function BoardEditor({
             {cells.map((cell) => (
               <div
                 key={cell.id}
-                className="relative flex aspect-[4/3] flex-col gap-1 overflow-hidden rounded-xl bg-white p-0 shadow-lg ring-1 ring-gray-900/5"
+                className="relative flex aspect-[4/3] flex-col overflow-hidden rounded-xl bg-white p-2 shadow-lg ring-1 ring-gray-900/5"
               >
                 <div className="absolute right-1 top-1 z-10 flex gap-1">
                   <Button
                     type="button"
-                    size="xs"
+                    size="icon"
                     variant="secondary"
+                    className="h-8 w-8"
+                    aria-label="Muuda kaarti"
                     onClick={(e) => {
                       e.stopPropagation()
                       e.preventDefault()
@@ -407,7 +409,7 @@ export default function BoardEditor({
                     }}
                     onMouseDown={(e) => e.stopPropagation()}
                   >
-                    Muuda
+                    <Edit3 className="h-4 w-4" />
                   </Button>
 
                   <Button
@@ -428,8 +430,8 @@ export default function BoardEditor({
                 {renderCellImage(cell)}
 
                 {cell.title && (
-                  <div className="absolute bottom-0 left-0 w-full bg-slate-800/85 p-2 text-center text-white">
-                    <div className="break-words text-2xl leading-4">{cell.title}</div>
+                  <div className="shrink-0 px-1 pb-1 text-center uppercase text-slate-950">
+                    <div className="break-words text-xl font-semibold leading-5">{cell.title}</div>
                   </div>
                 )}
               </div>

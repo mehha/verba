@@ -394,13 +394,13 @@ export default function Runner({ board, isParentMode, canEdit, hasPin }: RunnerP
     if (!src) return null
 
     return (
-      <div className="relative w-full h-full min-h-[4rem]">
+      <div className="relative min-h-0 w-full flex-1 p-2 pb-1">
         <Image
           src={src}
           alt={cell.title ?? ''}
           fill
           sizes="(max-width: 768px) 100vw, 1200px"
-          className="object-contain rounded"
+          className="rounded object-contain p-2"
           priority={false}
         />
       </div>
@@ -791,7 +791,7 @@ export default function Runner({ board, isParentMode, canEdit, hasPin }: RunnerP
           return (
             <div
               key={cellIdString}
-              className={`relative flex aspect-[4/3] flex-col gap-1 overflow-hidden rounded-xl border bg-white p-0 shadow-lg ring-1 transition-all ${
+              className={`relative flex aspect-[4/3] flex-col overflow-hidden rounded-xl border bg-white p-2 shadow-lg ring-1 transition-all ${
                 isActiveCell
                   ? 'cursor-pointer ring-blue-500 shadow-blue-200/70'
                   : 'cursor-pointer ring-gray-900/5'
@@ -799,14 +799,11 @@ export default function Runner({ board, isParentMode, canEdit, hasPin }: RunnerP
             >
               {renderCellImage(cell)}
 
-              {/* Muutsime tingimust, et kuvada titleToShow */}
               {titleToShow && (
                 <div
-                  className={`pointer-events-none absolute bottom-0 left-0 w-full p-2 text-center text-white transition-colors duration-200 ${
-                    isOverridden || isActiveCell ? 'bg-blue-600/90' : 'bg-slate-800/85'
-                  }`}
+                  className="pointer-events-none shrink-0 px-1 pb-1 text-center uppercase text-slate-950 transition-colors duration-200"
                 >
-                  <div className="break-words text-2xl leading-4">{titleToShow}</div>
+                  <div className="break-words text-xl font-semibold leading-5">{titleToShow}</div>
                 </div>
               )}
 

@@ -51,6 +51,7 @@ tags: [suhtleja, frontend, boards, payload]
   - Parent mode must expose both actions on `/kodu`: `Lisa uus tahvel` and `Halda koduhaldust`.
 - Board runner rules:
   - On `/boards/[id]`, `sm` and `xs` layouts must always render two items per row by forcing each mobile tile to `w=1`.
+  - Board card labels should sit below the image without a background overlay, use black uppercase text, and leave enough card space so images and labels do not overlap.
   - The board runner action bar should stay fixed at the bottom of the viewport, remain compact enough for child-mode play, and leave bottom padding so board tiles are not hidden behind it.
   - In child mode, `/boards/[id]` must include minimal in-page controls for returning to `/kodu` and opening the parent PIN dialog because global header navigation is hidden.
 - Boards management rules:
