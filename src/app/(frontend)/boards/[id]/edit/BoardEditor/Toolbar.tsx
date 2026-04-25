@@ -232,9 +232,11 @@ export function BoardEditorToolbar({
 
       if (groqMatches.length > 0) {
         toast.info('AI leidis ARASAAC pildid', {
+          closeButton: true,
           description: groqMatches
             .map((match) => `${match.title} -> ${match.foundWithGroqTerm}`)
             .join(', '),
+          duration: Number.POSITIVE_INFINITY,
         })
       }
 
