@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { getClientSideURL } from '@/utilities/getURL'
 import { Grid2X2, Trash } from 'lucide-react'
+import { toast } from 'sonner'
 
 type ToolbarProps = {
   onAddCellAction: () => void
@@ -27,6 +28,11 @@ type ToolbarProps = {
   ) => void
   onClearAction: () => void
   disableClear: boolean
+}
+
+type TextCellImageMatch = {
+  foundWithGroqTerm?: string
+  preview: string
 }
 
 const MIN_DIMENSION = 1
@@ -124,18 +130,18 @@ async function fetchAiArasaacSearchTerms(base: string, label: string) {
   return Array.isArray(json.terms) ? json.terms.filter((term): term is string => typeof term === 'string') : []
 }
 
-async function findImageForTextCell(base: string, label: string) {
+async function findImageForTextCell(base: string, label: string): Promise<TextCellImageMatch | null> {
   const directPreview = await fetchFirstArasaacSymbol(base, label)
-  if (directPreview) return directPreview
+  if (directPreview) return { preview: directPreview }
 
   const fallbackTerms = normalizeSearchTerms(await fetchAiArasaacSearchTerms(base, label))
 
   for (const term of fallbackTerms) {
     const preview = await fetchFirstArasaacSymbol(base, term, { locale: 'en' })
-    if (preview) return preview
+    if (preview) return { foundWithGroqTerm: term, preview }
   }
 
-  return ''
+  return null
 }
 
 export function BoardEditorToolbar({
@@ -207,15 +213,30 @@ export function BoardEditorToolbar({
       const results = await Promise.all(
         textItemsToAdd.map(async (line) => {
           try {
+            const imageMatch = await findImageForTextCell(base, line)
             return {
+              foundWithGroqTerm: imageMatch?.foundWithGroqTerm,
               title: line,
-              externalImageURL: await findImageForTextCell(base, line),
+              externalImageURL: imageMatch?.preview ?? '',
             }
           } catch {
             return { title: line }
           }
         }),
       )
+
+      const groqMatches = results.filter(
+        (result): result is { externalImageURL: string; foundWithGroqTerm: string; title: string } =>
+          typeof result.foundWithGroqTerm === 'string' && !!result.externalImageURL,
+      )
+
+      if (groqMatches.length > 0) {
+        toast.info('AI leidis ARASAAC pildid', {
+          description: groqMatches
+            .map((match) => `${match.title} -> ${match.foundWithGroqTerm}`)
+            .join(', '),
+        })
+      }
 
       onAddTextCellsAction(results)
       setDialogOpen(false)

@@ -37,6 +37,7 @@ tags: [suhtleja, frontend, boards, payload]
   - `Lisa plokk` text-based bulk add must support both one-line-per-card input and sentence paste with an editable split preview.
   - In bulk add, if a matching image already exists in local `media`, prefer that image before falling back to ARASAAC.
   - In bulk add, if the direct local/ARASAAC lookup finds no image, use `/next/groq` to generate a small ordered set of English ARASAAC search terms and try each term until the first image is found.
+  - When bulk add finds images through Groq-generated ARASAAC terms, show a Sonner info toast listing the original text and matched English search term.
   - Explicit board saves must show visible progress while the save request is in flight.
   - Saving board grid changes must regenerate missing cached TTS audio for current cell labels.
   - Saving compounds must regenerate missing cached TTS audio for compound speech forms.
