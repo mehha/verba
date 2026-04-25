@@ -14,6 +14,8 @@ type Args = {
   }>
 }
 
+export const dynamic = 'force-dynamic'
+
 export default async function BoardRunPage({ params: paramsPromise }: Args) {
   const { id } = await paramsPromise
 
