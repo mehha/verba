@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { switchToChildModeAction } from '@/app/(frontend)/kodu/modeActions'
 import { ParentUnlockDialog } from '@/app/(frontend)/kodu/ParentUnlockDialog'
 import { ButtonGroup } from '@/components/ui/button-group'
+import { usePathname } from 'next/navigation'
 
 type ParentModeToggleProps = {
   isParentMode?: boolean
@@ -15,15 +16,15 @@ type ParentModeToggleProps = {
 
 export function ParentModeToggle({ isParentMode, hasPin }: ParentModeToggleProps) {
   const inParentMode = Boolean(isParentMode)
+  const pathname = usePathname()
 
   return (
-    <ButtonGroup
-      className="inline-flex rounded-full border border-border bg-muted/70 text-xs font-medium shadow-sm"
-    >
+    <ButtonGroup className="inline-flex rounded-full border border-border bg-muted/70 text-xs font-medium shadow-sm">
       {/* Lapse vaade */}
       {inParentMode ? (
         // vanema vaates -> Lapse nupp on klikitav (switchToChildModeAction)
         <form action={switchToChildModeAction} data-navigation-form>
+          <input name="returnTo" type="hidden" value={pathname} />
           <Button
             type="submit"
             size="icon"

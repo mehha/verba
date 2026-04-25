@@ -19,6 +19,8 @@ import { getPayload } from 'payload'
 import configPromise from '@payload-config'
 import { Toaster } from '@/components/ui/sonner'
 import { DEFAULT_META_DESCRIPTION, SITE_NAME } from '@/utilities/seo'
+import { getUiMode } from '@/utilities/uiMode'
+import { FrontendShell } from './FrontendShell'
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const { isEnabled } = await draftMode()
@@ -27,6 +29,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   const { user } = await payload.auth({ headers: requestHeaders })
   const isAdmin = user?.role === 'admin'
+  const uiMode = await getUiMode()
 
   return (
     <html className={cn(GeistSans.variable, GeistMono.variable)} lang="et" suppressHydrationWarning>
@@ -37,27 +40,32 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body className="bg-gray-50 dark:bg-gray-900">
         <Providers>
-          {isAdmin && (
-            <AdminBar
-              adminBarProps={{
-                preview: isEnabled,
-                createProps: {
-                  target: '_self',
-                },
-                editProps: {
-                  target: '_self',
-                },
-                logoutProps: {
-                  target: '_self',
-                },
-              }}
-            />
-          )}
-
           <Toaster />
-          <Header />
-          <div className="py-10 px-4">{children}</div>
-          <Footer />
+          <FrontendShell
+            adminBar={
+              isAdmin ? (
+                <AdminBar
+                  adminBarProps={{
+                    preview: isEnabled,
+                    createProps: {
+                      target: '_self',
+                    },
+                    editProps: {
+                      target: '_self',
+                    },
+                    logoutProps: {
+                      target: '_self',
+                    },
+                  }}
+                />
+              ) : null
+            }
+            footer={<Footer />}
+            header={<Header />}
+            uiMode={uiMode}
+          >
+            {children}
+          </FrontendShell>
         </Providers>
       </body>
     </html>

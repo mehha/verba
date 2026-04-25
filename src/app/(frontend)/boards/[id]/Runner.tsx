@@ -6,8 +6,23 @@ import Image from 'next/image'
 import type { Board, Media } from '@/payload-types'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Sparkles, Slash, WholeWord, Trash, Undo2, Volume2Icon, Edit3 } from 'lucide-react'
-import { WidthProvider, Responsive as ResponsiveGrid, type Layout, type Layouts } from 'react-grid-layout'
+import {
+  Edit3,
+  Home,
+  Sparkles,
+  Slash,
+  Trash,
+  Undo2,
+  UserLock,
+  Volume2Icon,
+  WholeWord,
+} from 'lucide-react'
+import {
+  WidthProvider,
+  Responsive as ResponsiveGrid,
+  type Layout,
+  type Layouts,
+} from 'react-grid-layout'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 
@@ -18,10 +33,11 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/comp
 import { AnimatedVolumeIcon } from '@/components/Animations/AnimatedVolumeIcon'
 import { getBoardTTSCacheManifest } from '@/utilities/boardTTSCacheManifest'
 import { prepareTextForTTS } from '@/utilities/azureTTS'
+import { ParentUnlockDialog } from '@/app/(frontend)/kodu/ParentUnlockDialog'
 
 const ResponsiveGridLayout = WidthProvider(ResponsiveGrid)
 
-type RunnerProps = { board: Board; isParentMode: boolean; canEdit: boolean }
+type RunnerProps = { board: Board; isParentMode: boolean; canEdit: boolean; hasPin: boolean }
 
 type SequenceItem = {
   cellId: string
@@ -32,7 +48,7 @@ type MorphResponse = {
   surface?: string
 }
 
-export default function Runner({ board, isParentMode, canEdit }: RunnerProps) {
+export default function Runner({ board, isParentMode, canEdit, hasPin }: RunnerProps) {
   // UUS: hoiame cellId + teksti
   const [sequence, setSequence] = useState<SequenceItem[]>([])
   const [activeCellId, setActiveCellId] = useState<string | null>(null)
@@ -53,10 +69,7 @@ export default function Runner({ board, isParentMode, canEdit }: RunnerProps) {
   const cells = (board.grid?.cells ?? []).filter((c) => !c.locked)
   const ttsCacheManifest = useMemo(() => getBoardTTSCacheManifest(board), [board])
   const cachedAudioUrlByText = useMemo(
-    () =>
-      new Map(
-        ttsCacheManifest.entries.map((entry) => [entry.text, entry.url] as const),
-      ),
+    () => new Map(ttsCacheManifest.entries.map((entry) => [entry.text, entry.url] as const)),
     [ttsCacheManifest.entries],
   )
 
@@ -366,9 +379,7 @@ export default function Runner({ board, isParentMode, canEdit }: RunnerProps) {
 
       // kui viimane tempLabel oli selle celli küljes, nulli see
       if (removed) {
-        setTempLabel((current) =>
-          current && current.id === removed.cellId ? null : current,
-        )
+        setTempLabel((current) => (current && current.id === removed.cellId ? null : current))
       }
 
       return next
@@ -489,7 +500,11 @@ export default function Runner({ board, isParentMode, canEdit }: RunnerProps) {
     return () => {
       cancelled = true
       if (timeoutId) clearTimeout(timeoutId)
-      if (idleCallbackId !== null && typeof window !== 'undefined' && 'cancelIdleCallback' in window) {
+      if (
+        idleCallbackId !== null &&
+        typeof window !== 'undefined' &&
+        'cancelIdleCallback' in window
+      ) {
         window.cancelIdleCallback(idleCallbackId)
       }
       preloadedAudioUrlBySourceRef.current.clear()
@@ -499,22 +514,44 @@ export default function Runner({ board, isParentMode, canEdit }: RunnerProps) {
   }, [cachedAudioUrlByText])
 
   return (
-    <div>
-      <div className="">
+    <div className={`pb-28 md:pb-24 ${!isParentMode ? 'pt-14' : ''}`}>
+      {!isParentMode && (
+        <div className="fixed inset-x-0 top-0 z-40 flex items-center justify-between px-3 pt-[calc(0.75rem+env(safe-area-inset-top))]">
+          <Button
+            asChild
+            variant="secondary"
+            size="icon"
+            roundness="full"
+            className="bg-white/90 shadow-lg ring-1 ring-gray-900/10 backdrop-blur"
+          >
+            <Link href="/kodu" aria-label="Kodu">
+              <Home className="h-5 w-5" />
+            </Link>
+          </Button>
+
+          <ParentUnlockDialog
+            hasPin={hasPin}
+            className="bg-white/90 shadow-lg ring-1 ring-gray-900/10 backdrop-blur"
+          >
+            <UserLock className="h-5 w-5" />
+            <span className="sr-only">Vanema vaade</span>
+          </ParentUnlockDialog>
+        </div>
+      )}
+
+      <div className="actionbar-container fixed inset-x-0 bottom-0 z-40 px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] sm:px-4">
         <TooltipProvider>
-          <div className="mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex flex-col gap-2 rounded-2xl border border-slate-200/80 bg-white/95 p-2 shadow-[0_18px_50px_rgba(15,23,42,0.18)] ring-1 ring-white/70 backdrop-blur md:flex-row md:items-stretch md:justify-between">
             <h1 className="text-center text-3xl font-semibold sr-only">{board.name}</h1>
 
             {actionBarEnabled && (
-              <div className="flex min-w-0 max-w-full flex-1 items-center gap-3 overflow-hidden rounded-xl border bg-slate-100/95 ps-6 pe-4 py-2 shadow-lg ring-1 ring-gray-900/10">
+              <div className="flex min-h-16 min-w-0 max-w-full flex-1 items-center gap-2 overflow-hidden rounded-xl bg-slate-50 px-3 py-1.5 ring-1 ring-slate-200/70">
                 <div
                   ref={scrollContainerRef}
-                  className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto py-1"
+                  className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto py-0.5"
                 >
                   {sequenceCells.length === 0 ? (
-                    <span className="text-sm text-slate-400">
-                      Vali pilte, et fraasi koostada
-                    </span>
+                    <span className="text-sm text-slate-400">Vali pilte, et fraasi koostada</span>
                   ) : (
                     sequenceCells.map(({ cellId, cell, text }, index) => {
                       const src =
@@ -527,7 +564,7 @@ export default function Runner({ board, isParentMode, canEdit }: RunnerProps) {
                       return (
                         <div
                           key={`${cellId}-${index}`}
-                          className="relative h-24 w-24 shrink-0 overflow-hidden rounded-lg bg-white"
+                          className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-slate-200"
                         >
                           {src ? (
                             <>
@@ -535,7 +572,7 @@ export default function Runner({ board, isParentMode, canEdit }: RunnerProps) {
                                 src={src}
                                 alt={cell?.title ?? text}
                                 fill
-                                sizes="96px"
+                                sizes="56px"
                                 className="object-contain"
                                 priority={false}
                               />
@@ -552,143 +589,178 @@ export default function Runner({ board, isParentMode, canEdit }: RunnerProps) {
                     })
                   )}
                 </div>
-                <div className="flex flex-col shrink-0 gap-2">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        onClick={handlePlayAll}
-                        roundness="full"
-                        size="icon"
-                        disabled={!sequence.length || phrasePlaying}
-                      >
-                        {phrasePlaying ? (
-                          <span className="inline-flex items-center gap-2">
-                            <AnimatedVolumeIcon busy className="h-6 w-6" />
-                          </span>
-                        ) : (
-                          <Volume2Icon className="h-6 w-6" />
-                        )}
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>
-                        {!sequence.length
-                          ? 'Lisa enne sõnu'
-                          : phrasePlaying
-                            ? 'Esitan praegu'
-                            : 'Esita kogu fraas'}
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant={sequence.length && !phrasePlaying ? 'secondary' : 'muted'}
-                        size="icon"
-                        disabled={!sequence.length || phrasePlaying}
-                        onClick={handleUndoLast}
-                        roundness="full"
-                      >
-                        <Undo2 className="h-6 w-6" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>
-                        {!sequence.length
-                          ? 'Pole midagi tagasi võtta'
-                          : phrasePlaying
-                            ? 'Oota, heli mängib'
-                            : 'Võta viimane tagasi'}
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant={sequence.length && !phrasePlaying ? 'destructive' : 'muted'}
-                        size="icon"
-                        disabled={!sequence.length || phrasePlaying}
-                        onClick={handleClear}
-                        roundness="full"
-                      >
-                        <Trash className="h-6 w-6" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>
-                        {!sequence.length
-                          ? 'Pole midagi tühjendada'
-                          : phrasePlaying
-                            ? 'Oota, heli mängib'
-                            : 'Tühjenda fraas'}
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
               </div>
             )}
 
-            <div className="flex flex-wrap md:items-end md:flex-col gap-2">
-              <Button
-                type="button"
-                size="sm"
-                roundness="2xl"
-                variant={aiEnabled ? 'positive' : 'muted'}
-                onClick={() => setAiEnabled((v) => !v)}
-                aria-pressed={aiEnabled}
-                title={
-                  aiEnabled ? 'AI on: parandab sõna kuju' : 'AI off: loeb täpselt valitud sõna'
-                }
-                className="inline-flex items-center gap-2"
-              >
-                {aiEnabled ? <Sparkles size={16} /> : <Slash size={16} />}
-                {aiEnabled ? 'AI: sees' : 'AI: väljas'}
-              </Button>
-
-              {/* Halda sõnaühendeid + tooltip */}
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  {isParentMode && canEdit ? (
-                    <Button variant="secondary" size="icon" asChild>
-                      <Link href={`/boards/${board.id}/compounds`}>
-                        <WholeWord className="h-5 w-5 text-pink-600" />
-                      </Link>
+            <div className="flex shrink-0 items-center justify-between gap-2 md:justify-end">
+              <div className="flex items-center gap-2">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={handlePlayAll}
+                      roundness="full"
+                      size="icon"
+                      disabled={!sequence.length || phrasePlaying}
+                      className="h-14 w-14 bg-emerald-600 text-white shadow-sm hover:bg-emerald-700 disabled:bg-slate-200 disabled:text-slate-400 md:h-12 md:w-12"
+                    >
+                      {phrasePlaying ? (
+                        <span className="inline-flex items-center gap-2">
+                          <AnimatedVolumeIcon busy className="h-7 w-7 md:h-6 md:w-6" />
+                        </span>
+                      ) : (
+                        <Volume2Icon className="h-7 w-7 md:h-6 md:w-6" />
+                      )}
                     </Button>
-                  ) : (
-                    <Button variant="secondary" size="sm">
-                      <WholeWord className="h-5 w-5" />
-                      <span className="sr-only">Sõnaühendite haldus</span>
-                    </Button>
-                  )}
-                </TooltipTrigger>
-                <TooltipContent className="max-w-sm">
-                  {compounds.length === 0 ? (
-                    <p className="text-xs text-muted-foreground">Sõnaühendeid pole veel lisatud.</p>
-                  ) : (
-                    <div className="max-h-[260px] space-y-2 overflow-y-auto text-xs">
-                      {compounds.map((compound) => {
-                        const surfaces = compound.parts?.map((p) => p.surface).join(' ') ?? ''
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>
+                      {!sequence.length
+                        ? 'Lisa enne sõnu'
+                        : phrasePlaying
+                          ? 'Esitan praegu'
+                          : 'Esita kogu fraas'}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
 
-                        return (
-                          <div key={compound.id} className="rounded border bg-muted/40 px-2 py-1">
-                            <div className="font-medium">{surfaces || '—'}</div>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant={sequence.length && !phrasePlaying ? 'secondary' : 'muted'}
+                      size="icon"
+                      disabled={!sequence.length || phrasePlaying}
+                      onClick={handleUndoLast}
+                      roundness="full"
+                      className="h-11 w-11 border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 disabled:bg-slate-100 disabled:text-slate-400"
+                    >
+                      <Undo2 className="h-5 w-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>
+                      {!sequence.length
+                        ? 'Pole midagi tagasi võtta'
+                        : phrasePlaying
+                          ? 'Oota, heli mängib'
+                          : 'Võta viimane tagasi'}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant={sequence.length && !phrasePlaying ? 'destructive' : 'muted'}
+                      size="icon"
+                      disabled={!sequence.length || phrasePlaying}
+                      onClick={handleClear}
+                      roundness="full"
+                      className="h-11 w-11 bg-rose-600 text-white shadow-sm hover:bg-rose-700 disabled:bg-slate-100 disabled:text-slate-400"
+                    >
+                      <Trash className="h-5 w-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>
+                      {!sequence.length
+                        ? 'Pole midagi tühjendada'
+                        : phrasePlaying
+                          ? 'Oota, heli mängib'
+                          : 'Tühjenda fraas'}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+
+              {isParentMode && (
+                <>
+                  <div className="h-9 w-px bg-slate-200" />
+
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      type="button"
+                      size="sm"
+                      roundness="full"
+                      variant={aiEnabled ? 'positive' : 'muted'}
+                      onClick={() => setAiEnabled((v) => !v)}
+                      aria-pressed={aiEnabled}
+                      title={
+                        aiEnabled
+                          ? 'AI on: parandab sõna kuju'
+                          : 'AI off: loeb täpselt valitud sõna'
+                      }
+                      className="h-10 gap-1.5 px-3 shadow-sm"
+                    >
+                      {aiEnabled ? <Sparkles size={16} /> : <Slash size={16} />}
+                      <span className="hidden sm:inline">
+                        {aiEnabled ? 'AI sees' : 'AI väljas'}
+                      </span>
+                    </Button>
+
+                    {/* Halda sõnaühendeid + tooltip */}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        {canEdit ? (
+                          <Button
+                            variant="secondary"
+                            size="icon"
+                            asChild
+                            className="h-10 w-10 border-slate-200 bg-white shadow-sm"
+                          >
+                            <Link href={`/boards/${board.id}/compounds`}>
+                              <WholeWord className="h-5 w-5 text-pink-600" />
+                            </Link>
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="secondary"
+                            size="icon"
+                            className="h-10 w-10 border-slate-200 bg-white shadow-sm"
+                          >
+                            <WholeWord className="h-5 w-5" />
+                            <span className="sr-only">Sõnaühendite haldus</span>
+                          </Button>
+                        )}
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-sm">
+                        {compounds.length === 0 ? (
+                          <p className="text-xs text-muted-foreground">
+                            Sõnaühendeid pole veel lisatud.
+                          </p>
+                        ) : (
+                          <div className="max-h-[260px] space-y-2 overflow-y-auto text-xs">
+                            {compounds.map((compound) => {
+                              const surfaces = compound.parts?.map((p) => p.surface).join(' ') ?? ''
+
+                              return (
+                                <div
+                                  key={compound.id}
+                                  className="rounded border bg-muted/40 px-2 py-1"
+                                >
+                                  <div className="font-medium">{surfaces || '—'}</div>
+                                </div>
+                              )
+                            })}
                           </div>
-                        )
-                      })}
-                    </div>
-                  )}
-                </TooltipContent>
-              </Tooltip>
+                        )}
+                      </TooltipContent>
+                    </Tooltip>
 
-              {isParentMode && canEdit && (
-                <Link href={`/boards/${board.id}/edit`}>
-                  <Button variant="secondary" roundness="full" size="sm">
-                    <Edit3 className="h-4 w-4 mr-2" />
-                    <span>Muuda</span>
-                  </Button>
-                </Link>
+                    {canEdit && (
+                      <Link href={`/boards/${board.id}/edit`}>
+                        <Button
+                          variant="secondary"
+                          roundness="full"
+                          size="icon"
+                          className="h-10 w-10 border-slate-200 bg-white shadow-sm"
+                        >
+                          <Edit3 className="h-4 w-4" />
+                          <span className="sr-only">Muuda</span>
+                        </Button>
+                      </Link>
+                    )}
+                  </div>
+                </>
               )}
             </div>
           </div>

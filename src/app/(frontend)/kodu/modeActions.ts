@@ -54,7 +54,20 @@ export async function unlockParentModeAction(
   return { success: true }
 }
 
-export async function switchToChildModeAction() {
+const getSafeChildReturnPath = (value: FormDataEntryValue | null): string => {
+  const fallback = '/kodu'
+
+  if (typeof value !== 'string') return fallback
+  if (!value.startsWith('/') || value.startsWith('//')) return fallback
+
+  const [pathname] = value.split(/[?#]/)
+  if (!pathname) return fallback
+
+  const canStayOnPath = pathname === '/kodu' || /^\/boards\/[^/]+$/.test(pathname)
+  return canStayOnPath ? value : fallback
+}
+
+export async function switchToChildModeAction(formData: FormData) {
   const cookieStore = await cookies()
 
   cookieStore.set('uiMode', 'child', {
@@ -65,5 +78,5 @@ export async function switchToChildModeAction() {
     maxAge: 60 * 60 * 24,
   })
 
-  redirect('/kodu')
+  redirect(getSafeChildReturnPath(formData.get('returnTo')))
 }

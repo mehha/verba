@@ -38,6 +38,9 @@ tags: [suhtleja, auth, mode, home, boards]
   - Clear fields.
   - Return focus to first OTP slot.
 - Keep explicit error message for invalid/missing PIN.
+- In child mode, `/kodu` and `/boards/[id]` should render as fullscreen child surfaces without the global header/footer/admin bar.
+- Child fullscreen surfaces must provide their own minimal navigation or unlock controls when global chrome is hidden.
+- Switching from parent mode to child mode may preserve safe child routes such as `/kodu` and `/boards/[id]`, but must fall back to `/kodu` from parent-only or management routes.
 
 ## Change Checklist
 - If cookie options change:

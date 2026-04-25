@@ -47,7 +47,12 @@ export default async function BoardRunPage({ params: paramsPromise }: Args) {
   return (
     <>
       <PageClient />
-      <Runner board={board} isParentMode={isParentMode} canEdit={canEdit} />
+      <Runner
+        board={board}
+        isParentMode={isParentMode}
+        canEdit={canEdit}
+        hasPin={Boolean((user as User).parentPinHash)}
+      />
     </>
   )
 }

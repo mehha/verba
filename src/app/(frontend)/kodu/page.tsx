@@ -5,7 +5,7 @@ import { headers } from 'next/headers'
 import type { Board, User } from '@/payload-types'
 import { SortableConnectDotsPuzzles, type HomeConnectDotsPuzzle } from './SortableConnectDotsPuzzles'
 import { SortableBoards, type HomeBoard } from './SortableBoards'
-import { ArrowRight, MonitorCheck, PlusCircle, Settings2 } from 'lucide-react'
+import { ArrowRight, MonitorCheck, PlusCircle, Settings2, UserLock } from 'lucide-react'
 import { isParentModeUtil, requireParentMode } from '@/utilities/uiMode'
 import { requireActiveMembership } from '@/utilities/membership'
 import Link from 'next/link'
@@ -19,6 +19,7 @@ import {
   sortSharedDocs,
   toIdString,
 } from '@/utilities/sharedHomePreferences'
+import { ParentUnlockDialog } from './ParentUnlockDialog'
 
 export const dynamic = 'force-dynamic'
 
@@ -439,7 +440,7 @@ export default async function HomePage() {
 
   return (
     <main className="xl:p-6 space-y-10">
-      <header className="flex flex-wrap items-center gap-6">
+      <header className="flex flex-wrap items-center justify-between gap-6">
         <div className="flex items-center gap-2">
           <MonitorCheck className="h-6 w-6 text-pink-500" />
           <h1 className="text-2xl font-semibold">Kodu</h1>
@@ -460,6 +461,12 @@ export default async function HomePage() {
               </Link>
             </Button>
           </div>
+        )}
+        {!isParentMode && (
+          <ParentUnlockDialog hasPin={Boolean(u.parentPinHash)}>
+            <UserLock className="h-5 w-5" />
+            <span className="sr-only">Vanema vaade</span>
+          </ParentUnlockDialog>
         )}
       </header>
 
