@@ -60,6 +60,84 @@ function parseSentenceToItems(value: string) {
     .filter(Boolean)
 }
 
+function normalizeFallbackKey(value: string) {
+  return value.toLowerCase().replace(/[^\p{L}\p{N}\s-]/gu, '').replace(/\s+/g, ' ').trim()
+}
+
+function normalizeSearchTerms(terms: string[]) {
+  const seen = new Set<string>()
+  const normalizedTerms: string[] = []
+
+  for (const term of terms) {
+    const normalized = normalizeFallbackKey(term)
+    if (!normalized || seen.has(normalized)) continue
+    seen.add(normalized)
+    normalizedTerms.push(normalized)
+  }
+
+  return normalizedTerms
+}
+
+async function fetchFirstArasaacSymbol(base: string, query: string, options?: { locale?: string }) {
+  const params = new URLSearchParams({
+    q: query,
+    source: 'arasaac',
+    limit: '1',
+  })
+
+  if (options?.locale) {
+    params.set('locale', options.locale)
+  } else {
+    params.set('preferLocal', 'true')
+  }
+
+  const res = await fetch(`${base}/next/symbols?${params.toString()}`, { credentials: 'include' })
+
+  if (!res.ok) return ''
+
+  const json = (await res.json()) as {
+    items?: Array<{ preview?: string }>
+  }
+  const first = Array.isArray(json.items) ? json.items[0] : null
+
+  return first && typeof first.preview === 'string' ? first.preview : ''
+}
+
+async function fetchAiArasaacSearchTerms(base: string, label: string) {
+  const res = await fetch(`${base}/next/groq`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      task: 'symbol-search-terms',
+      token: label,
+    }),
+    signal: AbortSignal.timeout(6000),
+  })
+
+  if (!res.ok) return []
+
+  const json = (await res.json()) as {
+    terms?: unknown
+  }
+
+  return Array.isArray(json.terms) ? json.terms.filter((term): term is string => typeof term === 'string') : []
+}
+
+async function findImageForTextCell(base: string, label: string) {
+  const directPreview = await fetchFirstArasaacSymbol(base, label)
+  if (directPreview) return directPreview
+
+  const fallbackTerms = normalizeSearchTerms(await fetchAiArasaacSearchTerms(base, label))
+
+  for (const term of fallbackTerms) {
+    const preview = await fetchFirstArasaacSymbol(base, term, { locale: 'en' })
+    if (preview) return preview
+  }
+
+  return ''
+}
+
 export function BoardEditorToolbar({
   onAddCellAction,
   onAddBlockAction,
@@ -129,24 +207,9 @@ export function BoardEditorToolbar({
       const results = await Promise.all(
         textItemsToAdd.map(async (line) => {
           try {
-            const res = await fetch(
-              `${base}/next/symbols?q=${encodeURIComponent(line)}&source=arasaac&preferLocal=true&limit=1`,
-              { credentials: 'include' },
-            )
-
-            if (!res.ok) {
-              return { title: line }
-            }
-
-            const json = (await res.json()) as {
-              items?: Array<{ preview?: string }>
-            }
-            const first = Array.isArray(json.items) ? json.items[0] : null
-
             return {
               title: line,
-              externalImageURL:
-                first && typeof first.preview === 'string' ? first.preview : '',
+              externalImageURL: await findImageForTextCell(base, line),
             }
           } catch {
             return { title: line }
@@ -292,7 +355,7 @@ export function BoardEditorToolbar({
                       />
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Iga mitte-tühi rida loob ühe kaardi. Esimene ARASAAC pilt lisatakse automaatselt, kui leitakse vaste.
+                      Iga mitte-tühi rida loob ühe kaardi. Esimene ARASAAC pilt lisatakse automaatselt; vajadusel proovitakse AI abil ingliskeelseid otsisõnu.
                     </p>
                   </>
                 ) : (

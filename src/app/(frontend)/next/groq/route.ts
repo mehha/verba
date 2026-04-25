@@ -13,7 +13,26 @@ const GROQ_MODEL = process.env.GROQ_MODEL ?? 'qwen/qwen3-32b'
 
 type GroqBody = {
   contextTail?: string[]
+  task?: 'symbol-search-terms'
   token?: string
+}
+
+function normalizeSymbolSearchTerms(value: unknown, original: string) {
+  if (!Array.isArray(value)) return []
+
+  const seen = new Set<string>()
+  const terms: string[] = []
+
+  for (const item of value) {
+    if (typeof item !== 'string') continue
+    const term = item.toLowerCase().replace(/[^\p{L}\p{N}\s-]/gu, '').replace(/\s+/g, ' ').trim()
+    if (!term || term.length > 40 || term === original.toLowerCase() || seen.has(term)) continue
+    seen.add(term)
+    terms.push(term)
+    if (terms.length >= 8) break
+  }
+
+  return terms
 }
 
 export async function POST(req: Request) {
@@ -35,6 +54,49 @@ export async function POST(req: Request) {
   const body = (await req.json().catch(() => ({}))) as GroqBody
   const raw = (body.token ?? '').trim()
   if (!raw) return NextResponse.json({ error: 'missing token' }, { status: 400 })
+
+  if (body.task === 'symbol-search-terms') {
+    const system = [
+      'You create ARASAAC pictogram search terms for AAC communication board cards.',
+      'Input can be Estonian or English, one word or a short phrase.',
+      'Return an ordered list of English search terms that are likely to exist as simple ARASAAC pictograms.',
+      '',
+      'Rules:',
+      '1) Prefer concrete base words: nouns, verbs, adjectives, and common AAC concepts.',
+      '2) Include translations and close synonyms, not explanations.',
+      '3) For phrases, include the main concept first, then useful phrase-level alternatives.',
+      '4) Use lowercase English only.',
+      '5) Do not include Estonian terms unless the input is already English-looking.',
+      '6) Put the most likely exact ARASAAC search term first, then synonyms or broader alternatives.',
+      '7) Return 5-8 terms when possible.',
+      '',
+      'Examples:',
+      '- eksam -> exam, examination, test',
+      '- vahetund -> break, recess',
+      '- söökla -> cafeteria, canteen',
+      '',
+      'Return ONLY JSON: {"terms":["..."]}',
+    ].join('\n')
+
+    try {
+      const completion = await client.chat.completions.create({
+        model: GROQ_MODEL,
+        response_format: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: `Card label: ${raw}` },
+        ],
+        temperature: 0.2,
+      })
+
+      const txt = (completion.choices?.[0]?.message?.content ?? '').trim()
+      const parsed = JSON.parse(txt) as { terms?: unknown }
+
+      return NextResponse.json({ terms: normalizeSymbolSearchTerms(parsed.terms, raw) })
+    } catch {
+      return NextResponse.json({ terms: [], note: 'sdk_error' }, { status: 200 })
+    }
+  }
 
   const tail = Array.isArray(body.contextTail) ? body.contextTail : []
 

@@ -62,6 +62,7 @@ export function useBoardGrid(board: Board) {
 
   // ---- DRAFT STATE (no autosave) ----
   const [saving, setSaving] = useState(false)
+  const [saveProgress, setSaveProgress] = useState(0)
   const [dirty, setDirty] = useState(false)
 
   const [actionBar, setActionBar] = useState<{ enabled: boolean }>(() => ({
@@ -81,6 +82,8 @@ export function useBoardGrid(board: Board) {
 
   // ---- SAVE (explicit) ----
   const saveDraft = useCallback(async () => {
+    if (saving) return
+
     const cellsForServer = cells.map((c) => {
       let image: any = c.image
       if (image && typeof image === 'object' && 'id' in image) {
@@ -100,22 +103,38 @@ export function useBoardGrid(board: Board) {
     })
 
     setSaving(true)
-    await fetch(`${getClientSideURL()}/api/boards/${board.id}`, {
-      method: 'PATCH',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        actionBar,
-        extra: {
-          ...(board.extra || {}),
-          ai: aiEnabled,
-        },
-        grid: { ...(board.grid || {}), cols: baseCols, cells: cellsForServer },
-      }),
-    })
-    setSaving(false)
-    setDirty(false)
-  }, [board.id, board.grid, baseCols, cells, actionBar, aiEnabled, board.extra])
+    setSaveProgress(12)
+
+    try {
+      const response = await fetch(`${getClientSideURL()}/api/boards/${board.id}`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          actionBar,
+          extra: {
+            ...(board.extra || {}),
+            ai: aiEnabled,
+          },
+          grid: { ...(board.grid || {}), cols: baseCols, cells: cellsForServer },
+        }),
+      })
+
+      setSaveProgress(82)
+
+      if (!response.ok) {
+        return
+      }
+
+      setSaveProgress(100)
+      setDirty(false)
+    } finally {
+      window.setTimeout(() => {
+        setSaving(false)
+        setSaveProgress(0)
+      }, 250)
+    }
+  }, [board.id, board.grid, baseCols, cells, actionBar, aiEnabled, board.extra, saving])
 
   // ---- RGL change: mark dirty, no save ----
   const onLayoutChange = useCallback(
@@ -269,6 +288,7 @@ export function useBoardGrid(board: Board) {
 
   return {
     saving,
+    saveProgress,
     dirty,
     cols: baseCols,
     cells,

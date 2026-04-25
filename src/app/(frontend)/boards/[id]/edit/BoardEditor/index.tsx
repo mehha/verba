@@ -19,6 +19,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import { Progress } from '@/components/ui/progress'
 import { Spinner } from '@/components/ui/spinner'
 import { Play, Trash, WholeWord, Edit3, Check, X, Settings2 } from 'lucide-react'
 import Image from 'next/image'
@@ -53,6 +54,7 @@ export default function BoardEditor({
 }: Props) {
   const {
     saving,
+    saveProgress,
     dirty,
     cols,
     cells,
@@ -366,7 +368,15 @@ export default function BoardEditor({
           </div>
         </div>
 
-        {saving && <p className="container text-xs text-slate-500">Salvestan…</p>}
+        {saving && (
+          <div className="container space-y-1">
+            <div className="flex items-center justify-between text-xs text-slate-500">
+              <span>Salvestan…</span>
+              <span>{saveProgress}%</span>
+            </div>
+            <Progress value={saveProgress} className="h-2" />
+          </div>
+        )}
 
         <div className="h-full w-full overflow-y-auto">
           <ReactGridLayout
