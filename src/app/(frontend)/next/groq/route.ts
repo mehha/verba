@@ -1,6 +1,5 @@
 // app/(frontend)/next/groq/route.ts
 import { NextResponse } from 'next/server'
-import Groq from 'groq-sdk'
 import configPromise from '@payload-config'
 import { getPayload } from 'payload'
 import type { User } from '@/payload-types'
@@ -8,13 +7,33 @@ import { hasActiveMembership } from '@/utilities/membershipStatus'
 
 export const runtime = 'nodejs'
 
-const client = new Groq({ apiKey: process.env.GROQ_API_KEY })
+const GROQ_CHAT_COMPLETIONS_URL = 'https://api.groq.com/openai/v1/chat/completions'
 const GROQ_MODEL = process.env.GROQ_MODEL ?? 'qwen/qwen3-32b'
 
 type GroqBody = {
   contextTail?: string[]
   task?: 'symbol-search-terms'
   token?: string
+}
+
+type GroqMessage = {
+  content: string
+  role: 'system' | 'user'
+}
+
+type GroqChatCompletionResponse = {
+  choices?: Array<{
+    message?: {
+      content?: string | null
+    }
+  }>
+}
+
+class GroqRequestError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'GroqRequestError'
+  }
 }
 
 function normalizeSymbolSearchTerms(value: unknown, original: string) {
@@ -33,6 +52,40 @@ function normalizeSymbolSearchTerms(value: unknown, original: string) {
   }
 
   return terms
+}
+
+async function createGroqJsonCompletion({
+  messages,
+  temperature,
+}: {
+  messages: GroqMessage[]
+  temperature: number
+}) {
+  const res = await fetch(GROQ_CHAT_COMPLETIONS_URL, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: GROQ_MODEL,
+      response_format: { type: 'json_object' },
+      messages,
+      temperature,
+    }),
+  })
+
+  const json = (await res.json().catch(() => ({}))) as GroqChatCompletionResponse & {
+    error?: { code?: unknown; message?: unknown; type?: unknown }
+  }
+
+  if (!res.ok) {
+    const code = typeof json.error?.code === 'string' ? json.error.code : `http_${res.status}`
+    const message = typeof json.error?.message === 'string' ? json.error.message : res.statusText
+    throw new GroqRequestError(`${code}: ${message}`)
+  }
+
+  return (json.choices?.[0]?.message?.content ?? '').trim()
 }
 
 export async function POST(req: Request) {
@@ -79,22 +132,24 @@ export async function POST(req: Request) {
     ].join('\n')
 
     try {
-      const completion = await client.chat.completions.create({
-        model: GROQ_MODEL,
-        response_format: { type: 'json_object' },
+      const txt = await createGroqJsonCompletion({
         messages: [
           { role: 'system', content: system },
           { role: 'user', content: `Card label: ${raw}` },
         ],
         temperature: 0.2,
       })
-
-      const txt = (completion.choices?.[0]?.message?.content ?? '').trim()
       const parsed = JSON.parse(txt) as { terms?: unknown }
 
       return NextResponse.json({ terms: normalizeSymbolSearchTerms(parsed.terms, raw) })
-    } catch {
-      return NextResponse.json({ terms: [], note: 'sdk_error' }, { status: 200 })
+    } catch (error) {
+      return NextResponse.json(
+        {
+          error: error instanceof Error ? error.message : 'groq_request_failed',
+          terms: [],
+        },
+        { status: 200 },
+      )
     }
   }
 
@@ -131,17 +186,13 @@ export async function POST(req: Request) {
   ].join('\n')
 
   try {
-    const completion = await client.chat.completions.create({
-      model: GROQ_MODEL,
-      response_format: { type: 'json_object' }, // garanteerib JSONi
+    const txt = await createGroqJsonCompletion({
       messages: [
         { role: 'system', content: system },
         { role: 'user', content: prompt },
       ],
       temperature: 0,
     })
-
-    const txt = (completion.choices?.[0]?.message?.content ?? '').trim()
 
     let surface = raw
 
@@ -167,8 +218,14 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ surface })
-  } catch {
+  } catch (error) {
     // Soft-fail: kui Groq error, loeme lihtsalt algset tokenit
-    return NextResponse.json({ surface: raw, note: 'sdk_error' }, { status: 200 })
+    return NextResponse.json(
+      {
+        error: error instanceof Error ? error.message : 'groq_request_failed',
+        surface: raw,
+      },
+      { status: 200 },
+    )
   }
 }
