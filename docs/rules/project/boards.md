@@ -32,6 +32,7 @@ tags: [suhtleja, frontend, boards, payload]
 - Board cell editor rules:
   - In image selection flow, `Sümbolid` is the default first tab when opening the cell modal.
   - Choosing an image source (`Sümbolid`, upload, media) must not clear the current `Tekst` input before the user presses save.
+  - The `Meedia` tab in the cell editor must show only image media that has been assigned to a Payload folder.
   - In `/boards/[id]/edit`, if there are unsaved changes, leaving the page must require explicit confirmation.
   - The unsaved-changes guard must apply to both anchor navigation and forms marked with `data-navigation-form` (e.g. parent/child mode switch flows).
   - `Lisa plokk` text-based bulk add must support both one-line-per-card input and sentence paste with an editable split preview.
