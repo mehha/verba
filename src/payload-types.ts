@@ -270,6 +270,7 @@ export interface Page {
         blockName?: string | null;
         blockType: 'usageContexts';
       }
+    | SuhtlejaHomepageBlock
   )[];
   meta?: {
     title?: string | null;
@@ -879,6 +880,81 @@ export interface AacFeaturesBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SuhtlejaHomepageBlock".
+ */
+export interface SuhtlejaHomepageBlock {
+  hero: {
+    enabled?: boolean | null;
+    eyebrow?: string | null;
+    title: string;
+    description: string;
+    image?: (number | null) | Media;
+    primaryCta?: {
+      label?: string | null;
+      href?: string | null;
+    };
+    secondaryCta?: {
+      label?: string | null;
+      href?: string | null;
+    };
+    highlights?:
+      | {
+          text: string;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  video: {
+    enabled?: boolean | null;
+    eyebrow?: string | null;
+    title: string;
+    description: string;
+    poster?: (number | null) | Media;
+    videoFile?: (number | null) | Media;
+    /**
+     * Valikuline. Kasuta siis, kui video on YouTube/Vimeo vms keskkonnas.
+     */
+    embedUrl?: string | null;
+    placeholderLabel?: string | null;
+  };
+  features: {
+    enabled?: boolean | null;
+    eyebrow?: string | null;
+    title: string;
+    description: string;
+    items?:
+      | {
+          title: string;
+          description: string;
+          image?: (number | null) | Media;
+          imageAspectRatio?: ('16/9' | '4/3' | '3/2' | '1/1' | '2/3') | null;
+          imageLabel?: string | null;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  audience: {
+    enabled?: boolean | null;
+    title: string;
+    description: string;
+    image?: (number | null) | Media;
+    items?:
+      | {
+          text: string;
+          id?: string | null;
+        }[]
+      | null;
+    cta?: {
+      label?: string | null;
+      href?: string | null;
+    };
+  };
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'suhtlejaHomepage';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "boards".
  */
 export interface Board {
@@ -1386,6 +1462,7 @@ export interface PagesSelect<T extends boolean = true> {
               id?: T;
               blockName?: T;
             };
+        suhtlejaHomepage?: T | SuhtlejaHomepageBlockSelect<T>;
       };
   meta?:
     | T
@@ -1505,6 +1582,91 @@ export interface AacFeaturesBlockSelect<T extends boolean = true> {
         ctaLabel?: T;
         ctaHref?: T;
         id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SuhtlejaHomepageBlock_select".
+ */
+export interface SuhtlejaHomepageBlockSelect<T extends boolean = true> {
+  hero?:
+    | T
+    | {
+        enabled?: T;
+        eyebrow?: T;
+        title?: T;
+        description?: T;
+        image?: T;
+        primaryCta?:
+          | T
+          | {
+              label?: T;
+              href?: T;
+            };
+        secondaryCta?:
+          | T
+          | {
+              label?: T;
+              href?: T;
+            };
+        highlights?:
+          | T
+          | {
+              text?: T;
+              id?: T;
+            };
+      };
+  video?:
+    | T
+    | {
+        enabled?: T;
+        eyebrow?: T;
+        title?: T;
+        description?: T;
+        poster?: T;
+        videoFile?: T;
+        embedUrl?: T;
+        placeholderLabel?: T;
+      };
+  features?:
+    | T
+    | {
+        enabled?: T;
+        eyebrow?: T;
+        title?: T;
+        description?: T;
+        items?:
+          | T
+          | {
+              title?: T;
+              description?: T;
+              image?: T;
+              imageAspectRatio?: T;
+              imageLabel?: T;
+              id?: T;
+            };
+      };
+  audience?:
+    | T
+    | {
+        enabled?: T;
+        title?: T;
+        description?: T;
+        image?: T;
+        items?:
+          | T
+          | {
+              text?: T;
+              id?: T;
+            };
+        cta?:
+          | T
+          | {
+              label?: T;
+              href?: T;
+            };
       };
   id?: T;
   blockName?: T;
