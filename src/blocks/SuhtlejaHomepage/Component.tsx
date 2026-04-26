@@ -32,6 +32,7 @@ const featureImageAspectClass: Record<ImageAspectRatio, string> = {
   '3/2': 'aspect-[3/2]',
   '1/1': 'aspect-square',
   '2/3': 'aspect-[2/3]',
+  '9/16': 'aspect-[9/16]',
 }
 
 function isMediaObject(resource: MediaResource): resource is PayloadMedia {

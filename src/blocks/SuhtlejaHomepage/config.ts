@@ -215,6 +215,7 @@ export const SuhtlejaHomepage: Block = {
                 { label: '3:2 lai foto', value: '3/2' },
                 { label: '1:1 ruut', value: '1/1' },
                 { label: '2:3 püstine', value: '2/3' },
+                { label: '9:16 telefoni portree', value: '9/16' },
               ],
             },
             {

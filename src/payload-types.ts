@@ -927,7 +927,7 @@ export interface SuhtlejaHomepageBlock {
           title: string;
           description: string;
           image?: (number | null) | Media;
-          imageAspectRatio?: ('16/9' | '4/3' | '3/2' | '1/1' | '2/3') | null;
+          imageAspectRatio?: ('16/9' | '4/3' | '3/2' | '1/1' | '2/3' | '9/16') | null;
           imageLabel?: string | null;
           id?: string | null;
         }[]
