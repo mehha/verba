@@ -11,10 +11,13 @@ import {
   Puzzle,
   ShieldCheck,
   Volume2,
+  X,
 } from 'lucide-react'
 
 import { Media } from '@/components/Media'
+import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import type { Media as PayloadMedia, SuhtlejaHomepageBlock as SuhtlejaHomepageProps } from '@/payload-types'
+import { getMediaUrl } from '@/utilities/getMediaUrl'
 import { cn } from '@/utilities/ui'
 
 type Props = SuhtlejaHomepageProps & {
@@ -113,6 +116,71 @@ function MediaFrame({
         )
       )}
     </div>
+  )
+}
+
+function VideoDialog({ video }: { video?: SuhtlejaHomepageProps['video'] }) {
+  const videoFile = isMediaObject(video?.videoFile) ? video.videoFile : null
+  const videoSrc = getMediaUrl(videoFile?.url, videoFile?.updatedAt)
+  const hasVideo = Boolean(video?.embedUrl || videoSrc)
+
+  const poster = (
+    <div className="relative">
+      <MediaFrame
+        resource={video?.poster}
+        label={video?.placeholderLabel || 'Video lisandub peagi'}
+        className="aspect-video"
+      >
+        <div className="flex h-full min-h-72 items-center justify-center bg-[#f7f9fd] p-8 text-center">
+          <p className="text-lg font-extrabold text-[#22314c]">
+            {video?.placeholderLabel || 'Video lisandub peagi'}
+          </p>
+        </div>
+      </MediaFrame>
+      <span className="absolute inset-0 flex items-center justify-center rounded-[28px] bg-[#22314c]/10 transition group-hover:bg-[#22314c]/16">
+        <span className="flex h-20 w-20 items-center justify-center rounded-full bg-white text-[#22314c] shadow-[0_18px_42px_rgba(34,49,76,0.3)] transition group-hover:scale-105">
+          <Play className="ml-1 h-9 w-9 fill-current" />
+        </span>
+      </span>
+    </div>
+  )
+
+  if (!hasVideo) return poster
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <button
+          type="button"
+          className="group block w-full rounded-[28px] text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1c79dd] focus-visible:ring-offset-4"
+          aria-label={video?.title ? `Ava video: ${video.title}` : 'Ava video'}
+        >
+          {poster}
+        </button>
+      </DialogTrigger>
+      <DialogContent className="w-[min(92vw,1040px)] max-w-none border-0 bg-transparent p-0 shadow-none [&>button:last-child]:hidden">
+        <DialogTitle className="sr-only">{video?.title || 'Suhtleja video'}</DialogTitle>
+        <DialogClose className="absolute -right-3 -top-3 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white text-[#22314c] shadow-[0_12px_30px_rgba(15,23,42,0.28)] transition hover:bg-[#f8fafc] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1c79dd] focus-visible:ring-offset-2">
+          <X className="h-5 w-5" />
+          <span className="sr-only">Sulge video</span>
+        </DialogClose>
+        <div className="overflow-hidden rounded-[28px] bg-black shadow-2xl">
+          {video?.embedUrl ? (
+            <iframe
+              src={video.embedUrl}
+              title={video.title || 'Suhtleja video'}
+              className="aspect-video w-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            />
+          ) : (
+            <video autoPlay controls playsInline className="max-h-[82vh] w-full bg-black">
+              <source src={videoSrc} type={videoFile?.mimeType || undefined} />
+            </video>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -286,30 +354,7 @@ export const SuhtlejaHomepageBlock: React.FC<Props> = ({ className, hero, video,
             <p className="mt-5 max-w-xl text-base leading-7 text-[#56627a]">{video?.description}</p>
           </div>
 
-          <MediaFrame
-            resource={video?.embedUrl ? undefined : video?.videoFile || video?.poster}
-            label={video?.placeholderLabel || 'Video lisandub peagi'}
-            className="aspect-video"
-          >
-            {video?.embedUrl ? (
-              <iframe
-                src={video.embedUrl}
-                title={video.title || 'Suhtleja video'}
-                className="h-full w-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-              />
-            ) : (
-              <div className="flex h-full min-h-72 items-center justify-center bg-[#f7f9fd] p-8 text-center">
-                <div>
-                  <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#22314c] text-white shadow-[0_18px_36px_rgba(34,49,76,0.24)]">
-                    <Play className="ml-1 h-7 w-7 fill-current" />
-                  </span>
-                  <p className="mt-5 text-lg font-extrabold text-[#22314c]">{video?.placeholderLabel || 'Video lisandub peagi'}</p>
-                </div>
-              </div>
-            )}
-          </MediaFrame>
+          <VideoDialog video={video} />
         </div>
       </div>}
 
