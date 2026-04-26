@@ -218,12 +218,19 @@ export const CellEditModal: React.FC<CellEditModalProps> = ({
   const mediaQueryURL = useMemo(() => {
     const base = getClientSideURL()
     const q = mediaQ.trim()
-    const where = q
-      ? `&where[or][0][alt][contains]=${encodeURIComponent(
-          q,
-        )}&where[or][1][filename][contains]=${encodeURIComponent(q)}`
-      : ''
-    return `${base}/api/media?limit=24&page=${mediaPage}${where}`
+    const params = new URLSearchParams({
+      limit: '24',
+      page: String(mediaPage),
+      'where[and][0][folder][exists]': 'true',
+      'where[and][1][mimeType][contains]': 'image',
+    })
+
+    if (q) {
+      params.set('where[and][2][or][0][alt][contains]', q)
+      params.set('where[and][2][or][1][filename][contains]', q)
+    }
+
+    return `${base}/api/media?${params.toString()}`
   }, [mediaQ, mediaPage])
 
   const runMediaSearch = async () => {
