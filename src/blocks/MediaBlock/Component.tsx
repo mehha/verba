@@ -47,6 +47,7 @@ export const MediaBlock: React.FC<Props> = (props) => {
           imgClassName={cn('border border-border rounded-[0.8rem]', imgClassName)}
           resource={media}
           src={staticImage}
+          videoAutoPlay={false}
           videoControls
           videoClassName={cn('w-full rounded-[0.8rem]', imgClassName)}
         />
