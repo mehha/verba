@@ -4,11 +4,8 @@
 import { useActionState, useState } from 'react'
 import { updatePinAction, clearPinAction } from './actions'
 import { Button } from '@/components/ui/button'
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-} from '@/components/ui/input-otp'
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/utilities/ui'
 import { Loader2, ShieldCheck, CircleSlash } from 'lucide-react'
@@ -75,8 +72,7 @@ export function ProfilePageClient({
   const [checkoutError, setCheckoutError] = useState<string | null>(null)
 
   // derived staatus: kui server action õnnestus, eelda et PIN on nüüd olemas
-  const effectiveHasPin =
-    initialHasPin || (state.success && !state.error)
+  const effectiveHasPin = initialHasPin || (state.success && !state.error)
 
   const membership = membershipStatus ?? 'none'
   const isMembershipActive = membership === 'active' || membership === 'trialing'
@@ -159,13 +155,17 @@ export function ProfilePageClient({
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border bg-card p-6 space-y-4">
-        <div className="flex items-start justify-between gap-4">
+      <Card>
+        <CardHeader>
           <div>
-            <h2 className="text-lg font-medium">Liikmelisus</h2>
-            <p className="text-sm text-muted-foreground">
+            <CardTitle className="text-lg font-medium">Liikmelisus</CardTitle>
+            <CardDescription>
               Alusta liikmelisust Stripe Checkoutiga. Esimesed 14 päeva on tasuta.
-            </p>
+            </CardDescription>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
             <p className="mt-2 text-sm">
               Staatus:{' '}
               <span
@@ -187,66 +187,62 @@ export function ProfilePageClient({
               </p>
             )}
             {trialEndsLabel && (
-              <p className="text-xs text-muted-foreground">
-                Trial lõpeb: {trialEndsLabel}
-              </p>
+              <p className="text-xs text-muted-foreground">Trial lõpeb: {trialEndsLabel}</p>
             )}
             {periodEndsLabel && (
-              <p className="text-xs text-muted-foreground">
-                Periood lõpeb: {periodEndsLabel}
-              </p>
+              <p className="text-xs text-muted-foreground">Periood lõpeb: {periodEndsLabel}</p>
             )}
           </div>
-        </div>
 
-        {checkoutError && (
-          <p className="text-sm text-red-500">{checkoutError}</p>
-        )}
-        <Button
-          type="button"
-          onClick={startMembershipCheckout}
-          disabled={checkoutLoading || hasMembershipAccess}
-          className="gap-2"
-        >
-          {checkoutLoading ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Suunan checkouti...
-            </>
-          ) : isPendingCancellation ? (
-            <>
-              <CircleSlash className="h-4 w-4" />
-              Tühistatud perioodi lõpus
-            </>
-          ) : hasMembershipAccess ? (
-            <>
-              <ShieldCheck className="h-4 w-4" />
-              Liikmelisus aktiivne
-            </>
-          ) : (
-            'Alusta liikmelisust (14 päeva tasuta)'
-          )}
-        </Button>
-        {canManageMembership && (
+          {checkoutError && <p className="text-sm text-red-500">{checkoutError}</p>}
           <Button
             type="button"
-            variant="outline"
-            onClick={openMembershipPortal}
-            disabled={portalLoading}
-            className="ms-2"
+            onClick={startMembershipCheckout}
+            disabled={checkoutLoading || hasMembershipAccess}
+            className="gap-2"
           >
-            {portalLoading ? 'Avan halduse...' : 'Halda liikmelisust'}
+            {checkoutLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Suunan checkouti...
+              </>
+            ) : isPendingCancellation ? (
+              <>
+                <CircleSlash className="h-4 w-4" />
+                Tühistatud perioodi lõpus
+              </>
+            ) : hasMembershipAccess ? (
+              <>
+                <ShieldCheck className="h-4 w-4" />
+                Liikmelisus aktiivne
+              </>
+            ) : (
+              'Alusta liikmelisust (14 päeva tasuta)'
+            )}
           </Button>
-        )}
-      </section>
+          {canManageMembership && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={openMembershipPortal}
+              disabled={portalLoading}
+              className="ms-2"
+            >
+              {portalLoading ? 'Avan halduse...' : 'Halda liikmelisust'}
+            </Button>
+          )}
+        </CardContent>
+      </Card>
 
-      <section className="rounded-2xl border bg-card p-6 space-y-4">
-        <div className="flex items-start justify-between gap-4">
+      <Card>
+        <CardHeader>
           <div>
-            <h2 className="text-lg font-medium">Vanema PIN</h2>
-            <p className="text-sm text-muted-foreground">
-              PIN-i kasutatakse vanema vaate avamiseks koduvaates.
-            </p>
+            <CardTitle className="text-lg font-medium">Vanema PIN</CardTitle>
+            <CardDescription>PIN-i kasutatakse vanema vaate avamiseks koduvaates.</CardDescription>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
             <p className="mt-2 text-sm">
               Staatus:{' '}
               <span
@@ -255,57 +251,53 @@ export function ProfilePageClient({
                   effectiveHasPin ? 'text-emerald-600' : 'text-muted-foreground',
                 )}
               >
-                {effectiveHasPin
-                  ? 'PIN on seadistatud'
-                  : 'PIN ei ole seadistatud'}
+                {effectiveHasPin ? 'PIN on seadistatud' : 'PIN ei ole seadistatud'}
               </span>
             </p>
           </div>
-        </div>
 
-        {/* PIN seadmine / uuendamine – üks form */}
-        <form action={formAction} className="space-y-4">
-          <div className="space-y-2">
-            <Label>Uus PIN (4 numbrit)</Label>
-            <InputOTP
-              maxLength={4}
-              value={pin}
-              onChange={setPin}
-              containerClassName="justify-start"
-            >
-              <InputOTPGroup>
-                <InputOTPSlot index={0} />
-                <InputOTPSlot index={1} />
-                <InputOTPSlot index={2} />
-                <InputOTPSlot index={3} />
-              </InputOTPGroup>
-            </InputOTP>
+          {/* PIN seadmine / uuendamine – üks form */}
+          <form action={formAction} className="space-y-4">
+            <div className="space-y-2">
+              <Label>Uus PIN (4 numbrit)</Label>
+              <InputOTP
+                maxLength={4}
+                value={pin}
+                onChange={setPin}
+                containerClassName="justify-start"
+              >
+                <InputOTPGroup>
+                  <InputOTPSlot index={0} />
+                  <InputOTPSlot index={1} />
+                  <InputOTPSlot index={2} />
+                  <InputOTPSlot index={3} />
+                </InputOTPGroup>
+              </InputOTP>
 
-            {/* saadame PIN-i FormData-s kaasa */}
-            <input type="hidden" name="pin" value={pin} />
-          </div>
+              {/* saadame PIN-i FormData-s kaasa */}
+              <input type="hidden" name="pin" value={pin} />
+            </div>
 
-          {state.error && (
-            <p className="text-sm text-red-500">{state.error}</p>
-          )}
-          {state.success && !state.error && (
-            <p className="text-sm text-emerald-600">PIN salvestatud.</p>
-          )}
+            {state.error && <p className="text-sm text-red-500">{state.error}</p>}
+            {state.success && !state.error && (
+              <p className="text-sm text-emerald-600">PIN salvestatud.</p>
+            )}
 
-          <Button type="submit" disabled={pin.length !== 4}>
-            {effectiveHasPin ? 'Uuenda PIN' : 'Sea PIN'}
-          </Button>
-        </form>
-
-        {/* PIN eemaldamine – eraldi form, mitte form-i sees, ja EI mingit inline "use server" */}
-        {effectiveHasPin && (
-          <form action={clearPinAction}>
-            <Button type="submit" variant="outline">
-              Eemalda PIN
+            <Button type="submit" disabled={pin.length !== 4}>
+              {effectiveHasPin ? 'Uuenda PIN' : 'Sea PIN'}
             </Button>
           </form>
-        )}
-      </section>
+
+          {/* PIN eemaldamine – eraldi form, mitte form-i sees, ja EI mingit inline "use server" */}
+          {effectiveHasPin && (
+            <form action={clearPinAction}>
+              <Button type="submit" variant="outline">
+                Eemalda PIN
+              </Button>
+            </form>
+          )}
+        </CardContent>
+      </Card>
     </div>
   )
 }
