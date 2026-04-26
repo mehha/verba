@@ -1,29 +1,50 @@
-import type { CollectionConfig } from 'payload'
+import type { AccessArgs, CollectionConfig, Where } from 'payload'
+import type { User } from '@/payload-types'
 
 import {
   FixedToolbarFeature,
   InlineToolbarFeature,
   lexicalEditor,
 } from '@payloadcms/richtext-lexical'
-import path from 'path'
-import { fileURLToPath } from 'url'
 
 import { anyone } from '../access/anyone'
 import { authenticated } from '../access/authenticated'
 
-const filename = fileURLToPath(import.meta.url)
-const dirname = path.dirname(filename)
+const canManageMedia = ({ req }: AccessArgs<User>): boolean | Where => {
+  if (!req.user) return false
+  if (req.user.role === 'admin') return true
+
+  return {
+    owner: {
+      equals: req.user.id,
+    },
+  }
+}
 
 export const Media: CollectionConfig = {
   slug: 'media',
   folders: true,
   access: {
     create: authenticated,
-    delete: authenticated,
+    delete: canManageMedia,
     read: anyone,
-    update: authenticated,
+    update: canManageMedia,
   },
   fields: [
+    {
+      name: 'owner',
+      type: 'relationship',
+      relationTo: 'users',
+      admin: {
+        description: 'Kasutaja, kes laadis faili üles. Omanik või admin saab faili muuta ja kustutada.',
+        position: 'sidebar',
+      },
+      access: {
+        update: ({ req }) => req.user?.role === 'admin',
+      },
+      defaultValue: ({ user }) => user?.id,
+      index: true,
+    },
     {
       name: 'alt',
       type: 'text',
@@ -44,5 +65,18 @@ export const Media: CollectionConfig = {
     // These are not supported on Workers yet due to lack of sharp
     crop: false,
     focalPoint: false,
+  },
+  hooks: {
+    beforeChange: [
+      ({ data, operation, req }) => {
+        if (operation === 'create' && req.user) {
+          if (req.user.role !== 'admin' || !data.owner) {
+            data.owner = req.user.id
+          }
+        }
+
+        return data
+      },
+    ],
   },
 }

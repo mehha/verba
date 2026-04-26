@@ -93,7 +93,7 @@ function MediaFrame({
   return (
     <div
       className={cn(
-        'relative overflow-hidden rounded-[28px] shadow-[0_22px_70px_rgba(34,49,76,0.12)]',
+        'relative overflow-hidden rounded-[28px]',
         className,
       )}
     >
