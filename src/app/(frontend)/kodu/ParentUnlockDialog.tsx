@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useActionState, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { unlockParentModeAction, type UnlockState } from './modeActions'
 import { Button } from '@/components/ui/button'
@@ -33,9 +33,10 @@ type ParentUnlockDialogProps = {
 export function ParentUnlockDialog({ hasPin, className, children }: ParentUnlockDialogProps) {
   const [open, setOpen] = useState(false)
   const [pin, setPin] = useState('')
-  const [state, formAction] = useActionState(unlockParentModeAction, initialState)
+  const [state, setState] = useState<UnlockState>(initialState)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const router = useRouter()
-  const formRef = useRef<HTMLFormElement | null>(null)
+  const submittedPinRef = useRef<string | null>(null)
 
   // ref esimesele OTP slotile
   const firstSlotRef = useRef<HTMLInputElement | null>(null)
@@ -45,17 +46,46 @@ export function ParentUnlockDialog({ hasPin, className, children }: ParentUnlock
     if (state.success) {
       setOpen(false)
       setPin('')
-      router.push('/kodu')
+      submittedPinRef.current = null
+      router.replace('/kodu')
       router.refresh()
     }
   }, [state.success, router])
 
+  const submitPin = useCallback(
+    async (nextPin: string) => {
+      if (nextPin.length !== 4 || isSubmitting || submittedPinRef.current === nextPin) return
+
+      submittedPinRef.current = nextPin
+      setIsSubmitting(true)
+
+      const formData = new FormData()
+      formData.set('pin', nextPin)
+
+      try {
+        const result = await unlockParentModeAction(initialState, formData)
+        setState(result)
+
+        if (!result.success) {
+          submittedPinRef.current = null
+        }
+      } catch (error) {
+        console.error(error)
+        submittedPinRef.current = null
+        setState({ success: false, error: 'Midagi läks valesti. Palun proovi uuesti.' })
+      } finally {
+        setIsSubmitting(false)
+      }
+    },
+    [isSubmitting],
+  )
+
   // kui sisestatud 4 numbrit → automaatne submit
   useEffect(() => {
-    if (open && pin.length === 4 && formRef.current) {
-      formRef.current.requestSubmit()
+    if (open && pin.length === 4) {
+      void submitPin(pin)
     }
-  }, [pin, open])
+  }, [pin, open, submitPin])
 
   // VALE PIN: tühjenda ja liiguta fookus algusesse
   useEffect(() => {
@@ -70,7 +100,14 @@ export function ParentUnlockDialog({ hasPin, className, children }: ParentUnlock
 
   const handleOpen = () => {
     if (!hasPin) return
+    setState(initialState)
+    submittedPinRef.current = null
     setOpen(true)
+  }
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    void submitPin(pin)
   }
 
   return (
@@ -107,8 +144,7 @@ export function ParentUnlockDialog({ hasPin, className, children }: ParentUnlock
           </DialogHeader>
 
           <form
-            ref={formRef}
-            action={formAction}
+            onSubmit={handleSubmit}
             data-navigation-form
             className="space-y-4"
           >
@@ -138,9 +174,9 @@ export function ParentUnlockDialog({ hasPin, className, children }: ParentUnlock
             <Button
               type="submit"
               className="w-full"
-              disabled={pin.length !== 4}
+              disabled={pin.length !== 4 || isSubmitting}
             >
-              Ava vanema vaade
+              {isSubmitting ? 'Avan...' : 'Ava vanema vaade'}
             </Button>
           </form>
         </DialogContent>
