@@ -324,11 +324,11 @@ export function BoardEditorToolbar({
             Lisa plokk <Grid2X2 width={14} className="absolute right-2 top-1/2 -translate-y-1/2" />
           </Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="max-h-[min(90vh,720px)] overflow-hidden sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Lisa plokk</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-2">
+          <div className="grid max-h-[calc(min(90vh,720px)-9rem)] gap-4 overflow-y-auto py-2 pr-1">
             <div className="flex flex-wrap gap-2">
               <Button
                 type="button"
