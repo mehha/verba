@@ -92,7 +92,7 @@ function MediaFrame({
   return (
     <div
       className={cn(
-        'relative overflow-hidden rounded-[28px] border border-[#e0e5ee] bg-white shadow-[0_22px_70px_rgba(34,49,76,0.12)]',
+        'relative overflow-hidden rounded-[28px] shadow-[0_22px_70px_rgba(34,49,76,0.12)]',
         className,
       )}
     >
@@ -111,22 +111,6 @@ function MediaFrame({
           </div>
         )
       )}
-    </div>
-  )
-}
-
-function LogoTiles() {
-  return (
-    <div className="flex items-end gap-2" aria-hidden="true">
-      <span className="flex h-12 w-12 rotate-[-3deg] items-center justify-center rounded-[14px] bg-gradient-to-br from-[#ffbb2e] via-[#ff980d] to-[#ec6c05] text-white shadow-[0_12px_24px_rgba(236,108,5,0.25)]">
-        <MessageCircle className="h-6 w-6" />
-      </span>
-      <span className="flex h-12 w-12 rotate-[2deg] items-center justify-center rounded-[14px] bg-gradient-to-br from-[#ff7668] via-[#ef4035] to-[#bf1f2b] text-white shadow-[0_12px_24px_rgba(191,31,43,0.2)]">
-        <Volume2 className="h-6 w-6" />
-      </span>
-      <span className="relative flex h-12 w-12 items-center justify-center rounded-[14px] bg-gradient-to-br from-[#29a1f7] via-[#1c79dd] to-[#1359b7] text-white shadow-[0_12px_24px_rgba(19,89,183,0.24)] after:absolute after:-bottom-1 after:left-3 after:h-4 after:w-4 after:rotate-45 after:rounded-[3px] after:bg-[#1359b7]">
-        <Home className="relative z-10 h-7 w-7" />
-      </span>
     </div>
   )
 }
@@ -260,7 +244,6 @@ export const SuhtlejaHomepageBlock: React.FC<Props> = ({ className, hero, video,
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_78%_18%,rgba(28,121,221,0.14),transparent_32%),radial-gradient(circle_at_18%_28%,rgba(255,152,13,0.16),transparent_28%)]" />
         <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 pt-14 pb-24 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
           <div className="max-w-2xl">
-            {/*<LogoTiles />*/}
             <div className="mt-8">
               <Eyebrow tone="orange">{hero?.eyebrow}</Eyebrow>
             </div>
