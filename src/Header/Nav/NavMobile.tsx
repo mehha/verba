@@ -5,7 +5,14 @@ import * as React from 'react'
 import { CMSLink } from '@/components/Link'
 import type { Header as HeaderType } from '@/payload-types'
 import { Menu } from 'lucide-react'
-import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle, SheetClose } from '@/components/ui/sheet'
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Logo } from '@/components/Logo/Logo'
 
@@ -24,12 +31,17 @@ export function NavMobile({ data }: Props) {
           </Button>
         </SheetTrigger>
 
-        <SheetContent side="right" className="w-[84vw] sm:w-[400px] p-0">
-          <SheetHeader className="p-4">
-            <SheetTitle><Logo /></SheetTitle>
+        <SheetContent
+          side="right"
+          className="flex w-[84vw] max-w-[400px] flex-col overflow-hidden p-0"
+        >
+          <SheetHeader className="items-start shrink-0 p-4 pr-16 text-left">
+            <SheetTitle className="flex justify-start">
+              <Logo />
+            </SheetTitle>
           </SheetHeader>
 
-          <nav className="p-2">
+          <nav className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
             <ul className="space-y-1">
               {items.map((item, i) => {
                 const topLabel =

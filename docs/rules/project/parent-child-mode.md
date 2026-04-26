@@ -34,6 +34,7 @@ tags: [suhtleja, auth, mode, home, boards]
 
 ## UX Rules
 - Keep OTP auto-submit after 4 digits.
+- Parent unlock should submit through the controlled client handler, not programmatic native form submission, so mobile Safari stays on the client navigation path.
 - On invalid PIN:
   - Clear fields.
   - Return focus to first OTP slot.
