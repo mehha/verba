@@ -14,6 +14,31 @@ const getBaseURL = (req: Request): string => {
   return new URL(req.url).origin
 }
 
+const isMissingStripeResource = (err: unknown): boolean => {
+  const stripeErr = err as Stripe.errors.StripeError
+
+  return (
+    stripeErr?.type === 'StripeInvalidRequestError' &&
+    (stripeErr?.code === 'resource_missing' ||
+      stripeErr?.message?.toLowerCase().includes('no such customer'))
+  )
+}
+
+const clearLocalMembership = async (payload: Awaited<ReturnType<typeof getPayload>>, userId: string | number) => {
+  await payload.update({
+    collection: 'users',
+    id: userId,
+    data: {
+      stripeCustomerId: null,
+      stripeSubscriptionId: null,
+      membershipStatus: 'none',
+      trialEndsAt: null,
+      currentPeriodEndsAt: null,
+      membershipCancelAtPeriodEnd: false,
+    },
+  })
+}
+
 export async function POST(req: Request) {
   if (!STRIPE_SECRET_KEY) {
     return NextResponse.json({ error: 'missing_stripe_env' }, { status: 500 })
@@ -42,14 +67,13 @@ export async function POST(req: Request) {
 
     if (customerId) {
       try {
-        await stripe.customers.retrieve(customerId)
-      } catch (err) {
-        const stripeErr = err as Stripe.errors.StripeError
-        const isMissingCustomer =
-          stripeErr?.type === 'StripeInvalidRequestError' &&
-          stripeErr?.code === 'resource_missing'
+        const customer = await stripe.customers.retrieve(customerId)
 
-        if (isMissingCustomer) {
+        if ('deleted' in customer && customer.deleted) {
+          customerId = undefined
+        }
+      } catch (err) {
+        if (isMissingStripeResource(err)) {
           customerId = undefined
         } else {
           throw err
@@ -66,6 +90,8 @@ export async function POST(req: Request) {
     }
 
     if (!customerId) {
+      await clearLocalMembership(payload, user.id)
+
       return NextResponse.json({ error: 'missing_stripe_customer' }, { status: 400 })
     }
 
