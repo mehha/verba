@@ -23,6 +23,10 @@ interface HeaderClientProps {
   hasPin: boolean
 }
 
+type MeResponse = {
+  user?: User | null
+}
+
 export const HeaderClient: React.FC<HeaderClientProps> = ({
   data,
   currentUser,
@@ -34,6 +38,7 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({
   const { headerTheme, setHeaderTheme } = useHeaderTheme()
   const pathname = usePathname()
   const router = useRouter()
+  const [clientUser, setClientUser] = useState<User | null>(currentUser)
 
   async function handleSignOut() {
     try {
@@ -54,10 +59,47 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({
         document.cookie = ['uiMode=', 'path=/', 'max-age=0', 'samesite=lax'].join('; ')
       }
 
+      setClientUser(null)
       router.push('/login')
       router.refresh()
     }
   }
+
+  useEffect(() => {
+    setClientUser(currentUser)
+  }, [currentUser])
+
+  useEffect(() => {
+    let cancelled = false
+
+    const syncUser = async () => {
+      try {
+        const baseUrl = getClientSideURL()
+        const res = await fetch(`${baseUrl}/api/users/me`, {
+          credentials: 'include',
+          cache: 'no-store',
+        })
+
+        if (cancelled) return
+
+        if (!res.ok) {
+          setClientUser(null)
+          return
+        }
+
+        const data = (await res.json().catch(() => null)) as MeResponse | null
+        setClientUser(data?.user ?? null)
+      } catch (err) {
+        console.error('Header auth sync failed', err)
+      }
+    }
+
+    void syncUser()
+
+    return () => {
+      cancelled = true
+    }
+  }, [pathname])
 
   useEffect(() => {
     setHeaderTheme(null)
@@ -69,7 +111,8 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [headerTheme])
 
-  const name = currentUser?.name && true ? currentUser.name : (currentUser?.email ?? '')
+  const name = clientUser?.name && true ? clientUser.name : (clientUser?.email ?? '')
+  const effectiveHasPin = Boolean(clientUser?.parentPinHash || hasPin)
 
   return (
     <header className="container mt-6 relative z-20" {...(theme ? { 'data-theme': theme } : {})}>
@@ -86,12 +129,12 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({
 
         <div className="flex items-center gap-2 sm:gap-4 lg:justify-self-end">
           {/* ainult siis, kui on sisse loginud */}
-          {currentUser ? (
+          {clientUser ? (
             <>
-              <ParentModeToggle isParentMode={isParentMode} hasPin={Boolean(hasPin)} />
+              <ParentModeToggle isParentMode={isParentMode} hasPin={effectiveHasPin} />
               <UserMenu
                 name={name}
-                email={currentUser.email ?? ''}
+                email={clientUser.email ?? ''}
                 onSignOut={handleSignOut}
                 isParentMode={isParentMode}
               />

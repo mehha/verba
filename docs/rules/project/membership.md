@@ -17,12 +17,14 @@ tags: [suhtleja, stripe, membership, profile]
 - Membership state source of truth is Stripe webhooks, not redirect query params.
 - Checkout should always create subscription with `trial_period_days: 14`.
 - Checkout should treat `stripeCustomerId` as the primary Stripe identity and only use email lookup as a fallback.
+- Checkout and portal routes must treat deleted or missing Stripe customers as stale local state, not as unrecoverable server errors.
 - If checkout falls back to email lookup, it should:
   - prefer a Stripe customer whose metadata `payloadUserId` matches the current user
   - reuse a single unique email match
   - fail clearly instead of guessing when multiple unrelated Stripe customers share the same email
 - Membership cancel/manage flow should use Stripe Billing Portal.
 - Hide membership-management UI when `membershipStatus` is `none`; show only checkout/upgrade in that state.
+- The frontend header must refresh client-side auth state after route changes so Stripe redirects and login/logout transitions do not require a manual browser refresh.
 - Pending-cancellation profile UI should be driven by `membershipCancelAtPeriodEnd` plus a future `currentPeriodEndsAt`, not only by the current status label.
 - Active membership statuses are only `trialing` and `active`.
 - In non-production environments only, admin users may bypass membership gates for premium routes and APIs.
