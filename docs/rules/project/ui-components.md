@@ -17,3 +17,7 @@ tags: [suhtleja, ui, shadcn]
 ## Avoid
 - Duplicating primitives already covered by shadcn/ui (buttons, dialogs, tabs, selects, etc.).
 - Creating one-off variants that should be shared under `src/components/ui`.
+
+## Viewport-Sized Overlays
+- For shared sheets, drawers, and mobile menus, prefer stable viewport height units (`svh`) over dynamic viewport height (`dvh`) so Safari on iPad/iOS does not jump when browser chrome changes.
+- For mobile menu widths, keep a normal `vw` fallback and use `dvw` only as a supported enhancement.

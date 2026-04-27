@@ -84,7 +84,7 @@ export function ConnectDotsBoardsList({ deletePuzzle, isAdmin, puzzles, togglePi
           <Button asChild className="gap-2">
             <Link href="/connect-dots/manage/new">
               <PlusCircle className="h-4 w-4" />
-              Lisa uus puzzle
+              Lisa puzzle
             </Link>
           </Button>
         </div>

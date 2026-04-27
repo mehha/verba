@@ -1,15 +1,14 @@
 // src/components/BoardEditor/index.tsx (või src/app/(frontend)/boards/[id]/edit/AppEditor/index.tsx)
 'use client'
 
-import RGL, { WidthProvider } from 'react-grid-layout'
+import RGL, { WidthProvider, type Layout } from 'react-grid-layout'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 import type { Board, Media } from '@/payload-types'
 import { useBoardGrid } from './useBoardGrid'
 import { BoardEditorToolbar } from './Toolbar'
-import { useViewportHeight } from '@/utilities/useViewportHeight'
 import { CellEditModal } from './CellEditModal'
-import { useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -34,6 +33,55 @@ const ReactGridLayout = WidthProvider(RGL)
 const COMPACT_SWITCH_CLASS =
   'h-5 w-9 [&>span]:h-4 [&>span]:w-4 data-[state=checked]:[&>span]:translate-x-4'
 const TOGGLE_CARD_CLASS = 'flex items-center gap-2 rounded-xl border bg-card px-2.5 py-1.5'
+const GRID_MARGIN: [number, number] = [16, 16]
+
+const layoutsMatch = (a: Layout[], b: Layout[]) => {
+  if (a.length !== b.length) return false
+
+  return a.every((item) => {
+    const other = b.find((candidate) => candidate.i === item.i)
+    return (
+      other &&
+      item.x === other.x &&
+      item.y === other.y &&
+      item.w === other.w &&
+      item.h === other.h
+    )
+  })
+}
+
+const packLayoutToColumns = (items: Layout[], colCount: number): Layout[] => {
+  const safeColCount = Math.max(1, colCount)
+  const sorted = [...items].sort((a, b) => a.y - b.y || a.x - b.x)
+  const colHeights = Array.from({ length: safeColCount }, () => 0)
+
+  return sorted.map((item) => {
+    const h = Math.max(1, item.h)
+    const w = Math.max(1, Math.min(item.w, safeColCount))
+    const maxX = Math.max(0, safeColCount - w)
+    const colIndex = colHeights.reduce(
+      (shortestIndex, height, index) =>
+        height < colHeights[shortestIndex] && index <= maxX ? index : shortestIndex,
+      0,
+    )
+    const x = Math.min(colIndex, maxX)
+    const y = colHeights[x]
+
+    for (let col = x; col < x + w; col += 1) {
+      colHeights[col] = y + h
+    }
+
+    return { ...item, x, y, w, h }
+  })
+}
+
+const scaleLayoutToColumns = (items: Layout[], fromCols: number, toCols: number): Layout[] =>
+  items.map((item) => {
+    const w = Math.max(1, Math.min(toCols, Math.round((item.w / fromCols) * toCols)))
+    const x = Math.max(0, Math.min(toCols - w, Math.round((item.x / fromCols) * toCols)))
+
+    return { ...item, x, w }
+  })
 
 type Props = {
   board: Board
@@ -73,8 +121,8 @@ export default function BoardEditor({
     updateAi,
   } = useBoardGrid(board)
 
-  const vh = useViewportHeight()
   const [editingCellId, setEditingCellId] = useState<string | null>(null)
+  const gridContainerRef = useRef<HTMLDivElement | null>(null)
   const homeVisibilityFormRef = useRef<HTMLFormElement | null>(null)
   const visibilityFormRef = useRef<HTMLFormElement | null>(null)
 
@@ -82,16 +130,49 @@ export default function BoardEditor({
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [titleDraft, setTitleDraft] = useState(board.name ?? '')
 
-  const rowsNeeded = layout.length > 0 ? Math.max(...layout.map((l) => (l.y ?? 0) + (l.h ?? 1))) : 1
+  const [gridWidth, setGridWidth] = useState(0)
 
-  const TOP_BAR = 36,
-    HEADER = 98,
-    FOOTER = 105,
-    EXTRA = 24
-  const reserved = TOP_BAR + HEADER + FOOTER + EXTRA
-  const available = Math.max(200, vh - reserved)
-  let rowHeight = Math.floor(available / rowsNeeded)
-  rowHeight = Math.min(240, Math.max(48, rowHeight))
+  useEffect(() => {
+    const element = gridContainerRef.current
+    if (!element || typeof ResizeObserver === 'undefined') return
+
+    const observer = new ResizeObserver(([entry]) => {
+      setGridWidth(entry.contentRect.width)
+    })
+    observer.observe(element)
+
+    return () => observer.disconnect()
+  }, [])
+
+  const mobileCols = Math.max(1, Math.min(cols, 3))
+  const mdCols = Math.max(1, Math.min(cols, 4))
+  const activeGridCols = useMemo(() => {
+    if (gridWidth >= 1024) return cols
+    if (gridWidth >= 768) return mdCols
+    return mobileCols
+  }, [cols, gridWidth, mdCols, mobileCols])
+  const rowHeight = useMemo(() => {
+    if (!gridWidth) return 140
+
+    const horizontalGaps = GRID_MARGIN[0] * Math.max(0, activeGridCols - 1)
+    return Math.max(48, Math.floor((gridWidth - horizontalGaps) / activeGridCols))
+  }, [activeGridCols, gridWidth])
+  const editorLayout = useMemo(() => {
+    if (activeGridCols === cols) return layout
+
+    const scaledLayout = scaleLayoutToColumns(layout, cols, activeGridCols)
+    return packLayoutToColumns(scaledLayout, activeGridCols)
+  }, [activeGridCols, cols, layout])
+  const handleEditorLayoutChange = (nextLayout: Layout[]) => {
+    if (layoutsMatch(nextLayout, editorLayout)) return
+
+    if (activeGridCols === cols) {
+      onLayoutChange(nextLayout)
+      return
+    }
+
+    onLayoutChange(scaleLayoutToColumns(nextLayout, activeGridCols, cols))
+  }
 
   const currentEditingCell =
     editingCellId != null ? (cells.find((c) => c.id === editingCellId) ?? null) : null
@@ -378,22 +459,22 @@ export default function BoardEditor({
           </div>
         )}
 
-        <div className="h-full w-full overflow-y-auto">
+        <div ref={gridContainerRef} className="h-full w-full overflow-y-auto">
           <ReactGridLayout
             className="layout"
-            cols={cols}
-            rowHeight={140}
-            width={1200}
-            containerPadding={[1, 0]}
-            layout={layout}
-            onLayoutChange={onLayoutChange}
+            cols={activeGridCols}
+            rowHeight={rowHeight}
+            margin={GRID_MARGIN}
+            containerPadding={[0, 0]}
+            layout={editorLayout}
+            onLayoutChange={handleEditorLayoutChange}
             isResizable
             isDraggable
           >
             {cells.map((cell) => (
               <div
                 key={cell.id}
-                className="relative flex aspect-[4/3] flex-col overflow-hidden rounded-xl bg-white p-2 shadow-lg ring-1 ring-gray-900/5"
+                className="relative flex h-full w-full flex-col overflow-hidden rounded-xl bg-white p-2 shadow-lg ring-1 ring-gray-900/5"
               >
                 <div className="absolute right-1 top-1 z-10 flex gap-1">
                   <Button

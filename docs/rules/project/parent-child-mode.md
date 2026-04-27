@@ -39,6 +39,8 @@ tags: [suhtleja, auth, mode, home, boards]
   - Clear fields.
   - Return focus to first OTP slot.
 - Keep explicit error message for invalid/missing PIN.
+- Header parent/child switcher should stay icon-only visually, with accessible names preserved for assistive tech.
+- Logged-in header controls should include an icon-only home link before the parent/child switcher; `/home` is a redirect alias for `/kodu`.
 - In child mode, `/kodu` and `/boards/[id]` should render as fullscreen child surfaces without the global header/footer/admin bar.
 - Child fullscreen surfaces must provide their own minimal navigation or unlock controls when global chrome is hidden.
 - Switching from parent mode to child mode may preserve safe child routes such as `/kodu` and `/boards/[id]`, but must fall back to `/kodu` from parent-only or management routes.

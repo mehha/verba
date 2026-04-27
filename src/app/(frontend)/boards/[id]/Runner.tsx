@@ -36,6 +36,7 @@ import { prepareTextForTTS } from '@/utilities/azureTTS'
 import { ParentUnlockDialog } from '@/app/(frontend)/kodu/ParentUnlockDialog'
 
 const ResponsiveGridLayout = WidthProvider(ResponsiveGrid)
+const GRID_MARGIN: [number, number] = [16, 16]
 
 type RunnerProps = { board: Board; isParentMode: boolean; canEdit: boolean; hasPin: boolean }
 
@@ -59,6 +60,7 @@ export default function Runner({ board, isParentMode, canEdit, hasPin }: RunnerP
   const actionBarEnabled = board.actionBar?.enabled ?? false
   const [aiEnabled, setAiEnabled] = useState<boolean>(aiAllowed)
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
+  const gridContainerRef = useRef<HTMLDivElement | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const audioUnlockedRef = useRef(false)
   const playbackTokenRef = useRef(0)
@@ -97,14 +99,19 @@ export default function Runner({ board, isParentMode, canEdit, hasPin }: RunnerP
       }
     })
 
-  const buildTwoColumnLayout = (items: Layout[]): Layout[] => {
+  const buildColumnLayout = (items: Layout[], colCount: number): Layout[] => {
+    const safeColCount = Math.max(1, colCount)
     const sorted = [...items].sort((a, b) => a.y - b.y || a.x - b.x)
-    const colHeights = [0, 0]
+    const colHeights = Array.from({ length: safeColCount }, () => 0)
 
     return sorted.map((item) => {
       const h = Math.max(1, item.h)
 
-      const colIndex = colHeights[0] <= colHeights[1] ? 0 : 1
+      const colIndex = colHeights.reduce(
+        (shortestIndex, height, index) =>
+          height < colHeights[shortestIndex] ? index : shortestIndex,
+        0,
+      )
       const y = colHeights[colIndex]
       colHeights[colIndex] += h
 
@@ -113,15 +120,42 @@ export default function Runner({ board, isParentMode, canEdit, hasPin }: RunnerP
   }
 
   const mdCols = Math.max(1, Math.min(cols, 4))
+  const mobileCols = Math.max(1, Math.min(cols, 3))
+  const [gridWidth, setGridWidth] = useState(0)
   const responsiveLayouts: Layouts = useMemo(
     () => ({
       lg: baseLayout,
       md: clampLayoutToCols(baseLayout, mdCols),
-      sm: buildTwoColumnLayout(baseLayout),
-      xs: buildTwoColumnLayout(baseLayout),
+      sm: buildColumnLayout(baseLayout, mobileCols),
+      xs: buildColumnLayout(baseLayout, mobileCols),
     }),
-    [baseLayout, mdCols],
+    [baseLayout, mdCols, mobileCols],
   )
+
+  useEffect(() => {
+    const element = gridContainerRef.current
+    if (!element || typeof ResizeObserver === 'undefined') return
+
+    const observer = new ResizeObserver(([entry]) => {
+      setGridWidth(entry.contentRect.width)
+    })
+    observer.observe(element)
+
+    return () => observer.disconnect()
+  }, [])
+
+  const activeGridCols = useMemo(() => {
+    if (gridWidth >= 1024) return cols
+    if (gridWidth >= 768) return mdCols
+    return mobileCols
+  }, [cols, gridWidth, mdCols, mobileCols])
+
+  const squareRowHeight = useMemo(() => {
+    if (!gridWidth) return 140
+
+    const horizontalGaps = GRID_MARGIN[0] * Math.max(0, activeGridCols - 1)
+    return Math.max(96, Math.floor((gridWidth - horizontalGaps) / activeGridCols))
+  }, [activeGridCols, gridWidth])
 
   const tokens: SelectedToken[] = useMemo(
     () =>
@@ -767,56 +801,58 @@ export default function Runner({ board, isParentMode, canEdit, hasPin }: RunnerP
         </TooltipProvider>
       </div>
 
-      <ResponsiveGridLayout
-        className="layout"
-        breakpoints={{ lg: 1024, md: 768, sm: 640, xs: 0 }}
-        cols={{ lg: cols, md: mdCols, sm: 2, xs: 2 }}
-        rowHeight={140}
-        isResizable={false}
-        isDraggable={false}
-        margin={[16, 16]}
-        containerPadding={[0, 0]}
-        compactType={null}
-        preventCollision
-        layouts={responsiveLayouts}
-      >
-        {cells.map((cell) => {
-          const cellIdString = String(cell.id)
+      <div ref={gridContainerRef}>
+        <ResponsiveGridLayout
+          className="layout"
+          breakpoints={{ lg: 1024, md: 768, sm: 640, xs: 0 }}
+          cols={{ lg: cols, md: mdCols, sm: mobileCols, xs: mobileCols }}
+          rowHeight={squareRowHeight}
+          isResizable={false}
+          isDraggable={false}
+          margin={GRID_MARGIN}
+          containerPadding={[0, 0]}
+          compactType={null}
+          preventCollision
+          layouts={responsiveLayouts}
+        >
+          {cells.map((cell) => {
+            const cellIdString = String(cell.id)
 
-          // UUS: Kontrollime, kas sellele kaardile on määratud ajutine tekst
-          const isOverridden = tempLabel?.id === cellIdString
-          const isActiveCell = activeCellId === cellIdString
-          const titleToShow = isOverridden && tempLabel ? tempLabel.text : cell.title
+            // UUS: Kontrollime, kas sellele kaardile on määratud ajutine tekst
+            const isOverridden = tempLabel?.id === cellIdString
+            const isActiveCell = activeCellId === cellIdString
+            const titleToShow = isOverridden && tempLabel ? tempLabel.text : cell.title
 
-          return (
-            <div
-              key={cellIdString}
-              className={`relative flex aspect-[4/3] flex-col overflow-hidden rounded-xl border bg-white p-2 shadow-lg ring-1 transition-all ${
-                isActiveCell
-                  ? 'cursor-pointer ring-blue-500 shadow-blue-200/70'
-                  : 'cursor-pointer ring-gray-900/5'
-              }`}
-            >
-              {renderCellImage(cell)}
+            return (
+              <div
+                key={cellIdString}
+                className={`relative flex h-full w-full flex-col overflow-hidden rounded-xl border bg-white p-2 shadow-lg ring-1 transition-all ${
+                  isActiveCell
+                    ? 'cursor-pointer ring-blue-500 shadow-blue-200/70'
+                    : 'cursor-pointer ring-gray-900/5'
+                }`}
+              >
+                {renderCellImage(cell)}
 
-              {titleToShow && (
-                <div
-                  className="pointer-events-none shrink-0 px-1 pb-1 text-center uppercase text-slate-950 transition-colors duration-200"
-                >
-                  <div className="break-words text-xl font-semibold leading-5">{titleToShow}</div>
-                </div>
-              )}
+                {titleToShow && (
+                  <div className="pointer-events-none shrink-0 px-1 pb-1 text-center uppercase text-slate-950 transition-colors duration-200">
+                    <div className="break-words text-xl font-semibold leading-5">
+                      {titleToShow}
+                    </div>
+                  </div>
+                )}
 
-              <button
-                type="button"
-                onClick={() => void handleCellClick(cell)}
-                className="absolute inset-0 cursor-pointer"
-                aria-label={titleToShow ?? 'valik'}
-              />
-            </div>
-          )
-        })}
-      </ResponsiveGridLayout>
+                <button
+                  type="button"
+                  onClick={() => void handleCellClick(cell)}
+                  className="absolute inset-0 cursor-pointer"
+                  aria-label={titleToShow ?? 'valik'}
+                />
+              </div>
+            )
+          })}
+        </ResponsiveGridLayout>
+      </div>
     </div>
   )
 }

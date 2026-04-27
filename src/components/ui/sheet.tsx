@@ -21,7 +21,7 @@ const SheetOverlay = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SheetPrimitive.Overlay
     className={cn(
-      "fixed inset-x-0 top-0 z-50 h-screen bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 supports-[height:100dvh]:h-dvh",
+      "fixed inset-x-0 top-0 z-50 h-screen bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 supports-[height:100svh]:h-svh",
       className
     )}
     {...props}
@@ -38,9 +38,9 @@ const sheetVariants = cva(
         top: "inset-x-0 top-0 border-b data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
         bottom:
           "inset-x-0 bottom-0 border-t data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
-        left: "left-0 top-0 h-screen w-3/4 border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left supports-[height:100dvh]:h-dvh sm:max-w-sm",
+        left: "left-0 top-0 h-screen w-3/4 border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left supports-[height:100svh]:h-svh sm:max-w-sm",
         right:
-          "right-0 top-0 h-screen w-3/4 border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right supports-[height:100dvh]:h-dvh sm:max-w-sm",
+          "right-0 top-0 h-screen w-3/4 border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right supports-[height:100svh]:h-svh sm:max-w-sm",
       },
     },
     defaultVariants: {

@@ -33,7 +33,7 @@ export function NavMobile({ data }: Props) {
 
         <SheetContent
           side="right"
-          className="flex w-[84vw] max-w-[400px] flex-col overflow-hidden p-0"
+          className="flex w-[84vw] max-w-[400px] flex-col overflow-hidden p-0 supports-[width:100dvw]:w-[84dvw]"
         >
           <SheetHeader className="items-start shrink-0 p-4 pr-16 text-left">
             <SheetTitle className="flex justify-start">

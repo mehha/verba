@@ -451,13 +451,13 @@ export default async function HomePage() {
             <Button className="gap-2" asChild>
               <Link href="/connect-dots/manage/new">
                 <PlusCircle className="h-4 w-4" />
-                Lisa uus puzzle
+                Lisa puzzle
               </Link>
             </Button>
             <Button variant="outline" asChild>
               <Link href="/koduhaldus" className="flex items-center gap-2">
                 <Settings2 className="h-4 w-4" />
-                Halda koduhaldust <ArrowRight className={`w-4 h-4`} />
+                Koduhaldus <ArrowRight className={`w-4 h-4`} />
               </Link>
             </Button>
           </div>

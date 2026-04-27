@@ -43,6 +43,8 @@ tags: [suhtleja, frontend, boards, payload]
   - Explicit board saves must show visible progress while the save request is in flight.
   - Saving board grid changes must regenerate missing cached TTS audio for current cell labels.
   - Saving compounds must regenerate missing cached TTS audio for compound speech forms.
+  - In `/boards/[id]/edit`, editor grid row height should track the column width so 1x1 editable cells render as square tiles.
+  - In `/boards/[id]/edit`, mobile layouts should start at 3 columns and increase at wider breakpoints.
 - Home page rules:
   - Show board content and connect-dots content in separate top-level sections.
   - Within each top-level section, owned items and shared items may render as separate subsections.
@@ -52,7 +54,8 @@ tags: [suhtleja, frontend, boards, payload]
   - Reordering is parent-mode only within each rendered subsection.
   - Parent mode must expose both actions on `/kodu`: `Lisa uus tahvel` and `Halda koduhaldust`.
 - Board runner rules:
-  - On `/boards/[id]`, `sm` and `xs` layouts must always render two items per row by forcing each mobile tile to `w=1`.
+  - On `/boards/[id]`, `sm` and `xs` layouts must render 3 items per row when the board has at least 3 columns, then increase at wider breakpoints.
+  - On `/boards/[id]`, board runner grid row height should track the active column width so 1x1 board items render as square tiles.
   - Board card labels should sit below the image without a background overlay, use black uppercase text, and leave enough card space so images and labels do not overlap.
   - The board runner action bar should stay fixed at the bottom of the viewport, remain compact enough for child-mode play, and leave bottom padding so board tiles are not hidden behind it.
   - In child mode, `/boards/[id]` must include minimal in-page controls for returning to `/kodu` and opening the parent PIN dialog because global header navigation is hidden.

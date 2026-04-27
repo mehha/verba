@@ -37,13 +37,13 @@ export function CreateBoardForm({ createBoard }: CreateBoardFormProps) {
       <DialogTrigger asChild>
         <Button type="button" className="gap-2">
           <PlusCircle className="h-4 w-4" />
-          Lisa uus tahvel
+          Lisa tahvel
         </Button>
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Lisa uus tahvel</DialogTitle>
+          <DialogTitle>Lisa tahvel</DialogTitle>
           <DialogDescription>
             Sisesta tahvli nimi, et see luua.
           </DialogDescription>
@@ -71,7 +71,7 @@ export function CreateBoardForm({ createBoard }: CreateBoardFormProps) {
               </Button>
             </DialogClose>
             <Button type="submit" disabled={!canSubmit}>
-              Lisa uus tahvel
+              Lisa tahvel
             </Button>
           </DialogFooter>
         </form>

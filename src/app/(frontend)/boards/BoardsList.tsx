@@ -86,7 +86,7 @@ export function BoardsList({
   if (!boards.length) {
     return (
       <p className="text-sm text-muted-foreground">
-        Sul pole veel ühtegi tahvlit. Lisa ülal paremal nupust “Lisa uus tahvel”.
+        Sul pole veel ühtegi tahvlit. Lisa ülal paremal nupust “Lisa tahvel”.
       </p>
     )
   }

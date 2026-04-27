@@ -13,7 +13,7 @@ import { NavMobile } from '@/Header/Nav/NavMobile'
 import { getClientSideURL } from '@/utilities/getURL'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { LogIn } from 'lucide-react'
+import { House, LogIn } from 'lucide-react'
 import { ParentModeToggle } from '@/Header/Nav/ParentModeToggle'
 
 interface HeaderClientProps {
@@ -119,7 +119,11 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({
       <div className="flex items-center justify-between gap-4 rounded-full bg-white p-4 shadow-sm ring-1 ring-gray-900/5 dark:bg-black sm:px-8 lg:grid lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:items-center">
         <div className="flex items-center lg:justify-self-start">
           <Link href="/" className="flex items-center" aria-label="Suhtleja">
-            <Logo loading="eager" priority="high" />
+            <Logo
+              className="origin-left scale-[0.82] sm:scale-90 lg:scale-100"
+              loading="eager"
+              priority="high"
+            />
           </Link>
         </div>
 
@@ -131,6 +135,25 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({
           {/* ainult siis, kui on sisse loginud */}
           {clientUser ? (
             <>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      asChild
+                      variant="ghost"
+                      size="icon"
+                      aria-label="Kodu"
+                      className="h-10 w-10 rounded-full border border-slate-300 bg-white p-0 text-slate-800 shadow-sm hover:bg-accent hover:text-accent-foreground [&_svg]:h-[18px] [&_svg]:w-[18px]"
+                    >
+                      <Link href="/home">
+                        <House aria-hidden="true" />
+                        <span className="sr-only">Kodu</span>
+                      </Link>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Kodu</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               <ParentModeToggle isParentMode={isParentMode} hasPin={effectiveHasPin} />
               <UserMenu
                 name={name}
