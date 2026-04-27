@@ -231,7 +231,7 @@ function VideoDialog({ video }: { video?: SuhtlejaHomepageProps['video'] }) {
           {embedUrl ? (
             <iframe
               src={embedUrl}
-              title={video.title || 'Suhtleja video'}
+              title={video?.title || 'Suhtleja video'}
               className="aspect-video w-full"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen

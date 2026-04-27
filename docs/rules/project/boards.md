@@ -57,6 +57,7 @@ tags: [suhtleja, frontend, boards, payload]
   - On `/boards/[id]`, `sm` and `xs` layouts must render 3 items per row when the board has at least 3 columns, then increase at wider breakpoints.
   - On `/boards/[id]`, board runner grid row height should track the active column width so 1x1 board items render as square tiles.
   - Board card labels should sit below the image without a background overlay, use black uppercase text, and leave enough card space so images and labels do not overlap.
+  - AAC board runner tiles should have high-visibility hover/press affordances: clear border/ring contrast, obvious lift on pointer hover, and a readable pressed state without adding extra hover box shadow.
   - The board runner action bar should stay fixed at the bottom of the viewport, remain compact enough for child-mode play, and leave bottom padding so board tiles are not hidden behind it.
   - In child mode, `/boards/[id]` must include minimal in-page controls for returning to `/kodu` and opening the parent PIN dialog because global header navigation is hidden.
 - Boards management rules:

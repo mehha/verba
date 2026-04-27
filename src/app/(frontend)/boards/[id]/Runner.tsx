@@ -826,10 +826,10 @@ export default function Runner({ board, isParentMode, canEdit, hasPin }: RunnerP
             return (
               <div
                 key={cellIdString}
-                className={`relative flex h-full w-full flex-col overflow-hidden rounded-xl border bg-white p-2 shadow-lg ring-1 transition-all ${
+                className={`relative flex h-full w-full flex-col overflow-hidden rounded-xl border-2 bg-white p-2 shadow-lg ring-2 transition-all duration-150 hover:-translate-y-1 hover:scale-[1.025] active:translate-y-0 active:scale-[0.96] ${
                   isActiveCell
-                    ? 'cursor-pointer ring-blue-500 shadow-blue-200/70'
-                    : 'cursor-pointer ring-gray-900/5'
+                    ? 'cursor-pointer border-[#ff980d] ring-[#ff980d]/45 hover:ring-[#ff980d]/70'
+                    : 'cursor-pointer border-slate-200 ring-transparent hover:border-[#ff980d] hover:ring-[#ff980d]/35'
                 }`}
               >
                 {renderCellImage(cell)}
