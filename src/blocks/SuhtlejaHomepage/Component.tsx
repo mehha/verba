@@ -42,6 +42,66 @@ function isMediaObject(resource: MediaResource): resource is PayloadMedia {
   return Boolean(resource && typeof resource === 'object')
 }
 
+function appendSearchParams(url: URL, params: Record<string, string>) {
+  Object.entries(params).forEach(([key, value]) => {
+    if (!url.searchParams.has(key)) {
+      url.searchParams.set(key, value)
+    }
+  })
+
+  return url.toString()
+}
+
+function getVideoEmbedUrl(rawUrl?: string | null) {
+  if (!rawUrl) return ''
+
+  try {
+    const url = new URL(rawUrl)
+    const hostname = url.hostname.replace(/^www\./, '')
+
+    if (hostname === 'youtu.be') {
+      const id = url.pathname.split('/').filter(Boolean)[0]
+      if (id) {
+        return appendSearchParams(new URL(`https://www.youtube.com/embed/${id}`), {
+          playsinline: '1',
+          rel: '0',
+        })
+      }
+    }
+
+    if (hostname === 'youtube.com' || hostname === 'm.youtube.com') {
+      const id =
+        url.pathname.startsWith('/embed/')
+          ? url.pathname.split('/').filter(Boolean)[1]
+          : url.searchParams.get('v')
+
+      if (id) {
+        return appendSearchParams(new URL(`https://www.youtube.com/embed/${id}`), {
+          playsinline: '1',
+          rel: '0',
+        })
+      }
+    }
+
+    if (hostname === 'vimeo.com') {
+      const id = url.pathname.split('/').filter(Boolean)[0]
+      if (id) {
+        return appendSearchParams(new URL(`https://player.vimeo.com/video/${id}`), {
+          playsinline: '1',
+        })
+      }
+    }
+
+    if (hostname === 'player.vimeo.com') {
+      return appendSearchParams(url, { playsinline: '1' })
+    }
+
+    return rawUrl
+  } catch {
+    return rawUrl
+  }
+}
+
 function ButtonLink({
   href,
   label,
@@ -122,7 +182,10 @@ function MediaFrame({
 function VideoDialog({ video }: { video?: SuhtlejaHomepageProps['video'] }) {
   const videoFile = isMediaObject(video?.videoFile) ? video.videoFile : null
   const videoSrc = getMediaUrl(videoFile?.url, videoFile?.updatedAt)
-  const hasVideo = Boolean(video?.embedUrl || videoSrc)
+  const embedUrl = getVideoEmbedUrl(video?.embedUrl)
+  const posterMedia = isMediaObject(video?.poster) ? video.poster : null
+  const posterUrl = getMediaUrl(posterMedia?.url, posterMedia?.updatedAt)
+  const hasVideo = Boolean(embedUrl || videoSrc)
 
   const poster = (
     <div className="relative">
@@ -165,17 +228,26 @@ function VideoDialog({ video }: { video?: SuhtlejaHomepageProps['video'] }) {
           <span className="sr-only">Sulge video</span>
         </DialogClose>
         <div className="overflow-hidden rounded-[28px] bg-black shadow-2xl">
-          {video?.embedUrl ? (
+          {embedUrl ? (
             <iframe
-              src={video.embedUrl}
+              src={embedUrl}
               title={video.title || 'Suhtleja video'}
               className="aspect-video w-full"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
+              loading="eager"
+              referrerPolicy="strict-origin-when-cross-origin"
             />
           ) : (
-            <video autoPlay controls playsInline className="max-h-[82vh] w-full bg-black">
+            <video
+              controls
+              playsInline
+              preload="metadata"
+              poster={posterUrl || undefined}
+              className="max-h-[82svh] w-full bg-black"
+            >
               <source src={videoSrc} type={videoFile?.mimeType || undefined} />
+              Sinu brauser ei saa seda videot esitada.
             </video>
           )}
         </div>

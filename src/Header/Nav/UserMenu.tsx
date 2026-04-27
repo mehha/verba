@@ -42,11 +42,11 @@ export function UserMenu({ name, email, avatarUrl, onSignOut, isParentMode }: Us
               <button
                 type="button"
                 aria-label="Kasutaja menüü"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-300 bg-white text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-accent hover:text-accent-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white bg-slate-900 text-sm font-semibold text-white shadow-sm ring-1 ring-slate-900/25 transition hover:border-accent hover:bg-accent hover:text-accent-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
                 <Avatar className="h-9 w-9">
                   <AvatarImage src={avatarUrl} alt={displayName} />
-                  <AvatarFallback className="bg-transparent text-[13px] font-semibold text-current">
+                  <AvatarFallback className="bg-transparent text-[15px] font-bold text-current">
                     {fallbackContent}
                   </AvatarFallback>
                 </Avatar>

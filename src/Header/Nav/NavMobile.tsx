@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Logo } from '@/components/Logo/Logo'
+import Link from 'next/link'
 
 type Props = { data: HeaderType }
 
@@ -37,7 +38,11 @@ export function NavMobile({ data }: Props) {
         >
           <SheetHeader className="items-start shrink-0 p-4 pr-16 text-left">
             <SheetTitle className="flex justify-start">
-              <Logo />
+              <SheetClose asChild>
+                <Link href="/" aria-label="Suhtleja avaleht">
+                  <Logo />
+                </Link>
+              </SheetClose>
             </SheetTitle>
           </SheetHeader>
 
